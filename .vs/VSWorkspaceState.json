@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\backend",
+    "\\backend\\BloodDonation.API",
+    "\\backend\\BloodDonation.Infrastructure",
+    "\\backend\\BloodDonation.Infrastructure\\Data",
+    "\\backend\\BloodDonation.Infrastructure\\Data\\Configurations",
+    "\\frontend"
+  ],
+  "SelectedNode": "\\backend\\BloodDonation.API",
+  "PreviewInSolutionExplorer": false
+}

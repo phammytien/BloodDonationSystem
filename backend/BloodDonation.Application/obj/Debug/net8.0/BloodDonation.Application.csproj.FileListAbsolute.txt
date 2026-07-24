@@ -1,0 +1,15 @@
+D:\BloodDonationSystem\backend\BloodDonation.Application\bin\Debug\net8.0\BloodDonation.Application.deps.json
+D:\BloodDonationSystem\backend\BloodDonation.Application\bin\Debug\net8.0\BloodDonation.Application.dll
+D:\BloodDonationSystem\backend\BloodDonation.Application\bin\Debug\net8.0\BloodDonation.Application.pdb
+D:\BloodDonationSystem\backend\BloodDonation.Application\bin\Debug\net8.0\BloodDonation.Domain.dll
+D:\BloodDonationSystem\backend\BloodDonation.Application\bin\Debug\net8.0\BloodDonation.Domain.pdb
+D:\BloodDonationSystem\backend\BloodDonation.Application\obj\Debug\net8.0\BloodDonation.Application.csproj.AssemblyReference.cache
+D:\BloodDonationSystem\backend\BloodDonation.Application\obj\Debug\net8.0\BloodDonation.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\BloodDonationSystem\backend\BloodDonation.Application\obj\Debug\net8.0\BloodDonation.Application.AssemblyInfoInputs.cache
+D:\BloodDonationSystem\backend\BloodDonation.Application\obj\Debug\net8.0\BloodDonation.Application.AssemblyInfo.cs
+D:\BloodDonationSystem\backend\BloodDonation.Application\obj\Debug\net8.0\BloodDonation.Application.csproj.CoreCompileInputs.cache
+D:\BloodDonationSystem\backend\BloodDonation.Application\obj\Debug\net8.0\BloodDon.DE7DF12E.Up2Date
+D:\BloodDonationSystem\backend\BloodDonation.Application\obj\Debug\net8.0\BloodDonation.Application.dll
+D:\BloodDonationSystem\backend\BloodDonation.Application\obj\Debug\net8.0\refint\BloodDonation.Application.dll
+D:\BloodDonationSystem\backend\BloodDonation.Application\obj\Debug\net8.0\BloodDonation.Application.pdb
+D:\BloodDonationSystem\backend\BloodDonation.Application\obj\Debug\net8.0\ref\BloodDonation.Application.dll

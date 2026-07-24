@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "BloodDonation.Application/1.0.0": {
+        "dependencies": {
+          "BloodDonation.Domain": "1.0.0"
+        },
+        "runtime": {
+          "BloodDonation.Application.dll": {}
+        }
+      },
+      "BloodDonation.Domain/1.0.0": {
+        "runtime": {
+          "BloodDonation.Domain.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BloodDonation.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BloodDonation.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

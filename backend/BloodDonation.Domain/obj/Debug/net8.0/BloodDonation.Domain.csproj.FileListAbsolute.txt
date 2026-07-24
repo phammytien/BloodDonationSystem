@@ -1,0 +1,11 @@
+D:\BloodDonationSystem\backend\BloodDonation.Domain\bin\Debug\net8.0\BloodDonation.Domain.deps.json
+D:\BloodDonationSystem\backend\BloodDonation.Domain\bin\Debug\net8.0\BloodDonation.Domain.dll
+D:\BloodDonationSystem\backend\BloodDonation.Domain\bin\Debug\net8.0\BloodDonation.Domain.pdb
+D:\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.AssemblyInfoInputs.cache
+D:\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.AssemblyInfo.cs
+D:\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.csproj.CoreCompileInputs.cache
+D:\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.dll
+D:\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\refint\BloodDonation.Domain.dll
+D:\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.pdb
+D:\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\ref\BloodDonation.Domain.dll

@@ -1,0 +1,58 @@
+{
+  "Version": 1,
+  "Hash": "XqpVqXJNhU+/tgFceFLAqAUcKcp2cA92wrIkA1Rji6U=",
+  "Source": "BloodDonation.API",
+  "BasePath": "_content/BloodDonation.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "BloodDonation.API\\wwwroot",
+      "Source": "BloodDonation.API",
+      "ContentRoot": "D:\\BloodDonationSystem\\backend\\BloodDonation.API\\wwwroot\\",
+      "BasePath": "_content/BloodDonation.API",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "D:\\BloodDonationSystem\\backend\\BloodDonation.API\\wwwroot\\uploads\\health-checks\\1b53ac45-31fd-41d3-b25c-1bf71c9480c2_file_test.pdf",
+      "SourceId": "BloodDonation.API",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\BloodDonationSystem\\backend\\BloodDonation.API\\wwwroot\\",
+      "BasePath": "_content/BloodDonation.API",
+      "RelativePath": "uploads/health-checks/1b53ac45-31fd-41d3-b25c-1bf71c9480c2_file_test.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\health-checks\\1b53ac45-31fd-41d3-b25c-1bf71c9480c2_file_test.pdf"
+    },
+    {
+      "Identity": "D:\\BloodDonationSystem\\backend\\BloodDonation.API\\wwwroot\\uploads\\health-checks\\fdac9cb9-491e-4460-97fa-2bce96601c5e_file_test.pdf",
+      "SourceId": "BloodDonation.API",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\BloodDonationSystem\\backend\\BloodDonation.API\\wwwroot\\",
+      "BasePath": "_content/BloodDonation.API",
+      "RelativePath": "uploads/health-checks/fdac9cb9-491e-4460-97fa-2bce96601c5e_file_test.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\health-checks\\fdac9cb9-491e-4460-97fa-2bce96601c5e_file_test.pdf"
+    }
+  ]
+}
