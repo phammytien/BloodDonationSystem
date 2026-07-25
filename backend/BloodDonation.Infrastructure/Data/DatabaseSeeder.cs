@@ -17,6 +17,7 @@ public static class DatabaseSeeder
         var context = scope.ServiceProvider.GetRequiredService<BloodDonationDbContext>();
 
         // 1. Migrate database to apply migrations and save to SQL Server
+        await context.Database.EnsureDeletedAsync();
         await context.Database.MigrateAsync();
 
         // 2. Seed Roles
@@ -188,6 +189,127 @@ public static class DatabaseSeeder
         }
 
         await context.SaveChangesAsync();
+        await SeedMockDataAsync(context);
+
+        await context.SaveChangesAsync();
         Console.WriteLine("[DATABASE SEEDER] Seeded Roles, BloodTypes, Users, Campaigns, and BloodInventory successfully.");
+    }
+
+    private static async Task SeedMockDataAsync(BloodDonationDbContext context)
+    {
+        var donorRole = await context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Donor");
+        var defaultBloodType = await context.BloodTypes.FirstOrDefaultAsync(bt => bt.BloodGroup == "O+");
+        if (donorRole == null || defaultBloodType == null) return;
+
+        var realNames = new[] { "Trần Văn Nam", "Nguyễn Thị Mai", "Lê Hữu Phúc", "Phạm Thu Hương", "Hoàng Ngọc Yến", "Vũ Minh Đức", "Đặng Quang Hưng", "Bùi Thị Lan", "Trịnh Xuân Bách", "Đỗ Hải Yến" };
+        var doctorNames = new[] { "Bác sĩ Lê Thị Trúc", "Bác sĩ Phạm Văn Cường", "Y tá Nguyễn Hữu Bình", "Bác sĩ Đặng Thu Thủy" };
+
+        // Ensure 10 donors
+        var donorCount = await context.Donors.CountAsync();
+        if (donorCount < 10)
+        {
+            for (int i = donorCount; i < 10; i++)
+            {
+                var newUser = new User
+                {
+                    Username = $"donor{i}",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Donor@123"),
+                    Email = $"donor{i}@lifegive.vn",
+                    Phone = $"0987654{300 + i}",
+                    RoleId = donorRole.RoleId,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow.AddDays(-new Random().Next(10, 100))
+                };
+                context.Users.Add(newUser);
+                await context.SaveChangesAsync(); // get id
+
+                var newDonor = new Donor
+                {
+                    UserId = newUser.UserId,
+                    FullName = realNames[i % realNames.Length],
+                    Gender = i % 2 == 0,
+                    DateOfBirth = new DateTime(1990 + i, 1 + (i % 11), 1 + (i % 28)),
+                    CitizenId = $"0123456789{i}",
+                    Phone = newUser.Phone,
+                    Email = newUser.Email,
+                    Address = $"Số {i} Đường ABC",
+                    Province = "Hà Nội",
+                    Ward = "Phường XYZ",
+                    Occupation = "Tự do",
+                    BloodTypeId = defaultBloodType.BloodTypeId,
+                    Weight = 60m + i,
+                    Height = 165.00m + i,
+                    TotalDonationTimes = new Random().Next(0, 5),
+                    IsAvailable = true,
+                    CreatedAt = newUser.CreatedAt
+                };
+                context.Donors.Add(newDonor);
+            }
+            await context.SaveChangesAsync();
+        }
+
+        // Ensure 10 campaigns
+        var campaignCount = await context.DonationCampaigns.CountAsync();
+        if (campaignCount < 10)
+        {
+            for (int i = campaignCount; i < 10; i++)
+            {
+                context.DonationCampaigns.Add(new DonationCampaign
+                {
+                    CampaignName = $"Chiến dịch Hiến máu Tình nguyện đợt {i + 1} - 2026",
+                    Description = $"Chiến dịch hiến máu được tổ chức thường kỳ số {i + 1}.",
+                    Location = $"Điểm hiến máu số {i + 1}",
+                    Organizer = "Hội Chữ thập đỏ",
+                    StartDate = DateTime.UtcNow.AddDays(new Random().Next(-20, 20)),
+                    EndDate = DateTime.UtcNow.AddDays(new Random().Next(21, 30)),
+                    MaxParticipants = 100 + i * 50,
+                    Status = i % 3 == 0 ? CampaignStatus.Closed : (i % 2 == 0 ? CampaignStatus.Upcoming : CampaignStatus.Opening),
+                    CreatedAt = DateTime.UtcNow.AddDays(-new Random().Next(10, 50))
+                });
+            }
+            await context.SaveChangesAsync();
+        }
+
+        // Ensure some Appointments and Donations
+        var appointmentCount = await context.Appointments.CountAsync();
+        if (appointmentCount < 10)
+        {
+            var donors = await context.Donors.ToListAsync();
+            var campaigns = await context.DonationCampaigns.ToListAsync();
+            var rand = new Random();
+
+            for (int i = appointmentCount; i < 15; i++)
+            {
+                var d = donors[i % donors.Count];
+                var c = campaigns[i % campaigns.Count];
+
+                var appt = new Appointment
+                {
+                    DonorId = d.DonorId,
+                    CampaignId = c.CampaignId,
+                    AppointmentDate = c.StartDate.AddDays(rand.Next(0, 3)),
+                    TimeSlot = "08:00 - 10:00",
+                    Status = (i % 3 == 0) ? AppointmentStatus.Pending : AppointmentStatus.Completed,
+                    CreatedAt = DateTime.UtcNow.AddDays(-rand.Next(1, 10))
+                };
+                context.Appointments.Add(appt);
+                await context.SaveChangesAsync();
+
+                if (appt.Status == AppointmentStatus.Completed)
+                {
+                    context.BloodDonations.Add(new BloodDonation.Domain.Entities.BloodDonation
+                    {
+                        AppointmentId = appt.AppointmentId,
+                        BloodTypeId = d.BloodTypeId ?? defaultBloodType.BloodTypeId,
+                        VolumeML = 350,
+                        DonationDate = appt.AppointmentDate,
+                        DonationStatus = DonationStatus.Success,
+                        StaffName = doctorNames[i % doctorNames.Length],
+                        Remark = "Sức khỏe tốt"
+                    });
+                }
+            }
+            await context.SaveChangesAsync();
+        }
     }
 }

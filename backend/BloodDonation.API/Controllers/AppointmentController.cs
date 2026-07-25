@@ -60,7 +60,8 @@ public class AppointmentController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống.", details = ex.Message });
+            var details = ex.InnerException != null ? $"{ex.Message} - {ex.InnerException.Message}" : ex.Message;
+            return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống.", details = details });
         }
     }
 
@@ -82,6 +83,79 @@ public class AppointmentController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "Lỗi khi tải lịch sử đăng ký hiến máu.", details = ex.Message });
+        }
+    }
+
+    [HttpGet("campaign/{campaignId}/registrants")]
+    public async Task<IActionResult> GetCampaignRegistrants(int campaignId)
+    {
+        try
+        {
+            var registrants = await _appointmentService.GetCampaignRegistrantsAsync(campaignId);
+            return Ok(registrants);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi tải danh sách người đăng ký.", details = ex.Message });
+        }
+    }
+
+    // --- Admin/Staff Endpoints ---
+    [Authorize]
+    [HttpGet("admin/list")]
+    public async Task<IActionResult> GetAdminAppointments([FromQuery] byte? status = null, [FromQuery] int? campaignId = null)
+    {
+        try
+        {
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (userRole != "Admin" && userRole != "Staff")
+            {
+                return Forbid();
+            }
+
+            BloodDonation.Domain.Enums.AppointmentStatus? parsedStatus = null;
+            if (status.HasValue)
+            {
+                parsedStatus = (BloodDonation.Domain.Enums.AppointmentStatus)status.Value;
+            }
+
+            var appointments = await _appointmentService.GetAllAppointmentsAsync(parsedStatus, campaignId);
+            return Ok(appointments);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi tải danh sách đơn đăng ký.", details = ex.Message });
+        }
+    }
+
+    [Authorize]
+    [HttpPut("admin/status/{appointmentId}")]
+    public async Task<IActionResult> UpdateAppointmentStatus(int appointmentId, [FromBody] UpdateAppointmentStatusDto request)
+    {
+        try
+        {
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (userRole != "Admin" && userRole != "Staff")
+            {
+                return Forbid();
+            }
+
+            var result = await _appointmentService.UpdateAppointmentStatusAsync(
+                appointmentId, 
+                (BloodDonation.Domain.Enums.AppointmentStatus)request.Status, 
+                request.Note
+            );
+
+            if (!result)
+            {
+                return NotFound(new { message = "Không tìm thấy đơn đăng ký." });
+            }
+
+            return Ok(new { message = "Cập nhật trạng thái thành công." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi cập nhật trạng thái.", details = ex.Message });
         }
     }
 }

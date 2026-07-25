@@ -145,4 +145,48 @@ public class DonorService : IDonorService
             })
             .ToListAsync();
     }
+
+    public async Task<List<DonorProfileDto>> GetAllDonorsAsync(string search = null)
+    {
+        var query = _context.Donors
+            .Include(d => d.BloodType)
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            var searchLower = search.ToLower();
+            query = query.Where(d => 
+                (d.FullName != null && d.FullName.ToLower().Contains(searchLower)) ||
+                (d.Email != null && d.Email.ToLower().Contains(searchLower)) ||
+                (d.Phone != null && d.Phone.Contains(searchLower)) ||
+                (d.CitizenId != null && d.CitizenId.Contains(searchLower)));
+        }
+
+        var donors = await query
+            .OrderByDescending(d => d.CreatedAt)
+            .ToListAsync();
+
+        return donors.Select(d => new DonorProfileDto
+        {
+            DonorId = d.DonorId,
+            FullName = d.FullName,
+            Gender = d.Gender,
+            DateOfBirth = d.DateOfBirth,
+            CitizenId = d.CitizenId,
+            Phone = d.Phone,
+            Email = d.Email,
+            Address = d.Address,
+            Province = d.Province,
+            Ward = d.Ward,
+            Occupation = d.Occupation,
+            BloodTypeId = d.BloodTypeId,
+            BloodGroup = d.BloodType?.BloodGroup ?? string.Empty,
+            Weight = d.Weight,
+            Height = d.Height,
+            Avatar = d.Avatar,
+            LastDonationDate = d.LastDonationDate,
+            TotalDonationTimes = d.TotalDonationTimes,
+            UpdatedAt = d.UpdatedAt
+        }).ToList();
+    }
 }

@@ -9,4 +9,7 @@ public interface IDonorService
     Task<DonorProfileDto?> GetProfileByUserIdAsync(int userId);
     Task<bool> UpdateProfileByUserIdAsync(int userId, DonorProfileDto dto);
     Task<List<BloodTypeDto>> GetBloodTypesAsync();
+    
+    // Admin methods
+    Task<List<DonorProfileDto>> GetAllDonorsAsync(string search = null);
 }

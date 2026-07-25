@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { toast, ToastContainer } from 'react-toastify';
 import axios from 'axios';
-import { getAvatarChar, getDisplayName } from '../utils/avatarHelper';
-import { ChangePasswordModal } from '../components/ChangePasswordModal';
-import { NotificationBell } from '../components/NotificationBell';
+import Swal from 'sweetalert2';
+import { getAvatarChar, getDisplayName } from '../../utils/avatarHelper';
 
 interface Campaign {
   campaignId: number;
   campaignName: string;
-  description: string | null;
-  location: string;
-  organizer: string;
   startDate: string;
   endDate: string;
+  location: string;
+  organizer: string;
+  description: string;
+  maxParticipants: number;
   attachmentUrl?: string | null;
   attachmentName?: string | null;
-  maxParticipants: number | null;
   registrantCount: number;
 }
 
@@ -64,14 +63,14 @@ const TIME_SLOTS = [
 ];
 
 const getStatusBadge = (statusStr: string | null) => {
-  if (!statusStr) return <span className="badge bg-light text-dark px-3 py-2 rounded-pill fw-semibold">Đang chờ duyệt</span>;
+  if (!statusStr) return <span className="badge bg-light text-dark px-2 py-1 rounded-pill">Chờ duyệt</span>;
   switch (statusStr.toLowerCase()) {
-    case 'pending': return <span className="badge bg-warning text-dark px-3 py-2 rounded-pill fw-semibold">Đang chờ duyệt</span>;
-    case 'confirmed': return <span className="badge bg-info    text-white px-3 py-2 rounded-pill fw-semibold">Đã xác nhận</span>;
-    case 'completed': return <span className="badge bg-success  text-white px-3 py-2 rounded-pill fw-semibold">Đã hoàn thành</span>;
-    case 'cancelled': return <span className="badge bg-secondary text-white px-3 py-2 rounded-pill fw-semibold">Đã hủy</span>;
-    case 'absent': return <span className="badge bg-danger   text-white px-3 py-2 rounded-pill fw-semibold">Vắng mặt</span>;
-    default: return <span className="badge bg-light    text-dark  px-3 py-2 rounded-pill fw-semibold">{statusStr}</span>;
+    case 'pending': return <span className="badge bg-warning text-dark px-2 py-1 rounded-pill">Chờ duyệt</span>;
+    case 'confirmed': return <span className="badge bg-info text-white px-2 py-1 rounded-pill">Đã xác nhận</span>;
+    case 'completed': return <span className="badge bg-success text-white px-2 py-1 rounded-pill">Đã hoàn thành</span>;
+    case 'cancelled': return <span className="badge bg-secondary text-white px-2 py-1 rounded-pill">Đã hủy</span>;
+    case 'absent': return <span className="badge bg-danger text-white px-2 py-1 rounded-pill">Vắng mặt</span>;
+    default: return <span className="badge bg-light text-dark px-2 py-1 rounded-pill">{statusStr}</span>;
   }
 };
 
@@ -83,14 +82,12 @@ const formatDate = (dateStr: string | null) => {
 };
 
 export const AppointmentPage: React.FC = () => {
-  const { user, logout, profilePromptDismissed, dismissProfilePrompt } = useAuth();
+  const { user, profilePromptDismissed, dismissProfilePrompt } = useAuth();
   const navigate = useNavigate();
 
   // ── Scroll to Top state ──────────────────────────────────────
   const [showScrollBtn, setShowScrollBtn] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   const handleDismissModal = () => {
     dismissProfilePrompt();
@@ -142,11 +139,6 @@ export const AppointmentPage: React.FC = () => {
   const [donorProfile, setDonorProfile] = useState<DonorProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  const handleLogout = () => {
-    navigate('/');
-    logout();
-    toast.success('Đăng xuất thành công!');
-  };
 
   // Reset appointment date if it falls outside the new campaign's date range
   useEffect(() => {
@@ -176,14 +168,22 @@ export const AppointmentPage: React.FC = () => {
   };
 
   // Fetch campaigns (public)
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialCampaignId = searchParams.get('campaignId');
+
   useEffect(() => {
     axios.get('http://localhost:5028/api/appointment/campaigns')
       .then(res => {
         setCampaigns(res.data);
-        if (res.data.length > 0) setSelectedCampaignId(String(res.data[0].campaignId));
+        if (initialCampaignId && res.data.some((c: any) => String(c.campaignId) === initialCampaignId)) {
+          setSelectedCampaignId(initialCampaignId);
+        } else if (res.data.length > 0) {
+          setSelectedCampaignId(String(res.data[0].campaignId));
+        }
       })
       .catch(err => console.error('Lỗi tải chiến dịch', err));
-  }, []);
+  }, [initialCampaignId]);
 
   // Fetch donor profile for pre-filling/displaying (requires auth)
   const fetchDonorProfile = () => {
@@ -267,131 +267,36 @@ export const AppointmentPage: React.FC = () => {
         { campaignId: parseInt(selectedCampaignId), appointmentDate, timeSlot, note, fileId: uploadedFileId },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
-      toast.success(res.data.message || 'Đăng ký lịch hiến máu thành công!');
+      
+      await Swal.fire({
+        icon: 'success',
+        title: 'Đăng ký thành công!',
+        text: res.data.message || 'Lịch hẹn của bạn đã được ghi nhận.',
+        confirmButtonColor: '#1B4FD8',
+        confirmButtonText: 'Xem lịch sử'
+      });
+      
       setNote(''); setAppointmentDate('');
       setUploadedFile(null);
       setUploadedFileId(null);
-      fetchHistory();
+      navigate('/history');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+      const errorMsg = err.response?.data?.details || err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.';
+      Swal.fire({
+        icon: 'error',
+        title: 'Không thể đăng ký',
+        text: errorMsg,
+        confirmButtonColor: '#1B4FD8',
+        confirmButtonText: 'Đã hiểu'
+      });
     } finally {
       setFormLoading(false);
     }
   };
 
-  const totalCompleted = history.filter(a => a.status && a.status.toLowerCase() === 'completed').length;
-  const totalPending = history.filter(a => a.status && a.status.toLowerCase() === 'pending').length;
-
   return (
     <div className="fade-in" style={{ minHeight: '100vh', backgroundColor: '#F8FAFF' }}>
-      <ToastContainer position="top-right" autoClose={3000} />
-
-      {/* ── NAVBAR ─────────────────────────────────────────── */}
-      <nav className="navbar navbar-expand-lg sticky-top bg-white" style={{ borderBottom: '1px solid #E5E7EB', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-        <div className="container">
-          <Link to="/" className="d-flex align-items-center text-decoration-none gap-2">
-            <div className="d-flex align-items-center justify-content-center rounded-circle" style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#1B4FD8,#2563EB)' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#fff" />
-                <path d="M12 7v10M9 12h6" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <span style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.2rem', color: '#1B4FD8' }}>LifeGive</span>
-          </Link>
-
-          <div className="d-flex align-items-center gap-3 ms-auto">
-            <Link to="/" className="text-muted text-decoration-none small fw-semibold" style={{ fontFamily: 'Nunito' }}>← Trang chủ</Link>
-            {user && (
-              <Link to="/profile" className="text-muted text-decoration-none small fw-semibold" style={{ fontFamily: 'Nunito' }}>Thông tin tài khoản</Link>
-            )}
-            {user && (
-              <Link to="/appointment" className="text-decoration-none small fw-semibold" style={{ fontFamily: 'Nunito', color: '#1B4FD8' }}>Lịch hẹn của tôi</Link>
-            )}
-            {user && (
-              <Link to="/change-password" className="text-muted text-decoration-none small fw-semibold" style={{ fontFamily: 'Nunito' }}>Đổi mật khẩu</Link>
-            )}
-            {user && <NotificationBell />}
-            {user && (
-              <div className="position-relative">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="d-flex align-items-center justify-content-center rounded-circle border-0"
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    background: 'linear-gradient(135deg, #1B4FD8 0%, #8B5CF6 100%)',
-                    color: '#fff',
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: showUserMenu ? '0 4px 12px rgba(27, 79, 216, 0.4)' : '0 2px 8px rgba(27, 79, 216, 0.15)'
-                  }}
-                  tabIndex={0}
-                >
-                  {getAvatarChar(donorProfile?.fullName || user.fullName, user.username)}
-                </button>
-                {showUserMenu && (
-                  <div
-                    className="position-absolute end-0 mt-2 bg-white rounded-3 shadow-lg"
-                    style={{
-                      minWidth: '210px',
-                      zIndex: 1000,
-                      border: '1px solid #E5E7EB',
-                      animation: 'fadeInDown 0.15s ease'
-                    }}
-                  >
-                    <div className="p-3 border-bottom" style={{ fontSize: '0.8rem', color: '#4B5563' }}>
-                      <div className="d-flex align-items-center gap-2 mb-2">
-                        <div
-                          className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
-                          style={{
-                            width: '30px',
-                            height: '30px',
-                            background: 'linear-gradient(135deg, #1B4FD8 0%, #8B5CF6 100%)',
-                            color: '#fff',
-                            fontWeight: 700,
-                            fontSize: '0.8rem'
-                          }}
-                        >
-                          {getAvatarChar(donorProfile?.fullName || user.fullName, user.username)}
-                        </div>
-                        <div>
-                          <div className="fw-bold" style={{ color: '#111827', fontSize: '0.82rem' }}>{getDisplayName(donorProfile?.fullName || user.fullName, user.username)}</div>
-                          <div style={{ color: '#9CA3AF', fontSize: '0.7rem' }}>{user.email}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-2">
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          logout();
-                        }}
-                        className="w-100 d-flex align-items-center gap-2 px-3 py-2 border-0 bg-transparent rounded-2 text-start"
-                        style={{
-                          fontSize: '0.82rem',
-                          color: '#D42B2B',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FEF0F0')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
-                        Đăng xuất
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            {!user && (
-              <Link to="/login?redirect=/appointment" className="btn-primary-custom" style={{ padding: '0.55rem 1.25rem', fontSize: '0.88rem' }}>Đăng nhập</Link>
-            )}
-          </div>
-        </div>
-      </nav>
+      <ToastContainer position="top-center" autoClose={3000} />
 
       {/* ── HERO HEADER ───────────────────────────────────── */}
       <div style={{ background: 'linear-gradient(135deg, #1B4FD8 0%, #2563EB 60%, #1D4ED8 100%)', padding: '3rem 0 2rem', position: 'relative', overflow: 'hidden' }}>
@@ -403,21 +308,6 @@ export const AppointmentPage: React.FC = () => {
           <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: '0.9rem', maxWidth: 620, lineHeight: 1.6, margin: 0 }}>
             Chọn chiến dịch phù hợp, đặt lịch hẹn và theo dõi trạng thái xét duyệt của bạn ngay tại đây.
           </p>
-
-          {/* Mini stats */}
-          {user && (
-            <div className="d-flex gap-3 mt-3">
-              {[
-                { label: 'Lần hiến thành công', value: totalCompleted, color: '#60A5FA' },
-                { label: 'Đang chờ duyệt', value: totalPending, color: '#FCD34D' },
-              ].map((s, i) => (
-                <div key={i} className="d-flex align-items-center gap-2" style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', borderRadius: 8, padding: '0.4rem 1rem' }}>
-                  <div style={{ fontFamily: 'Montserrat', fontWeight: 800, fontSize: '1.3rem', color: s.color, lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.72rem' }}>{s.label}</div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
@@ -902,7 +792,14 @@ export const AppointmentPage: React.FC = () => {
           {/* History table (Right) */}
           <div className="col-12 col-xl-8">
             <div className="bg-white rounded-4 p-4 h-100 d-flex flex-column" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.06)', border: '1px solid #E5E7EB', minHeight: 330 }}>
-              <h5 className="mb-3" style={{ fontFamily: 'Montserrat', fontWeight: 700, color: '#111827', fontSize: '1rem' }}>Lịch sử đăng ký hiến máu</h5>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 style={{ fontFamily: 'Montserrat', fontWeight: 700, color: '#111827', fontSize: '1rem', margin: 0 }}>Lịch sử đăng ký (Gần đây)</h5>
+                {history.length > 0 && (
+                  <Link to="/history" className="text-decoration-none fw-semibold" style={{ fontSize: '0.82rem', color: '#1B4FD8' }}>
+                    Xem tất cả &rarr;
+                  </Link>
+                )}
+              </div>
 
               {!user ? (
                 <div className="text-center py-5 my-auto text-muted small">
@@ -917,7 +814,13 @@ export const AppointmentPage: React.FC = () => {
                 </div>
               ) : history.length === 0 ? (
                 <div className="text-center py-5 my-auto text-muted small">
-                  <p className="mb-0">Bạn chưa có lịch hẹn nào. Hãy điền form bên trên để đăng ký!</p>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="50" height="50" className="mb-3 opacity-50 text-primary">
+                    <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  <p className="mb-3">Bạn chưa có lịch hẹn nào.</p>
+                  <Link to="/history" className="btn btn-outline-primary rounded-pill px-4 fw-semibold" style={{ fontSize: '0.85rem' }}>
+                    Đi đến trang Lịch sử
+                  </Link>
                 </div>
               ) : (
                 <div className="table-responsive my-auto">
@@ -925,48 +828,41 @@ export const AppointmentPage: React.FC = () => {
                     <thead className="table-light">
                       <tr>
                         <th>Chiến dịch / Địa điểm</th>
-                        <th>Ngày & Giờ</th>
+                        <th>Ngày hẹn</th>
                         <th>Trạng thái</th>
-                        <th>Ghi chú</th>
                         <th>Phiếu khám</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {history.map(a => (
+                      {history.slice(0, 3).map(a => (
                         <tr key={a.appointmentId}>
                           <td>
                             <div className="fw-bold text-dark" style={{ fontSize: '0.82rem' }}>{a.campaignName}</div>
-                            <div className="text-muted" style={{ fontSize: '0.75rem' }}>{a.location}</div>
+                            <div className="text-muted" style={{ fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 150 }}>{a.location}</div>
                           </td>
                           <td>
-                            <div className="fw-semibold">{formatDate(a.appointmentDate)}</div>
-                            <div className="text-muted" style={{ fontSize: '0.75rem' }}>{a.timeSlot}</div>
+                            <div className="fw-semibold text-primary">{formatDate(a.appointmentDate)}</div>
                           </td>
                           <td>{getStatusBadge(a.status)}</td>
-                          <td className="text-muted" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.77rem' }} title={a.note || ''}>
-                            {a.note || '—'}
-                          </td>
                           <td>
                             {a.fileUrl ? (
-                              <a
-                                href={`http://localhost:5028${a.fileUrl}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="d-inline-flex align-items-center gap-1 text-decoration-none fw-bold small"
-                                style={{ color: '#1B4FD8' }}
-                                title={a.fileName || 'Tải xuống'}
-                              >
+                              <a href={`http://localhost:5028${a.fileUrl}`} target="_blank" rel="noopener noreferrer" className="d-inline-flex align-items-center gap-1 text-decoration-none fw-bold small" style={{ color: '#1B4FD8' }} title="Tải xuống">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                <span className="text-truncate" style={{ maxWidth: '100px' }}>{a.fileName || 'Xem phiếu'}</span>
+                                Xem
                               </a>
-                            ) : (
-                              <span className="text-muted">—</span>
-                            )}
+                            ) : <span className="text-muted">—</span>}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  {history.length > 3 && (
+                    <div className="text-center mt-3">
+                      <Link to="/history" className="text-decoration-none fw-bold" style={{ fontSize: '0.85rem', color: '#6B7280' }}>
+                        Xem tất cả lịch sử ({history.length})
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

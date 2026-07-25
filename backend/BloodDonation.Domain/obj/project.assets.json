@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\BloodDonationSystem\\backend\\BloodDonation.Domain\\BloodDonation.Domain.csproj",
+      "projectUniqueName": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.Domain\\BloodDonation.Domain.csproj",
       "projectName": "BloodDonation.Domain",
-      "projectPath": "D:\\BloodDonationSystem\\backend\\BloodDonation.Domain\\BloodDonation.Domain.csproj",
+      "projectPath": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.Domain\\BloodDonation.Domain.csproj",
       "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
-      "outputPath": "D:\\BloodDonationSystem\\backend\\BloodDonation.Domain\\obj\\",
+      "outputPath": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.Domain\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\PC\\AppData\\Roaming\\NuGet\\NuGet.Config"

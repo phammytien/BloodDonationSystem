@@ -101,4 +101,19 @@ public class DonorController : ControllerBase
             return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống.", details = ex.Message });
         }
     }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("admin/list")]
+    public async Task<IActionResult> GetAdminDonors([FromQuery] string? search = null)
+    {
+        try
+        {
+            var donors = await _donorService.GetAllDonorsAsync(search);
+            return Ok(donors);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi lấy danh sách người hiến máu.", details = ex.Message });
+        }
+    }
 }

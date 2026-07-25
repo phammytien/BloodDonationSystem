@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { toast, ToastContainer } from 'react-toastify';
 import axios from 'axios';
-import { getAvatarChar, getDisplayName } from '../utils/avatarHelper';
-import { ChangePasswordModal } from '../components/ChangePasswordModal';
-import { NotificationBell } from '../components/NotificationBell';
 
 interface BloodCompatibility {
   giveTo: string[];
@@ -62,16 +59,14 @@ const initialInventory: Record<string, number> = {
 };
 
 export const HomePage: React.FC = () => {
-  const { user, logout, profilePromptDismissed, dismissProfilePrompt } = useAuth();
-  const navigate = useNavigate();
+  const { user, profilePromptDismissed, dismissProfilePrompt } = useAuth();
   const [selectedBlood, setSelectedBlood] = useState<string>('O-');
   const [bloodInventory, setBloodInventory] = useState<Record<string, number>>(initialInventory);
   const [simulateType, setSimulateType] = useState<string>('O-');
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [showScrollBtn, setShowScrollBtn] = useState<boolean>(false);
-  const [showUserMenu, setShowUserMenu] = useState<boolean>(false);
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState<boolean>(false);
+  const [latestCampaign, setLatestCampaign] = useState<any>(null);
 
   // Toast on logout success
   useEffect(() => {
@@ -79,6 +74,19 @@ export const HomePage: React.FC = () => {
       toast.success('Đăng xuất thành công!');
       localStorage.removeItem('logout_success_toast');
     }
+  }, []);
+
+  // Fetch campaigns for emergency banner
+  useEffect(() => {
+    axios.get('http://localhost:5028/api/campaign')
+      .then(res => {
+        if (res.data && res.data.length > 0) {
+          // Find first opening or upcoming campaign
+          const active = res.data.find((c: any) => c.status === 0 || c.status === 1);
+          if (active) setLatestCampaign(active);
+        }
+      })
+      .catch(err => console.error('Lỗi tải chiến dịch', err));
   }, []);
 
   const handleDismissModal = () => {
@@ -134,10 +142,7 @@ export const HomePage: React.FC = () => {
     }, 1000);
   };
 
-  const handleLogout = () => {
-    setShowUserMenu(false);
-    logout();
-  };
+
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -156,201 +161,7 @@ export const HomePage: React.FC = () => {
     <div className="fade-in" style={{ minHeight: '100vh', backgroundColor: '#fff' }}>
       <ToastContainer position="top-right" autoClose={3500} />
 
-      {/* ── NAVBAR ───────────────────────────────────────────── */}
-      <nav
-        className="navbar navbar-expand-lg bg-white sticky-top"
-        style={{
-          borderBottom: '1px solid #F3F4F6',
-          boxShadow: '0 2px 15px rgba(0,0,0,0.03)',
-          padding: '0.85rem 0'
-        }}
-      >
-        <div className="container">
-          <Link to="/" className="d-flex align-items-center text-decoration-none gap-2">
-            <div
-              className="d-flex align-items-center justify-content-center rounded-circle"
-              style={{
-                width: '40px',
-                height: '40px',
-                background: 'linear-gradient(135deg, #1B4FD8 0%, #2563EB 100%)'
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                  fill="#fff"
-                />
-                <path
-                  d="M12 7v10M9 12h6"
-                  stroke="#fff"
-                  strokeWidth="25%"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-            <span style={{ fontFamily: 'Montserrat', fontWeight: 800, fontSize: '1.25rem', color: '#1B4FD8' }}>
-              LifeGive
-            </span>
-          </Link>
 
-          <button className="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-
-          <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav mx-auto gap-3 my-2 my-lg-0">
-              {['intro', 'process', 'inventory-status', 'compatibility', 'testimonials', 'news'].map((id, i) => {
-                const labels = ['Giới thiệu', 'Quy trình', 'Kho dự trữ', 'Tương thích', 'Cảm nhận', 'Tin tức'];
-                return (
-                  <li key={id} className="nav-item">
-                    <button onClick={() => scrollTo(id)} className="nav-link-custom btn py-2">{labels[i]}</button>
-                  </li>
-                );
-              })}
-            </ul>
-
-            <div className="d-flex align-items-center gap-3">
-              {user ? (
-                <>
-                  {user.roleName.toLowerCase() === 'donor' && (
-                    <Link to="/appointment" className="btn-primary-custom">
-                      Đăng ký hiến máu
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor" /></svg>
-                    </Link>
-                  )}
-                  {user.roleName.toLowerCase() === 'staff' && (
-                    <Link to="/dashboard" className="btn-primary-custom">
-                      Bảng điều khiển
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
-                    </Link>
-                  )}
-                  <NotificationBell />
-                  {/* User Avatar Dropdown */}
-                  <div className="position-relative">
-                    <button
-                      onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="d-flex align-items-center justify-content-center rounded-circle border-0"
-                      style={{
-                        width: '38px',
-                        height: '38px',
-                        background: 'linear-gradient(135deg, #1B4FD8 0%, #8B5CF6 100%)',
-                        color: '#fff',
-                        fontWeight: 700,
-                        fontSize: '0.9rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        boxShadow: showUserMenu ? '0 4px 12px rgba(27, 79, 216, 0.4)' : '0 2px 8px rgba(27, 79, 216, 0.15)'
-                      }}
-                      onBlur={() => setTimeout(() => setShowUserMenu(false), 150)}
-                      tabIndex={0}
-                    >
-                      {getAvatarChar(user.fullName, user.username)}
-                    </button>
-                    {showUserMenu && (
-                      <div
-                        className="position-absolute end-0 mt-2 bg-white rounded-3 shadow-lg"
-                        style={{
-                          minWidth: '220px',
-                          zIndex: 1000,
-                          border: '1px solid #E5E7EB',
-                          animation: 'fadeInDown 0.15s ease'
-                        }}
-                      >
-                        <div className="p-3 border-bottom" style={{ fontSize: '0.82rem', color: '#4B5563' }}>
-                          <div className="d-flex align-items-center gap-2 mb-2">
-                            <div
-                              className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
-                              style={{
-                                width: '32px',
-                                height: '32px',
-                                background: 'linear-gradient(135deg, #1B4FD8 0%, #8B5CF6 100%)',
-                                color: '#fff',
-                                fontWeight: 700,
-                                fontSize: '0.85rem'
-                              }}
-                            >
-                              {getAvatarChar(user.fullName, user.username)}
-                            </div>
-                            <div>
-                              <div className="fw-bold" style={{ color: '#111827' }}>{getDisplayName(user.fullName, user.username)}</div>
-                              <div style={{ color: '#9CA3AF', fontSize: '0.75rem' }}>{user.email}</div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-2">
-                          <Link
-                            to="/profile"
-                            className="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none rounded-2"
-                            style={{
-                              fontSize: '0.85rem',
-                              color: '#1B4FD8',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s',
-                              borderRadius: '10px'
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFF6FF')}
-                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                            Thông tin tài khoản
-                          </Link>
-                          <Link
-                            to="/change-password"
-                            className="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none rounded-2"
-                            style={{
-                              fontSize: '0.85rem',
-                              color: '#4B5563',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s',
-                              borderRadius: '10px'
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F3F4F6')}
-                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                            Đổi mật khẩu
-                          </Link>
-                          <button
-                            onClick={handleLogout}
-                            className="w-100 d-flex align-items-center gap-2 px-3 py-2 border-0 bg-transparent rounded-2 text-start"
-                            style={{
-                              fontSize: '0.85rem',
-                              color: '#D42B2B',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s'
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FEF0F0')}
-                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
-                            Đăng xuất
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login?redirect=/appointment"
-                    className="btn-primary-custom d-flex align-items-center gap-2"
-                    style={{ fontFamily: 'Montserrat', fontSize: '0.85rem', padding: '0.55rem 1.2rem' }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                    </svg>
-                    Đăng ký hiến máu
-                  </Link>
-                  <Link to="/login" style={{ fontFamily: 'Montserrat', fontWeight: 700, fontSize: '0.88rem', color: '#1B4FD8', textDecoration: 'none' }}>Đăng nhập</Link>
-                  <Link to="/register" className="btn btn-outline-danger fw-bold px-3 py-2 rounded-pill" style={{ fontFamily: 'Montserrat', fontSize: '0.82rem' }}>Đăng ký</Link>
-                </>
-              )
-              }
-            </div>
-          </div>
-        </div>
-      </nav>
 
       {/* ── HERO BANNER ──────────────────────────────────────── */}
       <header className="hero-section" style={{ position: 'relative' }}>
@@ -938,10 +749,12 @@ export const HomePage: React.FC = () => {
                   YÊU CẦU KHẨN CẤP
                 </div>
                 <h3 style={{ fontFamily: 'Montserrat', fontWeight: 800, fontSize: '1.6rem', color: '#FFFFFF' }}>
-                  Chiến dịch hiến máu hè khẩn cấp 2026
+                  {latestCampaign ? latestCampaign.campaignName : 'Chiến dịch hiến máu hè khẩn cấp 2026'}
                 </h3>
                 <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.97rem', lineHeight: 1.75, maxWidth: 580, margin: '0.5rem 0 0' }}>
-                  Kho dự trữ nhóm máu hiếm <strong style={{ color: '#FCA5A5' }}>O- và AB-</strong> đang ở mức báo động đỏ tại các bệnh viện đối tác. Nếu bạn thuộc nhóm máu này và đủ điều kiện sức khoẻ, hãy đăng ký hỗ trợ ngay hôm nay.
+                  {latestCampaign && latestCampaign.description ? latestCampaign.description : (
+                    <>Kho dự trữ nhóm máu hiếm <strong style={{ color: '#FCA5A5' }}>O- và AB-</strong> đang ở mức báo động đỏ tại các bệnh viện đối tác. Nếu bạn thuộc nhóm máu này và đủ điều kiện sức khoẻ, hãy đăng ký hỗ trợ ngay hôm nay.</>
+                  )}
                 </p>
               </div>
               <div className="col-12 col-md-4 text-center text-md-end">

@@ -15,10 +15,13 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<BloodDonationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Register Auth Services
+// Register Application Services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICampaignService, CampaignService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IDonorService, DonorService>();
+builder.Services.AddScoped<IBloodInventoryService, BloodInventoryService>();
+builder.Services.AddScoped<IBloodDonationService, BloodDonationService>();
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

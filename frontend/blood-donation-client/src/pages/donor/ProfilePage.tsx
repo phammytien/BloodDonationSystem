@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { toast, ToastContainer } from 'react-toastify';
 import axios from 'axios';
-import { getAvatarChar, getDisplayName } from '../utils/avatarHelper';
-import { ChangePasswordModal } from '../components/ChangePasswordModal';
-import { NotificationBell } from '../components/NotificationBell';
+import { getAvatarChar } from '../../utils/avatarHelper';
 
 interface BloodType {
   bloodTypeId: number;
@@ -35,15 +33,13 @@ interface DonorProfile {
 }
 
 export const ProfilePage: React.FC = () => {
-  const { user, logout, login } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState<DonorProfile | null>(null);
   const [bloodTypes, setBloodTypes] = useState<BloodType[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Form states
@@ -207,7 +203,7 @@ export const ProfilePage: React.FC = () => {
         totalDonationTimes: profile?.totalDonationTimes || 0
       };
 
-      const response = await axios.put('http://localhost:5028/api/donor/profile', payload, {
+      await axios.put('http://localhost:5028/api/donor/profile', payload, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
 
@@ -274,101 +270,7 @@ export const ProfilePage: React.FC = () => {
     <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFF' }}>
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* ── NAVBAR ─────────────────────────────────────────── */}
-      <nav className="navbar navbar-expand-lg sticky-top bg-white" style={{ borderBottom: '1px solid #E5E7EB', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-        <div className="container">
-          <Link to="/" className="d-flex align-items-center text-decoration-none gap-2">
-            <div className="d-flex align-items-center justify-content-center rounded-circle" style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#1B4FD8,#2563EB)' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#fff" />
-                <path d="M12 7v10M9 12h6" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <span style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.2rem', color: '#1B4FD8' }}>LifeGive</span>
-          </Link>
 
-          <div className="d-flex align-items-center gap-3 ms-auto">
-            <Link to="/" className="text-muted text-decoration-none small fw-semibold" style={{ fontFamily: 'Nunito' }}>← Trang chủ</Link>
-            <Link to="/profile" className="text-decoration-none small fw-semibold" style={{ fontFamily: 'Nunito', color: '#1B4FD8' }}>Thông tin tài khoản</Link>
-            <Link to="/appointment" className="text-muted text-decoration-none small fw-semibold" style={{ fontFamily: 'Nunito' }}>Lịch hẹn của tôi</Link>
-            <Link to="/change-password" className="text-muted text-decoration-none small fw-semibold" style={{ fontFamily: 'Nunito' }}>Đổi mật khẩu</Link>
-            {user && <NotificationBell />}
-            <div className="position-relative">
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="d-flex align-items-center justify-content-center rounded-circle border-0"
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  background: 'linear-gradient(135deg, #1B4FD8 0%, #8B5CF6 100%)',
-                  color: '#fff',
-                  fontWeight: 700,
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: showUserMenu ? '0 4px 12px rgba(27, 79, 216, 0.4)' : '0 2px 8px rgba(27, 79, 216, 0.15)'
-                }}
-                tabIndex={0}
-              >
-                {getAvatarChar(fullName || user?.fullName, user?.username)}
-              </button>
-              {showUserMenu && (
-                <div
-                  className="position-absolute end-0 mt-2 bg-white rounded-3 shadow-lg"
-                  style={{
-                    minWidth: '210px',
-                    zIndex: 1000,
-                    border: '1px solid #E5E7EB',
-                    animation: 'fadeInDown 0.15s ease'
-                  }}
-                >
-                  <div className="p-3 border-bottom" style={{ fontSize: '0.8rem', color: '#4B5563' }}>
-                    <div className="d-flex align-items-center gap-2 mb-2">
-                      <div
-                        className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
-                        style={{
-                          width: '30px',
-                          height: '30px',
-                          background: 'linear-gradient(135deg, #1B4FD8 0%, #8B5CF6 100%)',
-                          color: '#fff',
-                          fontWeight: 700,
-                          fontSize: '0.8rem'
-                        }}
-                      >
-                        {getAvatarChar(fullName || user?.fullName, user?.username)}
-                      </div>
-                      <div>
-                        <div className="fw-bold" style={{ color: '#111827', fontSize: '0.82rem' }}>{getDisplayName(fullName || user?.fullName, user?.username)}</div>
-                        <div style={{ color: '#9CA3AF', fontSize: '0.7rem' }}>{user?.email}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-2">
-                    <button
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        logout();
-                      }}
-                      className="w-100 d-flex align-items-center gap-2 px-3 py-2 border-0 bg-transparent rounded-2 text-start"
-                      style={{
-                        fontSize: '0.82rem',
-                        color: '#D42B2B',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FEF0F0')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
-                      Đăng xuất
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
 
       <div className="container py-5">
         <div className="row g-4 justify-content-center">

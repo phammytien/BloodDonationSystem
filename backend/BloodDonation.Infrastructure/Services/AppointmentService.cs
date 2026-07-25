@@ -50,9 +50,8 @@ public class AppointmentService : IAppointmentService
         var donor = await _context.Donors.FirstOrDefaultAsync(d => d.UserId == userId);
         if (donor == null)
         {
-            // Fallback: If donor profile is somehow missing, try to get user details to create a basic donor profile
             var user = await _context.Users.FindAsync(userId);
-            if (user == null) return false;
+            if (user == null) throw new Exception("User not found.");
 
             var defaultBloodType = await _context.BloodTypes.FirstOrDefaultAsync();
             if (defaultBloodType == null)
@@ -85,6 +84,53 @@ public class AppointmentService : IAppointmentService
             await _context.SaveChangesAsync();
         }
 
+        var campaign = await _context.DonationCampaigns.FindAsync(dto.CampaignId);
+        if (campaign == null)
+        {
+            throw new Exception("Chiến dịch không tồn tại.");
+        }
+
+        if (campaign.Status != CampaignStatus.Opening && campaign.Status != CampaignStatus.Upcoming)
+        {
+            throw new Exception("Chiến dịch không trong thời gian mở đăng ký.");
+        }
+
+        var now = DateTime.UtcNow;
+        if (campaign.RegistrationStartDate.HasValue && now < campaign.RegistrationStartDate.Value)
+        {
+            throw new Exception("Chưa tới thời gian mở đăng ký.");
+        }
+        if (campaign.RegistrationEndDate.HasValue && now > campaign.RegistrationEndDate.Value)
+        {
+            throw new Exception("Đã hết thời gian đăng ký.");
+        }
+
+        var registeredCount = await _context.Appointments.CountAsync(a => a.CampaignId == dto.CampaignId && (a.Status == AppointmentStatus.Pending || a.Status == AppointmentStatus.Confirmed || a.Status == AppointmentStatus.Completed));
+        if (campaign.MaxParticipants.HasValue && registeredCount >= campaign.MaxParticipants.Value)
+        {
+            throw new Exception("Chiến dịch đã đủ số lượng người đăng ký.");
+        }
+
+        var alreadyRegistered = await _context.Appointments.AnyAsync(a => a.CampaignId == dto.CampaignId && a.DonorId == donor.DonorId && a.Status != AppointmentStatus.Cancelled);
+        if (alreadyRegistered)
+        {
+            throw new Exception("Bạn đã đăng ký tham gia chiến dịch này rồi.");
+        }
+
+        var lastCompletedAppointment = await _context.Appointments
+            .Where(a => a.DonorId == donor.DonorId && a.Status == AppointmentStatus.Completed)
+            .OrderByDescending(a => a.AppointmentDate)
+            .FirstOrDefaultAsync();
+
+        if (lastCompletedAppointment != null)
+        {
+            var daysSinceLastDonation = (now - lastCompletedAppointment.AppointmentDate).TotalDays;
+            if (daysSinceLastDonation < 84)
+            {
+                throw new Exception($"Bạn cần chờ ít nhất 84 ngày giữa hai lần hiến máu (Còn {84 - (int)daysSinceLastDonation} ngày).");
+            }
+        }
+
         var appointment = new Appointment
         {
             DonorId = donor.DonorId,
@@ -97,7 +143,20 @@ public class AppointmentService : IAppointmentService
         };
 
         _context.Appointments.Add(appointment);
+        
+        var notification = new Notification
+        {
+            UserId = userId,
+            Title = "Đăng ký hiến máu thành công",
+            Content = $"Lịch hẹn hiến máu cho chiến dịch đã được ghi nhận. Vui lòng chờ nhân viên duyệt đơn.",
+            Type = "Campaign",
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Notifications.Add(notification);
+
         await _context.SaveChangesAsync();
+
 
         if (dto.FileId.HasValue)
         {
@@ -148,5 +207,161 @@ public class AppointmentService : IAppointmentService
                 CreatedAt = a.CreatedAt
             };
         }).ToList();
+    }
+
+    public async Task<List<CampaignRegistrantDto>> GetCampaignRegistrantsAsync(int campaignId)
+    {
+        var registrants = await _context.Appointments
+            .Include(a => a.Donor)
+            .Where(a => a.CampaignId == campaignId && 
+                (a.Status == AppointmentStatus.Pending || 
+                 a.Status == AppointmentStatus.Confirmed || 
+                 a.Status == AppointmentStatus.Completed))
+            .OrderByDescending(a => a.CreatedAt)
+            .Select(a => new CampaignRegistrantDto
+            {
+                AppointmentId = a.AppointmentId,
+                DonorName = a.Donor.FullName,
+                Phone = !string.IsNullOrEmpty(a.Donor.Phone) 
+                    ? a.Donor.Phone.Substring(0, Math.Min(4, a.Donor.Phone.Length)) + "***" + (a.Donor.Phone.Length > 7 ? a.Donor.Phone.Substring(a.Donor.Phone.Length - 3) : "")
+                    : null,
+                Status = a.Status == AppointmentStatus.Confirmed || a.Status == AppointmentStatus.Completed 
+                    ? "Đã xác nhận" 
+                    : "Chờ duyệt",
+                CreatedAt = a.CreatedAt
+            })
+            .Take(10)
+            .ToListAsync();
+
+        return registrants;
+    }
+
+    public async Task<List<AdminAppointmentDto>> GetAllAppointmentsAsync(AppointmentStatus? status = null, int? campaignId = null)
+    {
+        var query = _context.Appointments
+            .Include(a => a.Donor)
+            .ThenInclude(d => d.BloodType)
+            .Include(a => a.Campaign)
+            .AsQueryable();
+
+        if (status.HasValue)
+        {
+            query = query.Where(a => a.Status == status.Value);
+        }
+
+        if (campaignId.HasValue)
+        {
+            query = query.Where(a => a.CampaignId == campaignId.Value);
+        }
+
+        var appointments = await query
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync();
+
+        return appointments.Select(a => new AdminAppointmentDto
+        {
+            AppointmentId = a.AppointmentId,
+            DonorId = a.DonorId,
+            DonorName = a.Donor.FullName,
+            DonorPhone = a.Donor.Phone,
+            DonorEmail = a.Donor.Email,
+            BloodGroup = a.Donor.BloodType?.BloodGroup ?? "Chưa rõ",
+            CampaignId = a.CampaignId,
+            CampaignName = a.Campaign.CampaignName,
+            AppointmentDate = a.AppointmentDate,
+            TimeSlot = a.TimeSlot,
+            Status = a.Status,
+            Note = a.Note,
+            CreatedAt = a.CreatedAt
+        }).ToList();
+    }
+
+    public async Task<bool> UpdateAppointmentStatusAsync(int appointmentId, AppointmentStatus status, string adminNote = null)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            var appointment = await _context.Appointments
+                .Include(a => a.Donor)
+                .Include(a => a.Campaign)
+                .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
+
+            if (appointment == null) return false;
+
+            if (appointment.Status == AppointmentStatus.Completed && status != AppointmentStatus.Completed)
+            {
+                throw new Exception("Không thể thay đổi trạng thái của lịch hẹn đã Hoàn thành.");
+            }
+
+            appointment.Status = status;
+            if (!string.IsNullOrEmpty(adminNote))
+            {
+                appointment.Note = string.IsNullOrEmpty(appointment.Note) 
+                    ? $"[Admin] {adminNote}" 
+                    : $"{appointment.Note} | [Admin] {adminNote}";
+            }
+
+            if (status == AppointmentStatus.Completed)
+            {
+                // Assign blood type if not present (simplified for now)
+                var bloodTypeId = appointment.Donor.BloodTypeId ?? 1; // Default to first type if unknown
+                int defaultVolume = 250;
+
+                var bloodDonation = new BloodDonation.Domain.Entities.BloodDonation
+                {
+                    AppointmentId = appointment.AppointmentId,
+                    BloodTypeId = bloodTypeId,
+                    VolumeML = defaultVolume,
+                    DonationDate = DateTime.UtcNow,
+                    DonationStatus = DonationStatus.Success,
+                    StaffName = "Admin/Staff", 
+                    Remark = "Hoàn thành hiến máu"
+                };
+                _context.BloodDonations.Add(bloodDonation);
+
+                var inventory = new BloodInventory
+                {
+                    BloodTypeId = bloodTypeId,
+                    QuantityML = defaultVolume,
+                    ExpiredDate = DateTime.UtcNow.AddDays(35), // typical shelf life
+                    StorageLocation = "Kho Tổng",
+                    Status = InventoryStatus.Available,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                _context.BloodInventories.Add(inventory);
+
+                appointment.Donor.TotalDonationTimes += 1;
+                appointment.Donor.LastDonationDate = DateTime.UtcNow;
+                _context.Donors.Update(appointment.Donor);
+            }
+
+            var statusName = status switch {
+                AppointmentStatus.Confirmed => "được xác nhận",
+                AppointmentStatus.Completed => "đã hoàn thành",
+                AppointmentStatus.Cancelled => "bị hủy",
+                AppointmentStatus.Absent => "đánh dấu vắng mặt",
+                _ => "cập nhật"
+            };
+
+            var notification = new Notification
+            {
+                UserId = appointment.Donor.UserId,
+                Title = $"Cập nhật trạng thái đơn hiến máu",
+                Content = $"Lịch hẹn của bạn cho chiến dịch '{appointment.Campaign.CampaignName}' đã {statusName}. {adminNote}",
+                Type = "StatusUpdate",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Notifications.Add(notification);
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 }

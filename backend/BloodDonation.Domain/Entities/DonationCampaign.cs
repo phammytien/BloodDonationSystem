@@ -11,8 +11,16 @@ public class DonationCampaign
     public string? Description { get; set; }
     public string Location { get; set; } = null!;
     public string Organizer { get; set; } = null!;
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
+    public DateTime StartDate { get; set; } // Can be used as RegistrationStartDate or keep for legacy compatibility
+    public DateTime EndDate { get; set; } // Can be used as RegistrationEndDate or keep for legacy compatibility
+    
+    // New exact fields for registration and event time
+    public DateTime? RegistrationStartDate { get; set; }
+    public DateTime? RegistrationEndDate { get; set; }
+    public DateTime? DonationDate { get; set; }
+    public TimeSpan? StartTime { get; set; }
+    public TimeSpan? EndTime { get; set; }
+
     public int? MaxParticipants { get; set; }
     public CampaignStatus Status { get; set; } = CampaignStatus.Upcoming;
     public string? BannerImage { get; set; }
