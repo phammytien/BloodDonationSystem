@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
 import { Pagination } from '../../components/common/Pagination';
 
@@ -99,20 +99,25 @@ export const AdminInventoryPage: React.FC = () => {
   };
 
   return (
-    <div className="fade-in position-relative">
-      <div className="d-flex justify-content-between align-items-end mb-4">
-        <div>
-          <h4 className="fw-bold mb-1" style={{ fontFamily: 'Montserrat', color: '#111827' }}>
-            Kho Máu Dự Trữ
-          </h4>
-          <p className="text-muted small mb-0">
-            Quản lý, theo dõi số lượng và hạn sử dụng túi máu
-          </p>
+    <>
+      {ReactDOM.createPortal(
+        <ToastContainer position="top-center" autoClose={3000} theme="colored" />,
+        document.body
+      )}
+      <div className="fade-in position-relative">
+        <div className="d-flex justify-content-between align-items-end mb-4">
+          <div>
+            <h4 className="fw-bold mb-1" style={{ fontFamily: 'Montserrat', color: '#111827' }}>
+              Kho Máu Dự Trữ
+            </h4>
+            <p className="text-muted small mb-0">
+              Quản lý, theo dõi số lượng và hạn sử dụng túi máu
+            </p>
+          </div>
+          <button className="btn btn-danger fw-semibold px-4 rounded-3" onClick={() => setShowAddModal(true)}>
+            + Nhập túi máu mới
+          </button>
         </div>
-        <button className="btn btn-danger fw-semibold px-4 rounded-3" onClick={() => setShowAddModal(true)}>
-          + Nhập túi máu mới
-        </button>
-      </div>
 
       <div className="bg-white rounded-3 shadow-sm overflow-hidden" style={{ border: '1px solid #E5E7EB' }}>
         <div className="table-responsive">
@@ -247,5 +252,6 @@ export const AdminInventoryPage: React.FC = () => {
         </>, document.body
       )}
     </div>
+    </>
   );
 };

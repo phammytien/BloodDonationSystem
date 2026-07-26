@@ -18,6 +18,7 @@ interface Campaign {
   attachmentUrl?: string | null;
   attachmentName?: string | null;
   registrantCount: number;
+  status: number;
 }
 
 interface AppointmentHistory {
@@ -126,6 +127,8 @@ export const AppointmentPage: React.FC = () => {
   const currentCampaign = campaigns.find(c => c.campaignId.toString() === selectedCampaignId);
   const isCampaignFull = !!(currentCampaign && currentCampaign.maxParticipants && currentCampaign.registrantCount >= currentCampaign.maxParticipants);
   const isCampaignEnded = !!(currentCampaign && new Date(currentCampaign.endDate) < new Date());
+  const isCampaignClosedOrCancelled = !!(currentCampaign && (currentCampaign.status === 2 || currentCampaign.status === 3));
+  const canRegister = !isCampaignFull && !isCampaignEnded && !isCampaignClosedOrCancelled;
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadedFileId, setUploadedFileId] = useState<number | null>(null);
@@ -574,11 +577,15 @@ export const AppointmentPage: React.FC = () => {
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                               THÔNG TIN CHI TIẾT CHIẾN DỊCH ĐÃ CHỌN
                             </span>
-                            {isCampaignEnded && (
+                            {isCampaignEnded ? (
                               <span className="badge bg-danger text-white rounded-pill px-2.5 py-1" style={{ fontSize: '0.7rem', fontFamily: 'Montserrat' }}>
                                 CHIẾN DỊCH ĐÃ KẾT THÚC
                               </span>
-                            )}
+                            ) : isCampaignClosedOrCancelled ? (
+                              <span className="badge bg-secondary text-white rounded-pill px-2.5 py-1" style={{ fontSize: '0.7rem', fontFamily: 'Montserrat' }}>
+                                ĐÃ ĐÓNG ĐĂNG KÝ
+                              </span>
+                            ) : null}
                           </h6>
                           <div className="row g-3" style={{ fontSize: '0.85rem' }}>
                             <div className="col-12 col-md-6">
@@ -695,24 +702,24 @@ export const AppointmentPage: React.FC = () => {
                     <div className="col-12 mt-3">
                       <button
                         type="submit"
-                        disabled={formLoading || isCampaignFull || isCampaignEnded}
+                        disabled={formLoading || !canRegister}
                         className="btn fw-bold rounded-pill w-100"
                         style={{ 
                           fontFamily: 'Montserrat', 
                           fontSize: '0.92rem', 
-                          backgroundColor: (isCampaignFull || isCampaignEnded) ? '#9CA3AF' : '#1B4FD8', 
+                          backgroundColor: (!canRegister) ? '#9CA3AF' : '#1B4FD8', 
                           color: '#fff', 
                           border: 'none', 
-                          boxShadow: (isCampaignFull || isCampaignEnded) ? 'none' : '0 6px 20px rgba(27,79,216,0.3)', 
+                          boxShadow: (!canRegister) ? 'none' : '0 6px 20px rgba(27,79,216,0.3)', 
                           height: 48, 
                           transition: 'all 0.2s',
-                          cursor: (isCampaignFull || isCampaignEnded) ? 'not-allowed' : 'pointer'
+                          cursor: (!canRegister) ? 'not-allowed' : 'pointer'
                         }}
                         onMouseEnter={e => {
-                          if (!isCampaignFull && !isCampaignEnded) e.currentTarget.style.backgroundColor = '#1E40AF';
+                          if (canRegister) e.currentTarget.style.backgroundColor = '#1E40AF';
                         }}
                         onMouseLeave={e => {
-                          if (!isCampaignFull && !isCampaignEnded) e.currentTarget.style.backgroundColor = '#1B4FD8';
+                          if (canRegister) e.currentTarget.style.backgroundColor = '#1B4FD8';
                         }}
                       >
                         {formLoading ? (
@@ -721,6 +728,11 @@ export const AppointmentPage: React.FC = () => {
                           <span className="d-flex align-items-center justify-content-center gap-2">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
                             Chiến dịch đã kết thúc
+                          </span>
+                        ) : isCampaignClosedOrCancelled ? (
+                          <span className="d-flex align-items-center justify-content-center gap-2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            Chiến dịch đã bị đóng hoặc hủy
                           </span>
                         ) : isCampaignFull ? (
                           <span className="d-flex align-items-center justify-content-center gap-2">

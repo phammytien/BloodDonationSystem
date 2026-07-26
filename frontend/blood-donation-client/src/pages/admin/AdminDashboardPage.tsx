@@ -72,12 +72,25 @@ export const AdminDashboardPage: React.FC = () => {
     </div>
   );
 
-  const barData = {
-    labels: stats?.dailyBloodVolumes?.length 
-      ? stats.dailyBloodVolumes.map(d => new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })) 
+  const barData: any = {
+    labels: stats?.dailyBloodVolumes?.length
+      ? stats.dailyBloodVolumes.map(d => new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }))
       : ['Chưa có dữ liệu'],
     datasets: [
       {
+        type: 'line' as const,
+        label: 'Đường tăng trưởng',
+        data: stats?.dailyBloodVolumes?.length ? stats.dailyBloodVolumes.map(d => d.volume) : [0],
+        borderColor: '#3B82F6',
+        backgroundColor: '#3B82F6',
+        borderWidth: 2.5,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#3B82F6',
+        fill: false,
+      },
+      {
+        type: 'bar' as const,
         label: 'Lượng máu (ml)',
         data: stats?.dailyBloodVolumes?.length ? stats.dailyBloodVolumes.map(d => d.volume) : [0],
         backgroundColor: '#F87171',
@@ -105,8 +118,8 @@ export const AdminDashboardPage: React.FC = () => {
       }
     },
     scales: {
-      y: { 
-        beginAtZero: true, 
+      y: {
+        beginAtZero: true,
         ticks: { color: '#9CA3AF', callback: (value: any) => value === 0 ? '0' : (value / 1000) + 'K' },
         border: { display: false },
         grid: { color: '#F3F4F6' }
@@ -134,7 +147,7 @@ export const AdminDashboardPage: React.FC = () => {
   const doughnutOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { 
+    plugins: {
       legend: { display: false }
     },
     cutout: '70%'
@@ -142,12 +155,12 @@ export const AdminDashboardPage: React.FC = () => {
 
   const Sparkline = ({ color }: { color: string }) => (
     <svg width="100%" height="30" viewBox="0 0 100 30" preserveAspectRatio="none" style={{ marginTop: '10px' }}>
-      <path 
-        d="M0 20 Q 10 10, 20 15 T 40 10 T 60 25 T 80 15 T 100 20" 
-        stroke={color} 
-        strokeWidth="2" 
-        fill="none" 
-        strokeLinecap="round" 
+      <path
+        d="M0 20 Q 10 10, 20 15 T 40 10 T 60 25 T 80 15 T 100 20"
+        stroke={color}
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -187,7 +200,7 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="bg-white rounded-4 p-4 shadow-sm position-relative overflow-hidden" style={{ border: '1px solid #F3F4F6' }}>
             <div className="d-flex align-items-center gap-3 mb-3">
               <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 48, height: 48, backgroundColor: '#D1FAE5', color: '#10B981' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
               </div>
               <div>
                 <div className="text-uppercase fw-semibold" style={{ fontSize: '0.75rem', color: '#6B7280', letterSpacing: '0.5px' }}>Chiến Dịch</div>
@@ -291,7 +304,7 @@ export const AdminDashboardPage: React.FC = () => {
                       <div className="text-muted mb-1" style={{ fontSize: '0.75rem' }}>{new Date(c.startDate).toLocaleDateString('vi-VN')}</div>
                       <div className="d-flex align-items-center gap-3" style={{ fontSize: '0.75rem', color: '#4B5563' }}>
                         <span className="d-flex align-items-center gap-1">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> 
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                           {c.registrantCount} người
                         </span>
                       </div>
@@ -330,7 +343,7 @@ export const AdminDashboardPage: React.FC = () => {
                   </div>
                 ))
               ) : (
-                 <div className="text-muted text-center py-4">Chưa có dữ liệu hiến máu</div>
+                <div className="text-muted text-center py-4">Chưa có dữ liệu hiến máu</div>
               )}
             </div>
           </div>
@@ -362,7 +375,7 @@ export const AdminDashboardPage: React.FC = () => {
                   </div>
                 ))
               ) : (
-                 <div className="text-muted text-center py-4">Không có đơn chờ duyệt</div>
+                <div className="text-muted text-center py-4">Không có đơn chờ duyệt</div>
               )}
             </div>
           </div>

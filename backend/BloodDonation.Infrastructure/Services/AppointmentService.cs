@@ -124,10 +124,10 @@ public class AppointmentService : IAppointmentService
 
         if (lastCompletedAppointment != null)
         {
-            var daysSinceLastDonation = (now - lastCompletedAppointment.AppointmentDate).TotalDays;
-            if (daysSinceLastDonation < 84)
+            var daysBetweenDonations = (dto.AppointmentDate.Date - lastCompletedAppointment.AppointmentDate.Date).TotalDays;
+            if (daysBetweenDonations < 84)
             {
-                throw new Exception($"Bạn cần chờ ít nhất 84 ngày giữa hai lần hiến máu (Còn {84 - (int)daysSinceLastDonation} ngày).");
+                throw new Exception($"Bạn cần chờ ít nhất 84 ngày giữa hai lần hiến máu. Ngày đăng ký hiến mới cách lần hiến gần nhất chưa đủ (Thiếu {84 - (int)daysBetweenDonations} ngày).");
             }
         }
 
@@ -146,7 +146,7 @@ public class AppointmentService : IAppointmentService
         
         var notification = new Notification
         {
-            UserId = userId,
+            UserId = donor.UserId,
             Title = "Đăng ký hiến máu thành công",
             Content = $"Lịch hẹn hiến máu cho chiến dịch đã được ghi nhận. Vui lòng chờ nhân viên duyệt đơn.",
             Type = "Campaign",
@@ -154,6 +154,25 @@ public class AppointmentService : IAppointmentService
             CreatedAt = DateTime.UtcNow
         };
         _context.Notifications.Add(notification);
+
+        // Gửi thông báo cho Admin/Staff
+        var adminUserIds = await _context.Users
+            .Where(u => u.Role.RoleName == "Admin" || u.Role.RoleName == "Staff")
+            .Select(u => u.UserId)
+            .ToListAsync();
+
+        foreach (var adminId in adminUserIds)
+        {
+            _context.Notifications.Add(new Notification
+            {
+                UserId = adminId,
+                Title = "Có đăng ký hiến máu mới 📢",
+                Content = $"Người hiến máu {donor.FullName} vừa đăng ký tham gia '{campaign.CampaignName}'. Vui lòng kiểm tra và xét duyệt.",
+                Type = "StatusUpdate",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
 
         await _context.SaveChangesAsync();
 
@@ -262,12 +281,13 @@ public class AppointmentService : IAppointmentService
         {
             AppointmentId = a.AppointmentId,
             DonorId = a.DonorId,
-            DonorName = a.Donor.FullName,
-            DonorPhone = a.Donor.Phone,
-            DonorEmail = a.Donor.Email,
-            BloodGroup = a.Donor.BloodType?.BloodGroup ?? "Chưa rõ",
+            DonorName = a.Donor?.FullName ?? "Không xác định",
+            DonorPhone = a.Donor?.Phone ?? "",
+            DonorEmail = a.Donor?.Email ?? "",
+            DonorCitizenId = a.Donor?.CitizenId ?? "",
+            BloodGroup = a.Donor?.BloodType?.BloodGroup ?? "Chưa rõ",
             CampaignId = a.CampaignId,
-            CampaignName = a.Campaign.CampaignName,
+            CampaignName = a.Campaign?.CampaignName ?? "Không xác định",
             AppointmentDate = a.AppointmentDate,
             TimeSlot = a.TimeSlot,
             Status = a.Status,

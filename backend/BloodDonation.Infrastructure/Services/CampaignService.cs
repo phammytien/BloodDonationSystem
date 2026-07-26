@@ -73,6 +73,25 @@ public class CampaignService : ICampaignService
         campaign.CreatedAt = DateTime.UtcNow;
         _context.DonationCampaigns.Add(campaign);
         await _context.SaveChangesAsync();
+
+        // Gửi thông báo cho tất cả người hiến máu (Donors) về chiến dịch mới
+        var donorUserIds = await _context.Donors.Select(d => d.UserId).Distinct().ToListAsync();
+        var notifications = donorUserIds.Select(userId => new Notification
+        {
+            UserId = userId,
+            Title = "Chiến dịch hiến máu mới \ud83e\ude78",
+            Content = $"Chiến dịch '{campaign.CampaignName}' vừa được phát động tại {campaign.Location}. Hãy đăng ký tham gia ngay!",
+            Type = "Campaign",
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        }).ToList();
+
+        if (notifications.Any())
+        {
+            _context.Notifications.AddRange(notifications);
+            await _context.SaveChangesAsync();
+        }
+
         return campaign;
     }
 

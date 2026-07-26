@@ -119,7 +119,7 @@ export const DonorNavbar: React.FC = () => {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor" /></svg>
                   </Link>
                 )}
-                {user.roleName.toLowerCase() === 'staff' && (
+                {['staff', 'admin'].includes(user.roleName.toLowerCase()) && (
                   <Link to="/dashboard" className="btn-primary-custom">
                     Bảng điều khiển
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
@@ -155,8 +155,12 @@ export const DonorNavbar: React.FC = () => {
                         </div>
                       </div>
                       <div className="p-2">
-                        <Link to="/profile" className="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none rounded-2" style={{ fontSize: '0.85rem', color: '#1B4FD8' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFF6FF')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>Thông tin tài khoản</Link>
-                        <Link to="/history" className="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none rounded-2" style={{ fontSize: '0.85rem', color: '#1B4FD8' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFF6FF')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>Lịch sử hiến máu</Link>
+                        {user.roleName.toLowerCase() === 'donor' && (
+                          <>
+                            <Link to="/profile" className="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none rounded-2" style={{ fontSize: '0.85rem', color: '#1B4FD8' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFF6FF')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>Thông tin tài khoản</Link>
+                            <Link to="/history" className="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none rounded-2" style={{ fontSize: '0.85rem', color: '#1B4FD8' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFF6FF')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>Lịch sử hiến máu</Link>
+                          </>
+                        )}
                         <Link to="/change-password" className="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none rounded-2" style={{ fontSize: '0.85rem', color: '#4B5563' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F3F4F6')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>Đổi mật khẩu</Link>
                         <button onClick={handleLogout} className="w-100 d-flex align-items-center gap-2 px-3 py-2 border-0 bg-transparent rounded-2 text-start" style={{ fontSize: '0.85rem', color: '#D42B2B' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FEF0F0')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>Đăng xuất</button>
                       </div>

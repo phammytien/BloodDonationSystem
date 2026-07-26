@@ -10,6 +10,7 @@ public class AdminAppointmentDto
     public string DonorName { get; set; }
     public string DonorPhone { get; set; }
     public string DonorEmail { get; set; }
+    public string DonorCitizenId { get; set; }
     public string BloodGroup { get; set; }
     public int CampaignId { get; set; }
     public string CampaignName { get; set; }

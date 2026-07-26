@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { NotificationBell } from '../NotificationBell';
 
 export const AdminLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -49,6 +50,8 @@ export const AdminLayout: React.FC = () => {
   const iconBox = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>;
 
   const iconSupport = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
+
+  const iconSettings = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>;
 
   return (
     <div className="d-flex" style={{ minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
@@ -101,6 +104,11 @@ export const AdminLayout: React.FC = () => {
             <NavItem to="/admin/donors" icon={iconUsers} label="Danh sách Donor" />
             <NavItem to="/admin/blood-types" icon={iconDrop} label="Nhóm máu" />
             <NavItem to="/admin/inventory" icon={iconBox} label="Kho máu dự trữ" />
+
+            <div className="mt-4 mb-2 ps-2 text-muted fw-bold" style={{ fontSize: '0.7rem', letterSpacing: '1px' }}>
+              HỆ THỐNG
+            </div>
+            <NavItem to="/admin/settings" icon={iconSettings} label="Cài đặt hệ thống" />
           </div>
         </div>
 
@@ -134,12 +142,7 @@ export const AdminLayout: React.FC = () => {
             <span className="text-danger">Admin Portal</span> <span className="mx-2">/</span> {location.pathname === '/dashboard' ? 'Tổng quan' : location.pathname.includes('/campaigns') ? 'Chiến dịch hiến máu' : 'Quản lý'}
           </div>
           <div className="d-flex align-items-center gap-4">
-            <button className="btn btn-link text-muted p-0 position-relative">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
-                3
-              </span>
-            </button>
+            <NotificationBell />
             <div className="d-flex align-items-center gap-2">
               <div className="text-end d-none d-md-block">
                 <div className="fw-bold" style={{ fontSize: '0.85rem', color: '#111827' }}>{user?.username}</div>

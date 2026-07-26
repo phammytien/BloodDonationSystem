@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using BloodDonation.Application.Services;
 using BloodDonation.Infrastructure.Data;
 using BloodDonation.Infrastructure.Services;
+using BloodDonation.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,10 @@ builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IDonorService, DonorService>();
 builder.Services.AddScoped<IBloodInventoryService, BloodInventoryService>();
 builder.Services.AddScoped<IBloodDonationService, BloodDonationService>();
+builder.Services.AddScoped<IBackupService, BackupService>();
+
+// Register Background Service
+builder.Services.AddHostedService<AutoBackupHostedService>();
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

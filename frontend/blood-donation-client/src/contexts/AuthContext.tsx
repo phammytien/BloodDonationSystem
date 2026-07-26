@@ -30,8 +30,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   useEffect(() => {
-    // Restore session from localStorage on startup
-    const storedUser = localStorage.getItem('bd_user_session');
+    // Restore session from sessionStorage on startup
+    const storedUser = sessionStorage.getItem('bd_user_session');
     if (storedUser) {
       try {
         const parsed: UserSession = JSON.parse(storedUser);
@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .then((res) => {
               const enriched: UserSession = { ...parsed, fullName: res.data.fullName || parsed.username };
               setUser(enriched);
-              localStorage.setItem('bd_user_session', JSON.stringify(enriched));
+              sessionStorage.setItem('bd_user_session', JSON.stringify(enriched));
             })
             .catch(() => {
               // If fetch fails (expired token etc.), just use existing session
@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(parsed);
       } catch (e) {
         console.error('Failed to parse stored user session', e);
-        localStorage.removeItem('bd_user_session');
+        sessionStorage.removeItem('bd_user_session');
       }
     }
     setLoading(false);
@@ -72,11 +72,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = (session: UserSession) => {
     setUser(session);
-    localStorage.setItem('bd_user_session', JSON.stringify(session));
+    sessionStorage.setItem('bd_user_session', JSON.stringify(session));
   };
 
   const logout = () => {
-    localStorage.removeItem('bd_user_session');
+    sessionStorage.removeItem('bd_user_session');
     sessionStorage.removeItem('profile_prompt_dismissed');
     localStorage.setItem('logout_success_toast', 'true');
     setUser(null);

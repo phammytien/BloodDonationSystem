@@ -12,6 +12,7 @@ import { AdminDonorsPage } from './pages/admin/AdminDonorsPage';
 import { AdminInventoryPage } from './pages/admin/AdminInventoryPage';
 import { AdminHistoryPage } from './pages/admin/AdminHistoryPage';
 import { AdminBloodTypesPage } from './pages/admin/AdminBloodTypesPage';
+import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
 import { HomePage } from './pages/donor/HomePage';
 import { AppointmentPage } from './pages/donor/AppointmentPage';
 import { ProfilePage } from './pages/donor/ProfilePage';
@@ -88,6 +89,7 @@ function App() {
             <Route path="/admin/donors" element={<AdminDonorsPage />} />
             <Route path="/admin/inventory" element={<AdminInventoryPage />} />
             <Route path="/admin/history" element={<AdminHistoryPage />} />
+            <Route path="/admin/settings" element={<AdminSettingsPage />} />
             <Route path="/admin/blood-types" element={<AdminBloodTypesPage />} />
           </Route>
 

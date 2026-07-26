@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 interface NotificationItem {
   notificationId: number;
@@ -13,9 +15,13 @@ interface NotificationItem {
 
 export const NotificationBell: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Track the highest ID we have seen so far
+  const latestNotificationIdRef = useRef<number | null>(null);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -25,7 +31,33 @@ export const NotificationBell: React.FC = () => {
       const res = await axios.get('http://localhost:5028/api/notification', {
         headers: { Authorization: `Bearer ${user.token}` }
       });
-      setNotifications(res.data);
+      
+      const newNotifications: NotificationItem[] = res.data;
+      
+      if (newNotifications.length > 0) {
+        const currentHighestId = Math.max(...newNotifications.map(n => n.notificationId));
+        
+        // If we already initialized the ref, check if there are new ones
+        if (latestNotificationIdRef.current !== null && currentHighestId > latestNotificationIdRef.current) {
+          const newlyArrived = newNotifications.filter(n => n.notificationId > (latestNotificationIdRef.current as number));
+          
+          // Show toast for newly arrived notifications
+          newlyArrived.forEach(n => {
+            toast.info(
+              <div>
+                <strong>{n.title}</strong>
+                <div style={{ fontSize: '0.85rem' }}>{n.content}</div>
+              </div>, 
+              { position: "top-center", autoClose: 6000, theme: "colored" }
+            );
+          });
+        }
+        
+        // Update the ref
+        latestNotificationIdRef.current = currentHighestId;
+      }
+      
+      setNotifications(newNotifications);
     } catch (err) {
       console.error('Lỗi tải thông báo', err);
     }
@@ -69,6 +101,29 @@ export const NotificationBell: React.FC = () => {
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleNotificationClick = (n: NotificationItem) => {
+    if (!n.isRead) {
+      handleMarkAsRead(n.notificationId);
+    }
+    
+    setIsOpen(false);
+    
+    // Điều hướng dựa vào Role và loại thông báo
+    if (user?.roleName === 'Admin' || user?.roleName === 'Staff') {
+        if (n.title.toLowerCase().includes('đăng ký hiến máu mới') || n.type === 'StatusUpdate') {
+            navigate('/admin/appointments');
+        } else if (n.title.toLowerCase().includes('chiến dịch')) {
+            navigate('/admin/campaigns');
+        }
+    } else {
+        if (n.title.toLowerCase().includes('chiến dịch')) {
+            navigate('/');
+        } else {
+            navigate('/history');
+        }
     }
   };
 
@@ -158,7 +213,7 @@ export const NotificationBell: React.FC = () => {
               notifications.map((n) => (
                 <div
                   key={n.notificationId}
-                  onClick={() => !n.isRead && handleMarkAsRead(n.notificationId)}
+                  onClick={() => handleNotificationClick(n)}
                   className="px-3 py-2 border-bottom d-flex align-items-start gap-2 position-relative text-start"
                   style={{
                     cursor: 'pointer',
