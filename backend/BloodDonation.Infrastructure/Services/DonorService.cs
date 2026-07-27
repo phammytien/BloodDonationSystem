@@ -138,12 +138,62 @@ public class DonorService : IDonorService
     public async Task<List<BloodTypeDto>> GetBloodTypesAsync()
     {
         return await _context.BloodTypes
+            .OrderByDescending(bt => bt.CreatedAt)
             .Select(bt => new BloodTypeDto
             {
                 BloodTypeId = bt.BloodTypeId,
-                BloodGroup = bt.BloodGroup
+                BloodGroup = bt.BloodGroup,
+                Description = bt.Description,
+                Status = bt.Status,
+                CreatedBy = bt.CreatedBy,
+                CreatedAt = bt.CreatedAt
             })
             .ToListAsync();
+    }
+
+    public async Task<BloodTypeDto> CreateBloodTypeAsync(BloodTypeDto dto)
+    {
+        var bt = new BloodType
+        {
+            BloodGroup = dto.BloodGroup,
+            Description = dto.Description,
+            Status = dto.Status,
+            CreatedBy = dto.CreatedBy ?? "admin",
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.BloodTypes.Add(bt);
+        await _context.SaveChangesAsync();
+        
+        dto.BloodTypeId = bt.BloodTypeId;
+        dto.CreatedAt = bt.CreatedAt;
+        return dto;
+    }
+
+    public async Task<bool> UpdateBloodTypeAsync(int id, BloodTypeDto dto)
+    {
+        var bt = await _context.BloodTypes.FindAsync(id);
+        if (bt == null) return false;
+
+        bt.BloodGroup = dto.BloodGroup;
+        bt.Description = dto.Description;
+        bt.Status = dto.Status;
+        // Optionally update UpdatedAt if it existed
+        
+        _context.BloodTypes.Update(bt);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> DeleteBloodTypeAsync(int id)
+    {
+        var bt = await _context.BloodTypes.FindAsync(id);
+        if (bt == null) return false;
+
+        // Soft delete
+        bt.Status = 2; // 2 = Deleted
+        _context.BloodTypes.Update(bt);
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     public async Task<List<DonorProfileDto>> GetAllDonorsAsync(string search = null)
@@ -188,5 +238,112 @@ public class DonorService : IDonorService
             TotalDonationTimes = d.TotalDonationTimes,
             UpdatedAt = d.UpdatedAt
         }).ToList();
+    }
+
+    public async Task<DonorProfileDto> CreateDonorAdminAsync(DonorProfileDto dto)
+    {
+        // For admin creation, we might not have a UserId (they might not have an account)
+        // Alternatively we can create a dummy user. Let's create a dummy User if needed,
+        // but looking at Domain.Entities.Donor, UserId is int (not nullable).
+        // So we MUST create a User first.
+        
+        var donorRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Donor");
+        var user = new User
+        {
+            Email = dto.Email,
+            Phone = dto.Phone,
+            PasswordHash = "$2a$11$dummyHashForNoLogin", // Dummy hash
+            RoleId = donorRole?.RoleId ?? 3,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var donor = new Donor
+        {
+            UserId = user.UserId,
+            FullName = dto.FullName,
+            Gender = dto.Gender,
+            DateOfBirth = dto.DateOfBirth,
+            CitizenId = dto.CitizenId,
+            Phone = dto.Phone,
+            Email = dto.Email,
+            Address = dto.Address,
+            Province = dto.Province,
+            Ward = dto.Ward,
+            Occupation = dto.Occupation,
+            BloodTypeId = dto.BloodTypeId,
+            Weight = dto.Weight,
+            Height = dto.Height,
+            Avatar = dto.Avatar,
+            TotalDonationTimes = 0,
+            IsAvailable = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Donors.Add(donor);
+        await _context.SaveChangesAsync();
+        
+        dto.DonorId = donor.DonorId;
+        dto.UpdatedAt = donor.UpdatedAt;
+        return dto;
+    }
+
+    public async Task<bool> UpdateDonorAdminAsync(int donorId, DonorProfileDto dto)
+    {
+        var donor = await _context.Donors.FirstOrDefaultAsync(d => d.DonorId == donorId);
+        if (donor == null) return false;
+
+        donor.FullName = dto.FullName;
+        donor.Gender = dto.Gender;
+        donor.DateOfBirth = dto.DateOfBirth;
+        donor.CitizenId = dto.CitizenId;
+        donor.Phone = dto.Phone;
+        donor.Email = dto.Email;
+        donor.Address = dto.Address;
+        donor.Province = dto.Province;
+        donor.Ward = dto.Ward;
+        donor.Occupation = dto.Occupation;
+        donor.BloodTypeId = dto.BloodTypeId;
+        donor.Weight = dto.Weight;
+        donor.Height = dto.Height;
+        donor.Avatar = dto.Avatar;
+        donor.UpdatedAt = DateTime.UtcNow;
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == donor.UserId);
+        if (user != null)
+        {
+            user.Email = dto.Email;
+            user.Phone = dto.Phone;
+            user.UpdatedAt = DateTime.UtcNow;
+            _context.Users.Update(user);
+        }
+
+        _context.Donors.Update(donor);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> DeleteDonorAdminAsync(int donorId)
+    {
+        var donor = await _context.Donors.FirstOrDefaultAsync(d => d.DonorId == donorId);
+        if (donor == null) return false;
+
+        // Soft delete
+        donor.IsAvailable = false;
+        donor.UpdatedAt = DateTime.UtcNow;
+        _context.Donors.Update(donor);
+        
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == donor.UserId);
+        if (user != null)
+        {
+            user.IsActive = false;
+            user.UpdatedAt = DateTime.UtcNow;
+            _context.Users.Update(user);
+        }
+
+        await _context.SaveChangesAsync();
+        return true;
     }
 }

@@ -31,4 +31,23 @@ public class BloodDonationController : ControllerBase
             return StatusCode(500, new { message = "Lỗi khi tải lịch sử hiến máu.", details = ex.Message });
         }
     }
+
+    [Authorize(Roles = "Admin,Staff")]
+    [HttpDelete("admin/{id}")]
+    public async Task<IActionResult> DeleteAdminDonation(int id)
+    {
+        try
+        {
+            var success = await _donationService.DeleteAdminDonationAsync(id);
+            if (!success)
+            {
+                return NotFound(new { message = "Không tìm thấy phiếu hiến máu." });
+            }
+            return Ok(new { message = "Xóa phiếu hiến máu thành công." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi xóa phiếu hiến máu.", details = ex.Message });
+        }
+    }
 }

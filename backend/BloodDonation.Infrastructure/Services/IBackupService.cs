@@ -15,5 +15,5 @@ public interface IBackupService
     Task<string> CreateBackupAsync(string backupType = "auto");
     Task<List<BackupFileInfo>> GetAvailableBackupsAsync();
     Task<byte[]?> GetBackupFileAsync(string fileName);
-    Task CleanUpOldBackupsAsync(int keepLatest = 20);
+    Task CleanUpOldBackupsAsync(int keepLatest = 5);
 }

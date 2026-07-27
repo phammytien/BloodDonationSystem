@@ -56,8 +56,3 @@ public class DonorProfileDto
     public DateTime? UpdatedAt { get; set; }
 }
 
-public class BloodTypeDto
-{
-    public int BloodTypeId { get; set; }
-    public string BloodGroup { get; set; } = null!;
-}

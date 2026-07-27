@@ -103,6 +103,53 @@ public class DonorController : ControllerBase
     }
 
     [Authorize(Roles = "Admin")]
+    [HttpPost("blood-types")]
+    public async Task<IActionResult> CreateBloodType([FromBody] BloodTypeDto dto)
+    {
+        try
+        {
+            var result = await _donorService.CreateBloodTypeAsync(dto);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi tạo nhóm máu.", details = ex.Message });
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("blood-types/{id}")]
+    public async Task<IActionResult> UpdateBloodType(int id, [FromBody] BloodTypeDto dto)
+    {
+        try
+        {
+            var success = await _donorService.UpdateBloodTypeAsync(id, dto);
+            if (!success) return NotFound(new { message = "Không tìm thấy nhóm máu." });
+            return Ok(new { message = "Cập nhật thành công." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi cập nhật nhóm máu.", details = ex.Message });
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("blood-types/{id}")]
+    public async Task<IActionResult> DeleteBloodType(int id)
+    {
+        try
+        {
+            var success = await _donorService.DeleteBloodTypeAsync(id);
+            if (!success) return NotFound(new { message = "Không tìm thấy nhóm máu." });
+            return Ok(new { message = "Xóa nhóm máu thành công." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi xóa nhóm máu.", details = ex.Message });
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
     [HttpGet("admin/list")]
     public async Task<IActionResult> GetAdminDonors([FromQuery] string? search = null)
     {
@@ -114,6 +161,67 @@ public class DonorController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "Lỗi khi lấy danh sách người hiến máu.", details = ex.Message });
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("admin")]
+    public async Task<IActionResult> CreateDonorAdmin([FromBody] DonorProfileDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
+            return BadRequest(new { message = "Dữ liệu không hợp lệ", details = string.Join("; ", errors) });
+        }
+
+        try
+        {
+            var result = await _donorService.CreateDonorAdminAsync(dto);
+            return Ok(new { message = "Thêm người hiến máu thành công!", data = result });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi thêm người hiến máu.", details = ex.Message });
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("admin/{id}")]
+    public async Task<IActionResult> UpdateDonorAdmin(int id, [FromBody] DonorProfileDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
+            return BadRequest(new { message = "Dữ liệu không hợp lệ", details = string.Join("; ", errors) });
+        }
+
+        try
+        {
+            var success = await _donorService.UpdateDonorAdminAsync(id, dto);
+            if (!success) return NotFound(new { message = "Không tìm thấy người hiến máu." });
+            
+            return Ok(new { message = "Cập nhật người hiến máu thành công!" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi cập nhật người hiến máu.", details = ex.Message });
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("admin/{id}")]
+    public async Task<IActionResult> DeleteDonorAdmin(int id)
+    {
+        try
+        {
+            var success = await _donorService.DeleteDonorAdminAsync(id);
+            if (!success) return NotFound(new { message = "Không tìm thấy người hiến máu." });
+            
+            return Ok(new { message = "Đã vô hiệu hóa người hiến máu thành công!" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi xóa người hiến máu.", details = ex.Message });
         }
     }
 }

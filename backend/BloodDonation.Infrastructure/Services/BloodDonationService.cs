@@ -42,4 +42,14 @@ public class BloodDonationService : IBloodDonationService
             Remark = d.Remark
         });
     }
+
+    public async Task<bool> DeleteAdminDonationAsync(int donationId)
+    {
+        var donation = await _context.BloodDonations.FindAsync(donationId);
+        if (donation == null) return false;
+
+        _context.BloodDonations.Remove(donation);
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }

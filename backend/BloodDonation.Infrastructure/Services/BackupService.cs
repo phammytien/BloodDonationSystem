@@ -86,7 +86,7 @@ public class BackupService : IBackupService
         return await File.ReadAllBytesAsync(filePath);
     }
 
-    public Task CleanUpOldBackupsAsync(int keepLatest = 20)
+    public Task CleanUpOldBackupsAsync(int keepLatest = 5)
     {
         var directory = new DirectoryInfo(_backupFolder);
         var files = directory.GetFiles("*.json")

@@ -18,8 +18,8 @@ export const AdminLayout: React.FC = () => {
   const NavItem = ({ to, icon, label }: { to: string, icon: React.ReactNode, label: string }) => {
     const isActive = location.pathname.startsWith(to) && (to !== '/dashboard' || location.pathname === '/dashboard');
     return (
-      <Link 
-        to={to} 
+      <Link
+        to={to}
         className="d-flex align-items-center text-decoration-none mb-2 py-2 px-3"
         style={{
           borderRadius: '0 8px 8px 0',
@@ -56,13 +56,13 @@ export const AdminLayout: React.FC = () => {
   return (
     <div className="d-flex" style={{ minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
       {/* Sidebar */}
-      <div 
-        className="d-flex flex-column bg-white shadow-sm" 
-        style={{ 
-          width: collapsed ? '80px' : '280px', 
+      <div
+        className="d-flex flex-column bg-white shadow-sm"
+        style={{
+          width: collapsed ? '80px' : '280px',
           transition: 'width 0.3s ease',
           borderRight: '1px solid #F3F4F6',
-          zIndex: 10 
+          zIndex: 10
         }}
       >
         {/* Logo Area */}
@@ -77,8 +77,8 @@ export const AdminLayout: React.FC = () => {
               <h4 className="m-0 fw-bold" style={{ color: '#D42B2B', fontFamily: 'Montserrat', letterSpacing: '-0.5px' }}>LifeGive</h4>
             </Link>
           )}
-          <button 
-            onClick={() => setCollapsed(!collapsed)} 
+          <button
+            onClick={() => setCollapsed(!collapsed)}
             className="btn btn-sm btn-light rounded-circle d-flex align-items-center justify-content-center"
             style={{ width: '32px', height: '32px', border: '1px solid #E5E7EB', margin: collapsed ? '0 auto' : '0' }}
           >
@@ -114,18 +114,8 @@ export const AdminLayout: React.FC = () => {
 
         {/* Footer Area */}
         <div className="p-3 border-top mt-auto bg-white">
-          {!collapsed && (
-            <div className="d-flex align-items-center justify-content-between p-2 mb-3 rounded" style={{ cursor: 'pointer' }}>
-              <div className="d-flex align-items-center text-dark">
-                <span className="d-flex align-items-center justify-content-center me-3" style={{ width: '32px', height: '32px', backgroundColor: '#FEF2F2', borderRadius: '50%', color: '#D42B2B' }}>
-                  {iconSupport}
-                </span>
-                <span className="fw-semibold" style={{ fontSize: '0.95rem' }}>Hỗ trợ</span>
-              </div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          )}
-          
+
+
           <div className="d-flex align-items-center justify-content-center p-2 rounded" style={{ backgroundColor: '#FEF2F2', cursor: 'pointer' }} onClick={handleLogout}>
             <div className="d-flex align-items-center text-danger">
               {!collapsed && <span className="fw-bold" style={{ fontSize: '0.95rem' }}>Đăng xuất</span>}

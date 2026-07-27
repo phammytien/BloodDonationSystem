@@ -1,37 +1,26 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { AdminDonorModal, type DonorProfileDto } from '../../components/admin/AdminDonorModal';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
 import { getAvatarChar } from '../../utils/avatarHelper';
-import { Download, Filter, Plus, Search, RefreshCw, Eye, Edit2, MoreHorizontal, Users, UserCheck, Droplet, UserPlus } from 'lucide-react';
+import { Download, Plus, Search, RefreshCw, Eye, Edit2, MoreHorizontal, Users, UserCheck, Droplet, UserPlus, X } from 'lucide-react';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { RobotoRegular } from '../../assets/fonts/Roboto-Regular';
 
-interface DonorProfile {
-  donorId: number;
-  fullName: string | null;
-  gender: boolean | null;
-  dateOfBirth: string | null;
-  citizenId: string | null;
-  phone: string;
-  email: string;
-  address: string | null;
-  province: string | null;
-  ward: string | null;
-  occupation: string | null;
-  bloodTypeId: number | null;
-  bloodGroup: string;
-  weight: number | null;
-  height: number | null;
-}
 
 export const AdminDonorsPage: React.FC = () => {
   const { user } = useAuth();
-  const [donors, setDonors] = useState<DonorProfile[]>([]);
+  const [donors, setDonors] = useState<DonorProfileDto[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Modal State
+  const [modalShow, setModalShow] = useState(false);
+  const [modalMode, setModalMode] = useState<'create'|'edit'|'view'>('create');
+  const [selectedDonor, setSelectedDonor] = useState<DonorProfileDto | null>(null);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,6 +49,19 @@ export const AdminDonorsPage: React.FC = () => {
     }
   };
 
+  const handleDelete = async (donorId: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn vô hiệu hóa người hiến máu này?')) return;
+    try {
+      await axios.delete(`http://localhost:5028/api/Donor/admin/${donorId}`, {
+        headers: { Authorization: `Bearer ${user?.token}` }
+      });
+      toast.success('Đã vô hiệu hóa người hiến máu.');
+      fetchDonors();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Lỗi khi xóa người hiến máu.');
+    }
+  };
+
   useEffect(() => {
     fetchDonors();
   }, [user]);
@@ -76,7 +78,7 @@ export const AdminDonorsPage: React.FC = () => {
       const matchBloodGroup = bloodGroupFilter === 'Tất cả' || (item.bloodGroup || 'Chưa rõ') === bloodGroupFilter;
       
       // Mock logic for status and donation count for demo purposes since we don't have real data
-      const mockCount = (item.donorId % 5);
+      const mockCount = item.donorId ? (item.donorId % 5) : 0;
       const matchCount = donationCountFilter === 'Tất cả' || 
                          (donationCountFilter === '0 lần' && mockCount === 0) ||
                          (donationCountFilter === '> 0 lần' && mockCount > 0);
@@ -216,7 +218,15 @@ export const AdminDonorsPage: React.FC = () => {
           </p>
         </div>
         <div className="d-flex gap-2">
-          <button className="btn btn-danger d-flex align-items-center gap-2 px-3 py-2 fw-medium rounded-3" style={{ backgroundColor: '#DC2626', borderColor: '#DC2626' }}>
+          <button 
+            className="btn btn-danger d-flex align-items-center gap-2 px-3 py-2 fw-medium rounded-3" 
+            style={{ backgroundColor: '#DC2626', borderColor: '#DC2626' }}
+            onClick={() => {
+              setModalMode('create');
+              setSelectedDonor(null);
+              setModalShow(true);
+            }}
+          >
             <Plus size={18} />
             <span>Thêm Donor</span>
           </button>
@@ -372,8 +382,8 @@ export const AdminDonorsPage: React.FC = () => {
                   const avatarColor = colors[item.fullName ? item.fullName.charCodeAt(0) % colors.length : 0];
                   
                   // Mock count & date based on ID for visual demonstration
-                  const count = item.donorId % 5;
-                  const lastDateStr = count > 0 ? new Date(Date.now() - (item.donorId * 123456789)).toLocaleDateString('vi-VN') : '—';
+                  const count = item.donorId ? (item.donorId % 5) : 0;
+                  const lastDateStr = count > 0 && item.donorId ? new Date(Date.now() - (item.donorId * 123456789)).toLocaleDateString('vi-VN') : '—';
 
                   return (
                     <tr key={index} className="border-bottom">
@@ -405,16 +415,41 @@ export const AdminDonorsPage: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="d-flex gap-2 justify-content-center">
-                          <button className="btn btn-sm btn-light border d-flex align-items-center gap-2 rounded-3 px-3 py-1" style={{ height: 32 }}>
+                          <button 
+                            className="btn btn-sm btn-light border d-flex align-items-center gap-2 rounded-3 px-3 py-1" 
+                            style={{ height: 32 }}
+                            onClick={() => {
+                              setModalMode('view');
+                              setSelectedDonor(item);
+                              setModalShow(true);
+                            }}
+                          >
                             <Eye size={14} className="text-muted" />
                             <span className="fw-medium text-dark" style={{ fontSize: '0.85rem' }}>Chi tiết</span>
                           </button>
-                          <button className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3" style={{ width: 32, height: 32 }}>
+                          <button 
+                            className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3" 
+                            style={{ width: 32, height: 32 }}
+                            onClick={() => {
+                              setModalMode('edit');
+                              setSelectedDonor(item);
+                              setModalShow(true);
+                            }}
+                          >
                             <Edit2 size={14} className="text-muted" />
                           </button>
-                          <button className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3" style={{ width: 32, height: 32 }}>
-                            <MoreHorizontal size={14} className="text-muted" />
-                          </button>
+                          <div className="dropdown">
+                            <button className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3" style={{ width: 32, height: 32 }} data-bs-toggle="dropdown" aria-expanded="false">
+                              <MoreHorizontal size={14} className="text-muted" />
+                            </button>
+                            <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-1">
+                              <li>
+                                <button className="dropdown-item text-danger d-flex align-items-center gap-2 py-2" onClick={() => item.donorId && handleDelete(item.donorId)}>
+                                  <X size={16} /> Vô hiệu hóa
+                                </button>
+                              </li>
+                            </ul>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -482,6 +517,14 @@ export const AdminDonorsPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      <AdminDonorModal 
+        show={modalShow}
+        onHide={() => setModalShow(false)}
+        mode={modalMode}
+        donorData={selectedDonor}
+        onSuccess={fetchDonors}
+      />
     </div>
   );
 };

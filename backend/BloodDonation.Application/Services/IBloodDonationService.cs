@@ -7,4 +7,5 @@ namespace BloodDonation.Application.Services;
 public interface IBloodDonationService
 {
     Task<IEnumerable<BloodDonationDto>> GetAdminDonationHistoryAsync();
+    Task<bool> DeleteAdminDonationAsync(int donationId);
 }

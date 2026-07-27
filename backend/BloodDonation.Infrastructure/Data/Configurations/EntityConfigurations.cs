@@ -78,6 +78,19 @@ public class BloodTypeConfiguration : IEntityTypeConfiguration<BloodType>
         builder.Property(bt => bt.BloodGroup)
             .IsRequired()
             .HasMaxLength(5);
+
+        builder.Property(bt => bt.Description)
+            .HasMaxLength(255);
+
+        builder.Property(bt => bt.Status)
+            .HasDefaultValue(0);
+
+        builder.Property(bt => bt.CreatedBy)
+            .HasMaxLength(100);
+
+        builder.Property(bt => bt.CreatedAt)
+            .HasColumnType("datetime")
+            .HasDefaultValueSql("GETUTCDATE()");
     }
 }
 

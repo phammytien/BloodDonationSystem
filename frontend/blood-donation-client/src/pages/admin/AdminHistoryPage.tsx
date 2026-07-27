@@ -3,17 +3,30 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
 import { getAvatarChar } from '../../utils/avatarHelper';
-import { Download, Filter, Plus, Search, RefreshCw, Eye, Printer, MoreHorizontal, Droplet, Users, Calendar } from 'lucide-react';
+import { Download, Search, RefreshCw, Eye, Droplet, Calendar, Users, Trash2 } from 'lucide-react';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { RobotoRegular } from '../../assets/fonts/Roboto-Regular';
 
+interface DonationHistoryDto {
+  donationId: number;
+  donorName: string;
+  donorEmail?: string;
+  donorPhone?: string;
+  bloodGroup: string;
+  volumeML: number;
+  donationDate: string;
+  staffName: string;
+  note?: string;
+}
+
 export const AdminHistoryPage: React.FC = () => {
   const { user } = useAuth();
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<DonationHistoryDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDonation, setSelectedDonation] = useState<DonationHistoryDto | null>(null);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,21 +38,33 @@ export const AdminHistoryPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
-  // Modal state
-  const [selectedDonation, setSelectedDonation] = useState<any | null>(null);
-
   const fetchHistory = async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:5028/api/blooddonation/admin/history', {
+      const url = 'http://localhost:5028/api/BloodDonation/admin/history';
+      const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setHistory(res.data);
-    } catch (err) {
-      toast.error('Không thể tải dữ liệu lịch sử hiến máu');
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Không thể tải lịch sử hiến máu.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (donationId: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa phiếu hiến máu này? Hành động này không thể hoàn tác!')) return;
+    try {
+      await axios.delete(`http://localhost:5028/api/BloodDonation/admin/${donationId}`, {
+        headers: { Authorization: `Bearer ${user?.token}` }
+      });
+      toast.success('Đã xóa phiếu hiến máu thành công.');
+      fetchHistory();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Lỗi khi xóa phiếu hiến máu.');
     }
   };
 
@@ -54,14 +79,14 @@ export const AdminHistoryPage: React.FC = () => {
   // Derived filtered history
   const filteredHistory = useMemo(() => {
     return history.filter(item => {
-      const matchSearch = searchTerm === '' || 
+      const matchSearch = searchTerm === '' ||
         (item.donorName && item.donorName.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (item.donorEmail && item.donorEmail.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (item.donationId && item.donationId.toString().includes(searchTerm));
-      
+
       const matchBloodGroup = bloodGroupFilter === 'Tất cả' || item.bloodGroup === bloodGroupFilter;
       const matchStaff = staffFilter === 'Tất cả' || item.staffName === staffFilter;
-      
+
       let matchTime = true;
       if (timeRangeFilter !== 'Tất cả') {
         const date = new Date(item.donationDate);
@@ -72,7 +97,7 @@ export const AdminHistoryPage: React.FC = () => {
         if (timeRangeFilter === '6 tháng qua' && diffDays > 180) matchTime = false;
         if (timeRangeFilter === '1 năm qua' && diffDays > 365) matchTime = false;
       }
-      
+
       return matchSearch && matchBloodGroup && matchStaff && matchTime;
     });
   }, [history, searchTerm, bloodGroupFilter, timeRangeFilter, staffFilter]);
@@ -131,7 +156,7 @@ export const AdminHistoryPage: React.FC = () => {
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFB31B1B' } };
       cell.font = { name: 'Arial', bold: true, color: { argb: 'FFFFFFFF' } };
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
-      cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
     });
 
     filteredHistory.forEach(item => {
@@ -145,7 +170,7 @@ export const AdminHistoryPage: React.FC = () => {
       ]);
       row.eachCell(cell => {
         cell.alignment = { vertical: 'middle', horizontal: 'center' };
-        cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
       });
     });
 
@@ -159,15 +184,15 @@ export const AdminHistoryPage: React.FC = () => {
 
   const exportToPDF = () => {
     const doc = new jsPDF('landscape');
-    
+
     doc.addFileToVFS("Roboto-Regular.ttf", RobotoRegular);
     doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-    
+
     doc.setFontSize(16);
     doc.setTextColor(179, 27, 27);
     doc.setFont("Roboto", "normal");
     doc.text("LỊCH SỬ HIẾN MÁU", doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
-    
+
     doc.setFontSize(11);
     doc.text(`Tổng số: ${filteredHistory.length} phiếu hiến`, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
 
@@ -220,14 +245,6 @@ export const AdminHistoryPage: React.FC = () => {
               <li><button className="dropdown-item" onClick={exportToPDF}>Xuất PDF</button></li>
             </ul>
           </div>
-          <button className="btn btn-light border d-flex align-items-center gap-2">
-            <Filter size={18} />
-            <span>Bộ lọc nâng cao</span>
-          </button>
-          <button className="btn btn-danger d-flex align-items-center gap-2">
-            <Plus size={18} />
-            <span>Thêm phiếu hiến</span>
-          </button>
         </div>
       </div>
 
@@ -296,16 +313,16 @@ export const AdminHistoryPage: React.FC = () => {
         <div className="p-3 border-bottom bg-white d-flex gap-3 align-items-center flex-wrap">
           <div className="position-relative flex-grow-1" style={{ minWidth: '250px' }}>
             <Search className="position-absolute text-muted" size={18} style={{ left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-            <input 
-              type="text" 
-              className="form-control ps-5 bg-light border-0" 
+            <input
+              type="text"
+              className="form-control ps-5 bg-light border-0"
               placeholder="Tìm kiếm theo tên, email, SĐT..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{ height: '42px', borderRadius: '8px' }}
             />
           </div>
-          
+
           <div style={{ width: '180px' }}>
             <label className="text-muted small mb-1" style={{ fontSize: '0.75rem', fontWeight: 600 }}>Nhóm máu</label>
             <select className="form-select border-0 bg-light" style={{ height: '42px', borderRadius: '8px' }} value={bloodGroupFilter} onChange={e => setBloodGroupFilter(e.target.value)}>
@@ -371,7 +388,7 @@ export const AdminHistoryPage: React.FC = () => {
                 currentItems.map((item, index) => {
                   const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
                   const avatarColor = colors[item.donorName ? item.donorName.charCodeAt(0) % colors.length : 0];
-                  
+
                   return (
                     <tr key={index} className="border-bottom">
                       <td className="px-4 py-3">
@@ -403,7 +420,7 @@ export const AdminHistoryPage: React.FC = () => {
                           <Calendar size={16} className="text-muted" />
                           <div>
                             <div style={{ color: '#374151', fontSize: '0.9rem', fontWeight: 500 }}>
-                              {new Date(item.donationDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit', second:'2-digit'})}
+                              {new Date(item.donationDate).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                             </div>
                             <div className="text-muted" style={{ fontSize: '0.85rem' }}>
                               {new Date(item.donationDate).toLocaleDateString('vi-VN')}
@@ -416,18 +433,23 @@ export const AdminHistoryPage: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="d-flex gap-2 justify-content-center">
-                          <button 
-                            className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3" 
+                          <button
+                            className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3"
                             style={{ width: 32, height: 32 }}
                             onClick={() => setSelectedDonation(item)}
                           >
                             <Eye size={16} className="text-muted" />
                           </button>
-                          <button className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3" style={{ width: 32, height: 32 }}>
+                          {/* <button className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3" style={{ width: 32, height: 32 }}>
                             <Printer size={16} className="text-muted" />
-                          </button>
-                          <button className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3" style={{ width: 32, height: 32 }}>
-                            <MoreHorizontal size={16} className="text-muted" />
+                          </button> */}
+                          <button 
+                            className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3 text-danger" 
+                            style={{ width: 32, height: 32 }}
+                            onClick={() => handleDelete(item.donationId)}
+                            title="Xóa phiếu hiến máu"
+                          >
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -438,19 +460,19 @@ export const AdminHistoryPage: React.FC = () => {
             </tbody>
           </table>
         </div>
-        
+
         {/* Footer Pagination */}
         {!loading && (
           <div className="p-4 border-top d-flex justify-content-between align-items-center bg-white flex-wrap gap-3">
             <div className="text-muted" style={{ fontSize: '0.9rem' }}>
               Hiển thị {(currentPage - 1) * itemsPerPage + (filteredHistory.length > 0 ? 1 : 0)} - {Math.min(currentPage * itemsPerPage, filteredHistory.length)} trong tổng số {filteredHistory.length} mục
             </div>
-            
+
             <div className="d-flex align-items-center gap-3">
               <div className="d-flex align-items-center gap-2">
                 <span className="text-muted" style={{ fontSize: '0.9rem' }}>Hiển thị</span>
-                <select 
-                  className="form-select form-select-sm border" 
+                <select
+                  className="form-select form-select-sm border"
                   style={{ width: '100px', height: '36px', borderRadius: '8px' }}
                   value={itemsPerPage}
                   onChange={(e) => {
@@ -463,9 +485,9 @@ export const AdminHistoryPage: React.FC = () => {
                   <option value="20">20 / trang</option>
                 </select>
               </div>
-              
+
               <div className="d-flex gap-1">
-                <button 
+                <button
                   className="btn btn-light border d-flex align-items-center justify-content-center"
                   style={{ width: 36, height: 36, borderRadius: '8px' }}
                   disabled={currentPage === 1}
@@ -474,7 +496,7 @@ export const AdminHistoryPage: React.FC = () => {
                   &laquo;
                 </button>
                 {Array.from({ length: Math.ceil(filteredHistory.length / itemsPerPage) }, (_, i) => i + 1).map(page => (
-                  <button 
+                  <button
                     key={page}
                     className={`btn border d-flex align-items-center justify-content-center fw-medium ${currentPage === page ? 'btn-danger text-white' : 'btn-white text-dark'}`}
                     style={{ width: 36, height: 36, borderRadius: '8px' }}
@@ -483,7 +505,7 @@ export const AdminHistoryPage: React.FC = () => {
                     {page}
                   </button>
                 ))}
-                <button 
+                <button
                   className="btn btn-light border d-flex align-items-center justify-content-center"
                   style={{ width: 36, height: 36, borderRadius: '8px' }}
                   disabled={currentPage === Math.ceil(filteredHistory.length / itemsPerPage) || filteredHistory.length === 0}
