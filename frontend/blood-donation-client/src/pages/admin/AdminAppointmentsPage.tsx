@@ -14,7 +14,7 @@ export const AdminAppointmentsPage: React.FC = () => {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<any[]>([]);
-  
+
   // Filters & Search
   const [filterCampaignId, setFilterCampaignId] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
@@ -102,9 +102,9 @@ export const AdminAppointmentsPage: React.FC = () => {
       (a.donorPhone && a.donorPhone.toLowerCase().includes(searchLower)) ||
       (a.appointmentId && a.appointmentId.toString().includes(searchLower))
     ) : true;
-    
+
     return matchCampaign && matchStatus && matchSearch;
-  });
+  }).sort((a, b) => a.appointmentId - b.appointmentId);
 
   // Calculate Stats
   const totalApps = appointments.length;
@@ -118,7 +118,7 @@ export const AdminAppointmentsPage: React.FC = () => {
 
   // Utilities
   const getStatusString = (status: number) => {
-    switch(status) {
+    switch (status) {
       case 0: return 'Chờ duyệt';
       case 1: return 'Đã xác nhận';
       case 2: return 'Hoàn thành';
@@ -128,7 +128,7 @@ export const AdminAppointmentsPage: React.FC = () => {
   };
 
   const getStatusBadge = (status: number) => {
-    switch(status) {
+    switch (status) {
       case 0: return <span className="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill fw-semibold">Chờ duyệt</span>;
       case 1: return <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold">Đã xác nhận</span>;
       case 2: return <span className="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill fw-semibold">Hoàn thành</span>;
@@ -138,13 +138,13 @@ export const AdminAppointmentsPage: React.FC = () => {
   };
 
   const removeVietnameseTones = (str: string) => {
-    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
-    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e"); 
-    str = str.replace(/ì|í|ị|ỉ|ĩ/g,"i"); 
-    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g,"o"); 
-    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u"); 
-    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y"); 
-    str = str.replace(/đ/g,"d");
+    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+    str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+    str = str.replace(/đ/g, "d");
     str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
     str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
     str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
@@ -163,7 +163,7 @@ export const AdminAppointmentsPage: React.FC = () => {
     // Mẫu màu giống hình ảnh
     const darkRed = 'FFB31B1B'; // #B31B1B
     const lightPink = 'FFFFF0F0';
-    
+
     // Dòng 1: Tiêu đề lớn
     worksheet.mergeCells('A1:I1');
     const titleCell = worksheet.getCell('A1');
@@ -182,7 +182,7 @@ export const AdminAppointmentsPage: React.FC = () => {
 
     // Dòng 3: Khoảng trắng
     worksheet.mergeCells('A3:I3');
-    
+
     // Dòng 4: Header
     const headers = ['Mã đơn', 'Người hiến máu', 'SĐT', 'Nhóm máu', 'Chiến dịch', 'Ngày hẹn', 'Giờ', 'Trạng thái', 'Ngày đăng ký'];
     const headerRow = worksheet.addRow(headers);
@@ -277,17 +277,17 @@ export const AdminAppointmentsPage: React.FC = () => {
 
   const exportToPDF = () => {
     const doc = new jsPDF('landscape');
-    
+
     // Đăng ký font tiếng Việt
     doc.addFileToVFS("Roboto-Regular.ttf", RobotoRegular);
     doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-    
+
     // Tiêu đề
     doc.setFontSize(16);
     doc.setTextColor(179, 27, 27); // Đỏ đậm
     doc.setFont("Roboto", "normal");
     doc.text("DANH SÁCH NGƯỜI ĐÃ ĐĂNG KÝ HIẾN MÁU", doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
-    
+
     // Tổng số
     doc.setFontSize(11);
     doc.setFont("Roboto", "normal");
@@ -317,24 +317,24 @@ export const AdminAppointmentsPage: React.FC = () => {
       theme: 'grid',
       styles: { font: "Roboto", fontStyle: "normal", fontSize: 9 },
       headStyles: { fillColor: [179, 27, 27], textColor: [255, 255, 255], fontStyle: 'normal', halign: 'center' },
-      didParseCell: function(data) {
+      didParseCell: function (data) {
         if (data.section === 'body' && data.column.index === 7) { // Trạng thái
-           const statusStr = data.cell.raw.toString().toLowerCase();
-           if (statusStr.includes('hoan thanh')) {
-              data.cell.styles.fillColor = [212, 237, 218];
-              data.cell.styles.textColor = [21, 87, 36];
-           } else if (statusStr.includes('cho duyet')) {
-              data.cell.styles.fillColor = [255, 243, 205];
-              data.cell.styles.textColor = [133, 100, 4];
-           } else if (statusStr.includes('xac nhan')) {
-              data.cell.styles.fillColor = [209, 236, 241];
-              data.cell.styles.textColor = [12, 84, 96];
-           } else if (statusStr.includes('huy')) {
-              data.cell.styles.fillColor = [248, 215, 218];
-              data.cell.styles.textColor = [114, 28, 36];
-           }
-           data.cell.styles.fontStyle = 'normal';
-           data.cell.styles.halign = 'center';
+          const statusStr = data.cell.raw.toString().toLowerCase();
+          if (statusStr.includes('hoan thanh')) {
+            data.cell.styles.fillColor = [212, 237, 218];
+            data.cell.styles.textColor = [21, 87, 36];
+          } else if (statusStr.includes('cho duyet')) {
+            data.cell.styles.fillColor = [255, 243, 205];
+            data.cell.styles.textColor = [133, 100, 4];
+          } else if (statusStr.includes('xac nhan')) {
+            data.cell.styles.fillColor = [209, 236, 241];
+            data.cell.styles.textColor = [12, 84, 96];
+          } else if (statusStr.includes('huy')) {
+            data.cell.styles.fillColor = [248, 215, 218];
+            data.cell.styles.textColor = [114, 28, 36];
+          }
+          data.cell.styles.fontStyle = 'normal';
+          data.cell.styles.halign = 'center';
         }
       }
     });
@@ -354,17 +354,17 @@ export const AdminAppointmentsPage: React.FC = () => {
     <>
       <div className="container-fluid fade-in py-2" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
         <ToastContainer position="top-center" autoClose={3000} theme="colored" />
-        
+
         {/* Header & Filters */}
         <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
           <div>
             <h3 style={{ fontFamily: 'Montserrat', fontWeight: 800, color: '#111827', margin: 0 }}>Duyệt Đơn Đăng Ký</h3>
             <p className="text-muted small mt-1 mb-0">Quản lý và xét duyệt các đơn đăng ký hiến máu.</p>
           </div>
-          
+
           <div className="d-flex gap-3 align-items-center">
-            <select 
-              className="form-select border-0 shadow-sm rounded-3 px-3 py-2" 
+            <select
+              className="form-select border-0 shadow-sm rounded-3 px-3 py-2"
               value={filterCampaignId}
               onChange={(e) => setFilterCampaignId(e.target.value)}
               style={{ minWidth: '220px', fontSize: '0.9rem' }}
@@ -375,8 +375,8 @@ export const AdminAppointmentsPage: React.FC = () => {
               ))}
             </select>
 
-            <select 
-              className="form-select border-0 shadow-sm rounded-3 px-3 py-2" 
+            <select
+              className="form-select border-0 shadow-sm rounded-3 px-3 py-2"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               style={{ minWidth: '180px', fontSize: '0.9rem' }}
@@ -387,10 +387,10 @@ export const AdminAppointmentsPage: React.FC = () => {
               <option value="2">Hoàn thành</option>
               <option value="3">Đã hủy</option>
             </select>
-            
-            <button className="btn btn-outline-secondary bg-white border-0 shadow-sm py-2 px-3 rounded-3" style={{ color: '#D42B2B' }}>
+
+            {/* <button className="btn btn-outline-secondary bg-white border-0 shadow-sm py-2 px-3 rounded-3" style={{ color: '#D42B2B' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -410,7 +410,7 @@ export const AdminAppointmentsPage: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="col-12 col-sm-6 col-lg-3">
             <div className="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white">
               <div className="d-flex align-items-center gap-3">
@@ -459,16 +459,16 @@ export const AdminAppointmentsPage: React.FC = () => {
 
         {/* Table & Toolbar */}
         <div className="card border-0 bg-white" style={{ boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', borderRadius: '1rem' }}>
-          
+
           <div className="d-flex justify-content-between align-items-center p-4 border-bottom">
             <div className="position-relative" style={{ width: '350px' }}>
               <span className="position-absolute" style={{ top: '50%', left: '15px', transform: 'translateY(-50%)', color: '#9CA3AF' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               </span>
-              <input 
-                type="text" 
-                className="form-control bg-light border-0 rounded-3 ps-5 py-2" 
-                placeholder="Tìm kiếm theo tên, SĐT, mã đơn..." 
+              <input
+                type="text"
+                className="form-control bg-light border-0 rounded-3 ps-5 py-2"
+                placeholder="Tìm kiếm theo tên, SĐT, mã đơn..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
@@ -479,9 +479,9 @@ export const AdminAppointmentsPage: React.FC = () => {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.21l-5.42 5.42"></path></svg>
                 Làm mới
               </button>
-              
+
               <div className="position-relative">
-                <button 
+                <button
                   className="btn btn-danger d-flex align-items-center gap-2 px-3 py-2 fw-semibold shadow-sm rounded-3"
                   onClick={() => setShowExportMenu(!showExportMenu)}
                   style={{ backgroundColor: '#D42B2B', border: 'none' }}
@@ -560,16 +560,16 @@ export const AdminAppointmentsPage: React.FC = () => {
                       </td>
                       <td className="py-3 text-end px-4">
                         <div className="d-flex gap-2 justify-content-end">
-                          <button 
-                            className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 rounded-pill px-3 py-1 bg-white" 
+                          <button
+                            className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 rounded-pill px-3 py-1 bg-white"
                             onClick={() => handleOpenViewModal(a)}
                             style={{ fontSize: '0.8rem', fontWeight: 500 }}
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             Xem
                           </button>
-                          <button 
-                            className="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 rounded-pill px-3 py-1 bg-white" 
+                          <button
+                            className="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 rounded-pill px-3 py-1 bg-white"
                             onClick={() => handleOpenStatusModal(a)}
                             style={{ fontSize: '0.8rem', fontWeight: 500, borderColor: a.status === 0 ? '#3b82f6' : '#ef4444', color: a.status === 0 ? '#3b82f6' : '#ef4444' }}
                           >
@@ -584,13 +584,13 @@ export const AdminAppointmentsPage: React.FC = () => {
               </tbody>
             </table>
           </div>
-          
+
           {!loading && filteredAppointments.length > 0 && (
             <div className="p-3 border-top d-flex justify-content-between align-items-center">
               <span className="text-muted small">
                 Hiển thị {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredAppointments.length)} trong tổng số {filteredAppointments.length} mục
               </span>
-              <Pagination 
+              <Pagination
                 currentPage={currentPage}
                 totalItems={filteredAppointments.length}
                 itemsPerPage={itemsPerPage}
@@ -621,9 +621,9 @@ export const AdminAppointmentsPage: React.FC = () => {
 
                 <div className="col-12">
                   <label className="form-label small fw-bold text-muted">CHUYỂN TRẠNG THÁI</label>
-                  <select 
-                    className="form-select" 
-                    value={newStatus} 
+                  <select
+                    className="form-select"
+                    value={newStatus}
                     onChange={e => setNewStatus(Number(e.target.value))}
                     style={{ backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB', padding: '0.6rem 1rem' }}
                   >
@@ -636,17 +636,17 @@ export const AdminAppointmentsPage: React.FC = () => {
 
                 <div className="col-12">
                   <label className="form-label small fw-bold text-muted">GHI CHÚ DÀNH CHO DONOR (TUỲ CHỌN)</label>
-                  <textarea 
-                    className="form-control" 
-                    rows={3} 
-                    value={adminNote} 
+                  <textarea
+                    className="form-control"
+                    rows={3}
+                    value={adminNote}
                     onChange={e => setAdminNote(e.target.value)}
                     placeholder="Nhập ghi chú hoặc lý do (VD: Hủy do máu không đạt chuẩn)..."
                     style={{ backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB' }}
                   />
                 </div>
               </div>
-              
+
               <div className="modal-footer border-0 pt-0 mt-3 d-flex gap-2">
                 <button type="button" className="btn btn-light rounded-pill px-4 fw-semibold" onClick={() => setShowStatusModal(false)}>Đóng</button>
                 <button type="button" className="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" onClick={handleUpdateStatus}>
@@ -663,7 +663,7 @@ export const AdminAppointmentsPage: React.FC = () => {
         <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(17, 24, 39, 0.6)', zIndex: 9999, backdropFilter: 'blur(4px)' }}>
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '1.25rem', overflow: 'hidden' }}>
-              
+
               {/* Header */}
               <div className="modal-header border-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                 <div className="d-flex align-items-center gap-3">
@@ -688,7 +688,7 @@ export const AdminAppointmentsPage: React.FC = () => {
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         THÔNG TIN NGƯỜI HIẾN
                       </h6>
-                      
+
                       <div className="mb-3">
                         <div className="text-muted small fw-semibold mb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>HỌ VÀ TÊN</div>
                         <div className="fw-bold text-dark fs-6">{selectedApp.donorName}</div>
@@ -709,7 +709,7 @@ export const AdminAppointmentsPage: React.FC = () => {
                         <div className="text-muted small fw-semibold mb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>CCCD / CMND</div>
                         <div className="fw-bold text-dark">{selectedApp.donorCitizenId || <span className="text-muted fst-italic fw-normal">Chưa cập nhật</span>}</div>
                       </div>
-                      
+
                       <div>
                         <div className="text-muted small fw-semibold mb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>GHI CHÚ ĐĂNG KÝ</div>
                         <div className="fw-medium text-dark">{selectedApp.note || <span className="text-muted fst-italic fw-normal">Không có ghi chú</span>}</div>
@@ -724,7 +724,7 @@ export const AdminAppointmentsPage: React.FC = () => {
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                         THÔNG TIN CHIẾN DỊCH
                       </h6>
-                      
+
                       <div className="mb-3">
                         <div className="text-muted small fw-semibold mb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>TÊN CHIẾN DỊCH</div>
                         <div className="fw-bold fs-6" style={{ color: '#0369A1' }}>{selectedApp.campaignName}</div>

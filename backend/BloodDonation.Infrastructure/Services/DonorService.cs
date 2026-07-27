@@ -236,20 +236,27 @@ public class DonorService : IDonorService
             Avatar = d.Avatar,
             LastDonationDate = d.LastDonationDate,
             TotalDonationTimes = d.TotalDonationTimes,
+            IsAvailable = d.IsAvailable,
             UpdatedAt = d.UpdatedAt
         }).ToList();
     }
 
     public async Task<DonorProfileDto> CreateDonorAdminAsync(DonorProfileDto dto)
     {
-        // For admin creation, we might not have a UserId (they might not have an account)
-        // Alternatively we can create a dummy user. Let's create a dummy User if needed,
-        // but looking at Domain.Entities.Donor, UserId is int (not nullable).
-        // So we MUST create a User first.
+        if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+        {
+            throw new Exception("Email đã được sử dụng bởi người dùng khác.");
+        }
+
+        if (await _context.Donors.AnyAsync(d => d.CitizenId == dto.CitizenId))
+        {
+            throw new Exception("Căn cước công dân đã tồn tại trong hệ thống.");
+        }
         
         var donorRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Donor");
         var user = new User
         {
+            Username = dto.Email,
             Email = dto.Email,
             Phone = dto.Phone,
             PasswordHash = "$2a$11$dummyHashForNoLogin", // Dummy hash
@@ -295,6 +302,16 @@ public class DonorService : IDonorService
         var donor = await _context.Donors.FirstOrDefaultAsync(d => d.DonorId == donorId);
         if (donor == null) return false;
 
+        if (await _context.Users.AnyAsync(u => u.Email == dto.Email && u.UserId != donor.UserId))
+        {
+            throw new Exception("Email đã được sử dụng bởi người dùng khác.");
+        }
+
+        if (await _context.Donors.AnyAsync(d => d.CitizenId == dto.CitizenId && d.DonorId != donorId))
+        {
+            throw new Exception("Căn cước công dân đã tồn tại trong hệ thống.");
+        }
+
         donor.FullName = dto.FullName;
         donor.Gender = dto.Gender;
         donor.DateOfBirth = dto.DateOfBirth;
@@ -330,15 +347,37 @@ public class DonorService : IDonorService
         var donor = await _context.Donors.FirstOrDefaultAsync(d => d.DonorId == donorId);
         if (donor == null) return false;
 
-        // Soft delete
-        donor.IsAvailable = false;
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == donor.UserId);
+        
+        try
+        {
+            _context.Donors.Remove(donor);
+            if (user != null)
+            {
+                _context.Users.Remove(user);
+            }
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch (DbUpdateException)
+        {
+            throw new Exception("Không thể xóa người hiến máu này vì đã có dữ liệu liên quan (lịch sử hiến máu, ...). Vui lòng sử dụng tính năng Khóa thay vì Xóa.");
+        }
+    }
+
+    public async Task<bool> ToggleLockDonorAdminAsync(int donorId)
+    {
+        var donor = await _context.Donors.FirstOrDefaultAsync(d => d.DonorId == donorId);
+        if (donor == null) return false;
+
+        donor.IsAvailable = !donor.IsAvailable;
         donor.UpdatedAt = DateTime.UtcNow;
         _context.Donors.Update(donor);
-        
+
         var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == donor.UserId);
         if (user != null)
         {
-            user.IsActive = false;
+            user.IsActive = donor.IsAvailable;
             user.UpdatedAt = DateTime.UtcNow;
             _context.Users.Update(user);
         }

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-toastify';
-import { Database, ShieldCheck, Calendar, FileText, Search, Filter, RefreshCw, Download, RotateCcw, MoreVertical, CheckCircle2, FileArchive, Info, Lightbulb, CloudUpload } from 'lucide-react';
+import { Database, ShieldCheck, Calendar, FileText, Search, Filter, RefreshCw, Download, CheckCircle2, FileArchive, Info, Lightbulb, CloudUpload } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 interface BackupFile {
   fileName: string;
@@ -42,18 +43,69 @@ export const AdminSettingsPage: React.FC = () => {
 
   const handleManualBackup = async () => {
     if (!user) return;
-    setBackingUp(true);
+    
+    let timerInterval: any;
+    
+    Swal.fire({
+      title: 'Đang tiến hành sao lưu...',
+      html: `
+        <div class="mb-3 text-muted" style="font-size: 0.9rem;">Vui lòng không đóng trang web trong quá trình này.</div>
+        <div class="progress" style="height: 20px; border-radius: 10px;">
+          <div id="swal-progress" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
+      `,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        const bar = document.getElementById('swal-progress');
+        let progress = 0;
+        timerInterval = setInterval(() => {
+          progress += Math.floor(Math.random() * 8) + 2;
+          if (progress >= 95) progress = 95;
+          if (bar) {
+            bar.style.width = `${progress}%`;
+            bar.textContent = `${progress}%`;
+          }
+        }, 300);
+      },
+      willClose: () => {
+        clearInterval(timerInterval);
+      }
+    });
+
     try {
       const res = await axios.post('http://localhost:5028/api/system/backups/create', {}, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
-      toast.success(res.data.message || 'Đã tạo bản sao lưu thành công');
-      fetchBackups();
+      
+      clearInterval(timerInterval);
+      const bar = document.getElementById('swal-progress');
+      if (bar) {
+        bar.style.width = `100%`;
+        bar.textContent = `100%`;
+      }
+
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Sao lưu thành công!',
+          text: res.data.message || 'Dữ liệu đã được sao lưu an toàn.',
+          confirmButtonColor: '#16A34A',
+          confirmButtonText: 'Hoàn tất'
+        });
+        fetchBackups();
+      }, 500);
+
     } catch (err) {
+      clearInterval(timerInterval);
       console.error(err);
-      toast.error('Lỗi khi tạo sao lưu thủ công');
-    } finally {
-      setBackingUp(false);
+      Swal.fire({
+        icon: 'error',
+        title: 'Lỗi',
+        text: 'Đã xảy ra lỗi khi tạo bản sao lưu.',
+        confirmButtonColor: '#DC2626'
+      });
     }
   };
 
@@ -139,14 +191,9 @@ export const AdminSettingsPage: React.FC = () => {
           className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 fw-medium rounded-3 shadow-sm"
           style={{ backgroundColor: '#DC2626', borderColor: '#DC2626' }}
           onClick={handleManualBackup}
-          disabled={backingUp}
         >
-          {backingUp ? (
-            <span className="spinner-border spinner-border-sm" />
-          ) : (
-            <Download size={18} />
-          )}
-          <span>{backingUp ? 'Đang sao lưu...' : 'Sao lưu dữ liệu ngay'}</span>
+          <Download size={18} />
+          <span>Sao lưu dữ liệu ngay</span>
         </button>
       </div>
 
@@ -315,14 +362,9 @@ export const AdminSettingsPage: React.FC = () => {
                             className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3 text-primary" 
                             style={{ width: 32, height: 32 }}
                             onClick={() => handleDownload(item.fileName)}
+                            title="Tải xuống"
                           >
                             <Download size={14} />
-                          </button>
-                          <button className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3 text-primary" style={{ width: 32, height: 32 }}>
-                            <RotateCcw size={14} />
-                          </button>
-                          <button className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3" style={{ width: 32, height: 32 }}>
-                            <MoreVertical size={14} className="text-muted" />
                           </button>
                         </div>
                       </td>

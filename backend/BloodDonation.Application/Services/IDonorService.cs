@@ -18,4 +18,5 @@ public interface IDonorService
     Task<DonorProfileDto> CreateDonorAdminAsync(DonorProfileDto dto);
     Task<bool> UpdateDonorAdminAsync(int donorId, DonorProfileDto dto);
     Task<bool> DeleteDonorAdminAsync(int donorId);
+    Task<bool> ToggleLockDonorAdminAsync(int donorId);
 }

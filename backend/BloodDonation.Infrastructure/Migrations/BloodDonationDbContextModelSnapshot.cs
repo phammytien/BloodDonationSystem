@@ -235,17 +235,6 @@ namespace BloodDonation.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CampaignId"));
 
-                    b.Property<string>("AttachmentName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("AttachmentUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("BannerImage")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CampaignName")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -312,9 +301,6 @@ namespace BloodDonation.Infrastructure.Migrations
                     b.Property<string>("Address")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Avatar")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("BloodTypeId")
                         .HasColumnType("int");
@@ -403,16 +389,18 @@ namespace BloodDonation.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FileId"));
 
-                    b.Property<int?>("AppointmentId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ContentType")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int?>("DonorId")
+                    b.Property<int>("EntityId")
                         .HasColumnType("int");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("FileName")
                         .IsRequired()
@@ -433,10 +421,6 @@ namespace BloodDonation.Infrastructure.Migrations
 
                     b.HasKey("FileId");
 
-                    b.HasIndex("AppointmentId");
-
-                    b.HasIndex("DonorId");
-
                     b.ToTable("Files", (string)null);
                 });
 
@@ -450,9 +434,6 @@ namespace BloodDonation.Infrastructure.Migrations
 
                     b.Property<int>("AppointmentId")
                         .HasColumnType("int");
-
-                    b.Property<string>("AttachmentFile")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BloodPressure")
                         .IsRequired()
@@ -738,23 +719,6 @@ namespace BloodDonation.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("BloodDonation.Domain.Entities.FileRecord", b =>
-                {
-                    b.HasOne("BloodDonation.Domain.Entities.Appointment", "Appointment")
-                        .WithMany()
-                        .HasForeignKey("AppointmentId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("BloodDonation.Domain.Entities.Donor", "Donor")
-                        .WithMany("Files")
-                        .HasForeignKey("DonorId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Appointment");
-
-                    b.Navigation("Donor");
-                });
-
             modelBuilder.Entity("BloodDonation.Domain.Entities.HealthCheck", b =>
                 {
                     b.HasOne("BloodDonation.Domain.Entities.Appointment", "Appointment")
@@ -823,8 +787,6 @@ namespace BloodDonation.Infrastructure.Migrations
             modelBuilder.Entity("BloodDonation.Domain.Entities.Donor", b =>
                 {
                     b.Navigation("Appointments");
-
-                    b.Navigation("Files");
                 });
 
             modelBuilder.Entity("BloodDonation.Domain.Entities.Role", b =>

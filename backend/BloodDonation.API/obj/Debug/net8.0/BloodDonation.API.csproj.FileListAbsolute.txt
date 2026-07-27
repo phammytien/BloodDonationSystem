@@ -367,8 +367,8 @@ D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonat
 D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.API\obj\Debug\net8.0\BloodDonation.API.pdb
 D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.API\obj\Debug\net8.0\BloodDonation.API.genruntimeconfig.cache
 D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.API\obj\Debug\net8.0\ref\BloodDonation.API.dll
-D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.API\bin\Debug\net8.0\Backups\backup_20260727_030947_auto.json
-D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.API\bin\Debug\net8.0\Backups\backup_20260727_031947_auto.json
-D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.API\bin\Debug\net8.0\Backups\backup_20260727_032947_auto.json
-D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.API\bin\Debug\net8.0\Backups\backup_20260727_033947_auto.json
-D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.API\bin\Debug\net8.0\Backups\backup_20260727_034947_auto.json
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.API\bin\Debug\net8.0\Backups\backup_20260727_142922_auto.json
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.API\bin\Debug\net8.0\Backups\backup_20260727_143922_auto.json
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.API\bin\Debug\net8.0\Backups\backup_20260727_144757_auto.json
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.API\bin\Debug\net8.0\Backups\backup_20260727_144914_auto.json
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.API\bin\Debug\net8.0\Backups\backup_20260727_144922_auto.json

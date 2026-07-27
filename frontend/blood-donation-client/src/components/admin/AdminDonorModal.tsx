@@ -21,6 +21,7 @@ export interface DonorProfileDto {
   weight: number | null;
   height: number | null;
   avatar?: string | null;
+  isAvailable?: boolean;
 }
 
 interface AdminDonorModalProps {
@@ -151,7 +152,7 @@ export const AdminDonorModal: React.FC<AdminDonorModalProps> = ({ show, onHide, 
                   </div>
                   <div className="col-md-6">
                     <label className="form-label text-muted small fw-semibold">CCCD / Hộ chiếu <span className="text-danger">*</span></label>
-                    <input type="text" className="form-control" name="citizenId" value={formData.citizenId || ''} onChange={handleChange} required disabled={mode === 'view'} placeholder="079..." />
+                    <input type="text" className="form-control" name="citizenId" value={formData.citizenId || ''} onChange={handleChange} required disabled={mode === 'view'} pattern="^(\d{9}|\d{12})$" title="CCCD phải gồm đúng 9 hoặc 12 chữ số" placeholder="079..." />
                   </div>
 
                   <div className="col-md-6">

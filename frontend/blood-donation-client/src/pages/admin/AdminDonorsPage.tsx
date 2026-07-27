@@ -4,7 +4,8 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
 import { getAvatarChar } from '../../utils/avatarHelper';
-import { Download, Plus, Search, RefreshCw, Eye, Edit2, MoreHorizontal, Users, UserCheck, Droplet, UserPlus, X } from 'lucide-react';
+import Swal from 'sweetalert2';
+import { Download, Plus, Search, RefreshCw, Eye, Edit2, MoreHorizontal, Users, UserCheck, Droplet, UserPlus, X, Lock, Unlock, Trash2 } from 'lucide-react';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
@@ -19,7 +20,7 @@ export const AdminDonorsPage: React.FC = () => {
 
   // Modal State
   const [modalShow, setModalShow] = useState(false);
-  const [modalMode, setModalMode] = useState<'create'|'edit'|'view'>('create');
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [selectedDonor, setSelectedDonor] = useState<DonorProfileDto | null>(null);
 
   // Filters
@@ -50,17 +51,57 @@ export const AdminDonorsPage: React.FC = () => {
   };
 
   const handleDelete = async (donorId: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn vô hiệu hóa người hiến máu này?')) return;
-    try {
-      await axios.delete(`http://localhost:5028/api/Donor/admin/${donorId}`, {
-        headers: { Authorization: `Bearer ${user?.token}` }
-      });
-      toast.success('Đã vô hiệu hóa người hiến máu.');
-      fetchDonors();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Lỗi khi xóa người hiến máu.');
-    }
+    Swal.fire({
+      title: 'Xác nhận xóa',
+      text: 'Bạn có chắc chắn muốn xóa vĩnh viễn người hiến máu này? Mọi dữ liệu liên quan cũng sẽ bị xóa.',
+      icon: 'error',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Có, xóa!',
+      cancelButtonText: 'Hủy'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.delete(`http://localhost:5028/api/Donor/admin/${donorId}`, {
+            headers: { Authorization: `Bearer ${user?.token}` }
+          });
+          toast.success('Đã xóa người hiến máu.');
+          fetchDonors();
+        } catch (err: any) {
+          console.error(err);
+          toast.error(err.response?.data?.message || 'Lỗi khi xóa người hiến máu.');
+        }
+      }
+    });
   };
+
+  const handleToggleLock = async (donorId: number, currentStatus: boolean) => {
+    Swal.fire({
+      title: currentStatus ? 'Xác nhận khóa' : 'Xác nhận mở khóa',
+      text: currentStatus ? 'Bạn có chắc chắn muốn khóa tài khoản này?' : 'Bạn có chắc chắn muốn mở khóa tài khoản này?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: currentStatus ? '#f59e0b' : '#10b981',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: currentStatus ? 'Có, khóa!' : 'Có, mở khóa!',
+      cancelButtonText: 'Hủy'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.put(`http://localhost:5028/api/Donor/admin/${donorId}/toggle-lock`, {}, {
+            headers: { Authorization: `Bearer ${user?.token}` }
+          });
+          toast.success(currentStatus ? 'Đã khóa người hiến máu.' : 'Đã mở khóa người hiến máu.');
+          fetchDonors();
+        } catch (err: any) {
+          console.error(err);
+          toast.error(err.response?.data?.message || 'Lỗi khi cập nhật trạng thái.');
+        }
+      }
+    });
+  };
+
 
   useEffect(() => {
     fetchDonors();
@@ -69,22 +110,26 @@ export const AdminDonorsPage: React.FC = () => {
   // Derived filtered donors
   const filteredDonors = useMemo(() => {
     return donors.filter(item => {
-      const matchSearch = searchTerm === '' || 
+      const matchSearch = searchTerm === '' ||
         (item.fullName && item.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (item.email && item.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (item.phone && item.phone.includes(searchTerm)) ||
         (item.citizenId && item.citizenId.includes(searchTerm));
-      
-      const matchBloodGroup = bloodGroupFilter === 'Tất cả' || (item.bloodGroup || 'Chưa rõ') === bloodGroupFilter;
-      
-      // Mock logic for status and donation count for demo purposes since we don't have real data
-      const mockCount = item.donorId ? (item.donorId % 5) : 0;
-      const matchCount = donationCountFilter === 'Tất cả' || 
-                         (donationCountFilter === '0 lần' && mockCount === 0) ||
-                         (donationCountFilter === '> 0 lần' && mockCount > 0);
 
-      return matchSearch && matchBloodGroup && matchCount;
-    });
+      const matchBloodGroup = bloodGroupFilter === 'Tất cả' || (item.bloodGroup || 'Chưa rõ') === bloodGroupFilter;
+
+      // Status filter logic based on isAvailable
+      const mockCount = item.donorId ? (item.donorId % 5) : 0;
+      const matchCount = donationCountFilter === 'Tất cả' ||
+        (donationCountFilter === '0 lần' && mockCount === 0) ||
+        (donationCountFilter === '> 0 lần' && mockCount > 0);
+
+      const matchStatus = statusFilter === 'Tất cả' ||
+        (statusFilter === 'Đang hoạt động' && item.isAvailable === true) ||
+        (statusFilter === 'Tạm ngưng' && item.isAvailable === false);
+
+      return matchSearch && matchBloodGroup && matchCount && matchStatus;
+    }).sort((a, b) => (a.donorId || 0) - (b.donorId || 0));
   }, [donors, searchTerm, bloodGroupFilter, statusFilter, donationCountFilter]);
 
   // Reset page to 1 when filters change
@@ -139,7 +184,7 @@ export const AdminDonorsPage: React.FC = () => {
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFB31B1B' } };
       cell.font = { name: 'Arial', bold: true, color: { argb: 'FFFFFFFF' } };
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
-      cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
     });
 
     filteredDonors.forEach(item => {
@@ -153,7 +198,7 @@ export const AdminDonorsPage: React.FC = () => {
       ]);
       row.eachCell(cell => {
         cell.alignment = { vertical: 'middle', horizontal: 'center' };
-        cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
       });
     });
 
@@ -167,15 +212,15 @@ export const AdminDonorsPage: React.FC = () => {
 
   const exportToPDF = () => {
     const doc = new jsPDF('landscape');
-    
+
     doc.addFileToVFS("Roboto-Regular.ttf", RobotoRegular);
     doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-    
+
     doc.setFontSize(16);
     doc.setTextColor(179, 27, 27);
     doc.setFont("Roboto", "normal");
     doc.text("DANH SÁCH NGƯỜI HIẾN MÁU", doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
-    
+
     doc.setFontSize(11);
     doc.text(`Tổng số: ${filteredDonors.length} người`, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
 
@@ -218,8 +263,8 @@ export const AdminDonorsPage: React.FC = () => {
           </p>
         </div>
         <div className="d-flex gap-2">
-          <button 
-            className="btn btn-danger d-flex align-items-center gap-2 px-3 py-2 fw-medium rounded-3" 
+          <button
+            className="btn btn-danger d-flex align-items-center gap-2 px-3 py-2 fw-medium rounded-3"
             style={{ backgroundColor: '#DC2626', borderColor: '#DC2626' }}
             onClick={() => {
               setModalMode('create');
@@ -298,16 +343,16 @@ export const AdminDonorsPage: React.FC = () => {
         <div className="p-3 border-bottom bg-white d-flex gap-3 align-items-center flex-wrap">
           <div className="position-relative flex-grow-1" style={{ minWidth: '250px' }}>
             <Search className="position-absolute text-muted" size={18} style={{ left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-            <input 
-              type="text" 
-              className="form-control ps-5 bg-light border-0" 
+            <input
+              type="text"
+              className="form-control ps-5 bg-light border-0"
               placeholder="Tìm kiếm theo tên, CCCD, email, SĐT..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{ height: '42px', borderRadius: '8px' }}
             />
           </div>
-          
+
           <div style={{ width: '130px' }}>
             <label className="text-muted small mb-1" style={{ fontSize: '0.75rem', fontWeight: 600 }}>Nhóm máu</label>
             <select className="form-select border-0 bg-light" style={{ height: '42px', borderRadius: '8px' }} value={bloodGroupFilter} onChange={e => setBloodGroupFilter(e.target.value)}>
@@ -321,7 +366,7 @@ export const AdminDonorsPage: React.FC = () => {
             <select className="form-select border-0 bg-light" style={{ height: '42px', borderRadius: '8px' }} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
               <option value="Tất cả">Tất cả</option>
               <option value="Hoạt động">Hoạt động</option>
-              <option value="Khóa">Khóa</option>
+              <option value="Tạm ngưng">Khóa</option>
             </select>
           </div>
 
@@ -380,7 +425,7 @@ export const AdminDonorsPage: React.FC = () => {
                 currentItems.map((item, index) => {
                   const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
                   const avatarColor = colors[item.fullName ? item.fullName.charCodeAt(0) % colors.length : 0];
-                  
+
                   // Mock count & date based on ID for visual demonstration
                   const count = item.donorId ? (item.donorId % 5) : 0;
                   const lastDateStr = count > 0 && item.donorId ? new Date(Date.now() - (item.donorId * 123456789)).toLocaleDateString('vi-VN') : '—';
@@ -393,7 +438,12 @@ export const AdminDonorsPage: React.FC = () => {
                             {getAvatarChar(item.fullName, item.email)}
                           </div>
                           <div>
-                            <div className="fw-semibold" style={{ color: '#111827', fontSize: '0.95rem' }}>{item.fullName || 'Chưa cập nhật'}</div>
+                            <div className="fw-semibold d-flex align-items-center gap-2" style={{ color: '#111827', fontSize: '0.95rem' }}>
+                              {item.fullName || 'Chưa cập nhật'}
+                              {item.isAvailable === false && (
+                                <span className="badge bg-warning bg-opacity-10 text-warning px-2 py-1" style={{ fontSize: '0.7rem' }}>Bị khóa</span>
+                              )}
+                            </div>
                             <div className="text-muted" style={{ fontSize: '0.8rem' }}>CCCD: {item.citizenId || '—'}</div>
                           </div>
                         </div>
@@ -415,8 +465,8 @@ export const AdminDonorsPage: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="d-flex gap-2 justify-content-center">
-                          <button 
-                            className="btn btn-sm btn-light border d-flex align-items-center gap-2 rounded-3 px-3 py-1" 
+                          <button
+                            className="btn btn-sm btn-light border d-flex align-items-center gap-2 rounded-3 px-3 py-1"
                             style={{ height: 32 }}
                             onClick={() => {
                               setModalMode('view');
@@ -427,8 +477,8 @@ export const AdminDonorsPage: React.FC = () => {
                             <Eye size={14} className="text-muted" />
                             <span className="fw-medium text-dark" style={{ fontSize: '0.85rem' }}>Chi tiết</span>
                           </button>
-                          <button 
-                            className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3" 
+                          <button
+                            className="btn btn-sm btn-light border d-flex align-items-center justify-content-center rounded-3"
                             style={{ width: 32, height: 32 }}
                             onClick={() => {
                               setModalMode('edit');
@@ -444,8 +494,14 @@ export const AdminDonorsPage: React.FC = () => {
                             </button>
                             <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-1">
                               <li>
+                                <button className="dropdown-item text-warning d-flex align-items-center gap-2 py-2" onClick={() => item.donorId && handleToggleLock(item.donorId, item.isAvailable ?? true)}>
+                                  {item.isAvailable === false ? <Unlock size={16} /> : <Lock size={16} />}
+                                  {item.isAvailable === false ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
+                                </button>
+                              </li>
+                              <li>
                                 <button className="dropdown-item text-danger d-flex align-items-center gap-2 py-2" onClick={() => item.donorId && handleDelete(item.donorId)}>
-                                  <X size={16} /> Vô hiệu hóa
+                                  <Trash2 size={16} /> Xóa vĩnh viễn
                                 </button>
                               </li>
                             </ul>
@@ -459,19 +515,19 @@ export const AdminDonorsPage: React.FC = () => {
             </tbody>
           </table>
         </div>
-        
+
         {/* Footer Pagination */}
         {!loading && (
           <div className="p-4 border-top d-flex justify-content-between align-items-center bg-white flex-wrap gap-3">
             <div className="text-muted" style={{ fontSize: '0.9rem' }}>
               Hiển thị {(currentPage - 1) * itemsPerPage + (filteredDonors.length > 0 ? 1 : 0)} - {Math.min(currentPage * itemsPerPage, filteredDonors.length)} trong tổng số {filteredDonors.length} mục
             </div>
-            
+
             <div className="d-flex align-items-center gap-3">
               <div className="d-flex align-items-center gap-2">
                 <span className="text-muted" style={{ fontSize: '0.9rem' }}>Hiển thị</span>
-                <select 
-                  className="form-select form-select-sm border" 
+                <select
+                  className="form-select form-select-sm border"
                   style={{ width: '100px', height: '36px', borderRadius: '8px' }}
                   value={itemsPerPage}
                   onChange={(e) => {
@@ -484,9 +540,9 @@ export const AdminDonorsPage: React.FC = () => {
                   <option value="20">20 / trang</option>
                 </select>
               </div>
-              
+
               <div className="d-flex gap-1">
-                <button 
+                <button
                   className="btn btn-light border d-flex align-items-center justify-content-center"
                   style={{ width: 36, height: 36, borderRadius: '8px' }}
                   disabled={currentPage === 1}
@@ -495,7 +551,7 @@ export const AdminDonorsPage: React.FC = () => {
                   &laquo;
                 </button>
                 {Array.from({ length: Math.max(1, Math.ceil(filteredDonors.length / itemsPerPage)) }, (_, i) => i + 1).map(page => (
-                  <button 
+                  <button
                     key={page}
                     className={`btn border d-flex align-items-center justify-content-center fw-medium ${currentPage === page ? 'btn-danger text-white' : 'btn-white text-dark'}`}
                     style={{ width: 36, height: 36, borderRadius: '8px' }}
@@ -504,7 +560,7 @@ export const AdminDonorsPage: React.FC = () => {
                     {page}
                   </button>
                 ))}
-                <button 
+                <button
                   className="btn btn-light border d-flex align-items-center justify-content-center"
                   style={{ width: 36, height: 36, borderRadius: '8px' }}
                   disabled={currentPage === Math.ceil(filteredDonors.length / itemsPerPage) || filteredDonors.length === 0}
@@ -518,7 +574,7 @@ export const AdminDonorsPage: React.FC = () => {
         )}
       </div>
 
-      <AdminDonorModal 
+      <AdminDonorModal
         show={modalShow}
         onHide={() => setModalShow(false)}
         mode={modalMode}

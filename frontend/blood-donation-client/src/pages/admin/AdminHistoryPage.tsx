@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 import { useAuth } from '../../contexts/AuthContext';
 import { getAvatarChar } from '../../utils/avatarHelper';
 import { Download, Search, RefreshCw, Eye, Droplet, Calendar, Users, Trash2 } from 'lucide-react';
@@ -56,16 +57,29 @@ export const AdminHistoryPage: React.FC = () => {
   };
 
   const handleDelete = async (donationId: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa phiếu hiến máu này? Hành động này không thể hoàn tác!')) return;
-    try {
-      await axios.delete(`http://localhost:5028/api/BloodDonation/admin/${donationId}`, {
-        headers: { Authorization: `Bearer ${user?.token}` }
-      });
-      toast.success('Đã xóa phiếu hiến máu thành công.');
-      fetchHistory();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Lỗi khi xóa phiếu hiến máu.');
-    }
+    Swal.fire({
+      title: 'Xác nhận xóa',
+      text: 'Bạn có chắc chắn muốn xóa phiếu hiến máu này? Hành động này không thể hoàn tác!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Có, xóa ngay!',
+      cancelButtonText: 'Hủy'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.delete(`http://localhost:5028/api/BloodDonation/admin/${donationId}`, {
+            headers: { Authorization: `Bearer ${user?.token}` }
+          });
+          toast.success('Đã xóa phiếu hiến máu thành công.');
+          fetchHistory();
+        } catch (err: any) {
+          console.error(err);
+          toast.error(err.response?.data?.message || 'Lỗi khi xóa phiếu hiến máu.');
+        }
+      }
+    });
   };
 
   useEffect(() => {
@@ -99,7 +113,7 @@ export const AdminHistoryPage: React.FC = () => {
       }
 
       return matchSearch && matchBloodGroup && matchStaff && matchTime;
-    });
+    }).sort((a, b) => a.donationId - b.donationId);
   }, [history, searchTerm, bloodGroupFilter, timeRangeFilter, staffFilter]);
 
   // Reset page to 1 when filters change

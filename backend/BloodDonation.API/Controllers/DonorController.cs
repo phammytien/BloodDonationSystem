@@ -217,11 +217,28 @@ public class DonorController : ControllerBase
             var success = await _donorService.DeleteDonorAdminAsync(id);
             if (!success) return NotFound(new { message = "Không tìm thấy người hiến máu." });
             
-            return Ok(new { message = "Đã vô hiệu hóa người hiến máu thành công!" });
+            return Ok(new { message = "Đã xóa người hiến máu thành công!" });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "Lỗi khi xóa người hiến máu.", details = ex.Message });
+            return StatusCode(500, new { message = ex.Message }); // Throw raw message if it's the DbUpdateException
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("admin/{id}/toggle-lock")]
+    public async Task<IActionResult> ToggleLockDonorAdmin(int id)
+    {
+        try
+        {
+            var success = await _donorService.ToggleLockDonorAdminAsync(id);
+            if (!success) return NotFound(new { message = "Không tìm thấy người hiến máu." });
+            
+            return Ok(new { message = "Cập nhật trạng thái khóa/mở khóa thành công!" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi cập nhật trạng thái.", details = ex.Message });
         }
     }
 }

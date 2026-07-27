@@ -94,14 +94,14 @@ export const AdminCampaignsPage: React.FC = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
-    
+
     const formData = new FormData();
     formData.append('file', file);
-    
+
     setIsUploading(true);
     try {
       const res = await axios.post('http://localhost:5028/api/upload', formData, {
-        headers: { 
+        headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${user?.token}`
         }
@@ -119,7 +119,7 @@ export const AdminCampaignsPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
-    
+
     // Validate dates
     if (new Date(endDate) < new Date(startDate)) {
       toast.error('Ngày kết thúc không được nhỏ hơn ngày bắt đầu', { position: 'top-center' });
@@ -196,7 +196,7 @@ export const AdminCampaignsPage: React.FC = () => {
     if (searchTerm && !c.campaignName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if (filterStatus !== 'all' && c.status.toString() !== filterStatus) return false;
     return true;
-  });
+  }).sort((a, b) => a.campaignId - b.campaignId);
 
   const paginatedCampaigns = filteredCampaigns.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -207,14 +207,14 @@ export const AdminCampaignsPage: React.FC = () => {
         document.body
       )}
       <div className="container-fluid fade-in py-4 px-4" style={{ backgroundColor: '#F8F9FA', minHeight: '100vh' }}>
-        
+
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
             <h3 style={{ fontFamily: 'Montserrat', fontWeight: 800, color: '#111827', margin: 0 }}>Quản lý Chiến dịch</h3>
             <p className="text-muted small mt-1 mb-0">Thiết lập và theo dõi các đợt hiến máu nhân đạo.</p>
           </div>
-          <button 
-            className="btn text-white fw-bold px-4 shadow-sm d-flex align-items-center gap-2" 
+          <button
+            className="btn text-white fw-bold px-4 shadow-sm d-flex align-items-center gap-2"
             onClick={() => handleOpenModal()}
             style={{ fontFamily: 'Montserrat', fontSize: '0.9rem', backgroundColor: '#DC2626', borderRadius: '0.5rem', border: 'none', height: '42px' }}
           >
@@ -288,7 +288,7 @@ export const AdminCampaignsPage: React.FC = () => {
                 </div>
                 <input type="text" className="form-control bg-light border-0 py-2 ps-5" style={{ borderRadius: '0.5rem', width: '280px', fontSize: '0.9rem' }} placeholder="Tìm kiếm chiến dịch..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
               </div>
-              
+
               <div className="d-flex align-items-center gap-2">
                 <span className="text-muted small fw-semibold" style={{ fontSize: '0.8rem' }}>Trạng thái</span>
                 <select className="form-select bg-light border-0 py-2 px-3 text-dark fw-semibold" style={{ borderRadius: '0.5rem', fontSize: '0.9rem', width: '130px', cursor: 'pointer' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
@@ -299,16 +299,16 @@ export const AdminCampaignsPage: React.FC = () => {
                 </select>
               </div>
 
-              <div className="d-flex align-items-center gap-2">
+              {/* <div className="d-flex align-items-center gap-2">
                 <span className="text-muted small fw-semibold" style={{ fontSize: '0.8rem' }}>Thời gian</span>
                 <select className="form-select bg-light border-0 py-2 px-3 text-dark fw-semibold" style={{ borderRadius: '0.5rem', fontSize: '0.9rem', width: '130px', cursor: 'pointer' }} value={filterTime} onChange={e => setFilterTime(e.target.value)}>
                   <option value="all">Tất cả</option>
                   <option value="month">Tháng này</option>
                   <option value="year">Năm nay</option>
                 </select>
-              </div>
+              </div> */}
             </div>
-            
+
             <button className="btn btn-light bg-white border d-flex align-items-center gap-2 text-dark fw-semibold" style={{ borderRadius: '0.5rem', fontSize: '0.85rem' }} onClick={() => { setSearchTerm(''); setFilterStatus('all'); setFilterTime('all'); }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
               Làm mới
@@ -370,8 +370,8 @@ export const AdminCampaignsPage: React.FC = () => {
                       <td className="py-4 border-0">
                         <div className="d-flex align-items-center gap-2 mb-1">
                           <div className="progress flex-grow-1 bg-light" style={{ height: '6px', borderRadius: '4px' }}>
-                            <div 
-                              className="progress-bar bg-danger" 
+                            <div
+                              className="progress-bar bg-danger"
                               style={{ width: `${c.maxParticipants ? Math.min((c.registrantCount / c.maxParticipants) * 100, 100) : 100}%`, borderRadius: '4px' }}
                             ></div>
                           </div>
@@ -390,24 +390,24 @@ export const AdminCampaignsPage: React.FC = () => {
                       </td>
                       <td className="py-4 border-0 text-center">
                         <div className="d-flex justify-content-center gap-2">
-                          <button 
-                            className="btn btn-sm bg-white text-primary rounded-2 border d-flex align-items-center justify-content-center" 
+                          <button
+                            className="btn btn-sm bg-white text-primary rounded-2 border d-flex align-items-center justify-content-center"
                             onClick={() => handleOpenModal(c)}
                             title="Chỉnh sửa"
                             style={{ width: '32px', height: '32px', borderColor: '#E5E7EB' }}
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                           </button>
-                          <button 
-                            className="btn btn-sm bg-white text-danger rounded-2 border d-flex align-items-center justify-content-center" 
+                          <button
+                            className="btn btn-sm bg-white text-danger rounded-2 border d-flex align-items-center justify-content-center"
                             onClick={() => confirmDelete(c.campaignId)}
                             title="Xoá"
                             style={{ width: '32px', height: '32px', borderColor: '#E5E7EB' }}
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                           </button>
-                          <button 
-                            className="btn btn-sm bg-white text-secondary rounded-2 border d-flex align-items-center justify-content-center" 
+                          <button
+                            className="btn btn-sm bg-white text-secondary rounded-2 border d-flex align-items-center justify-content-center"
                             title="Thêm"
                             style={{ width: '32px', height: '32px', borderColor: '#E5E7EB' }}
                           >
@@ -426,7 +426,7 @@ export const AdminCampaignsPage: React.FC = () => {
               <div className="text-muted" style={{ fontSize: '0.85rem' }}>
                 Hiển thị {Math.min((currentPage - 1) * itemsPerPage + 1, filteredCampaigns.length)} - {Math.min(currentPage * itemsPerPage, filteredCampaigns.length)} trong tổng số {filteredCampaigns.length} mục
               </div>
-              <Pagination 
+              <Pagination
                 currentPage={currentPage}
                 totalItems={filteredCampaigns.length}
                 itemsPerPage={itemsPerPage}
@@ -487,7 +487,7 @@ export const AdminCampaignsPage: React.FC = () => {
                     <div className="col-12 col-md-4">
                       <label className="form-label small fw-bold text-dark mb-1">Ảnh đại diện</label>
                       <div className="text-muted mb-2" style={{ fontSize: '0.75rem' }}>JPG, PNG (tối đa 2MB)</div>
-                      
+
                       <div className="position-relative w-100 rounded-3 overflow-hidden d-flex flex-column align-items-center justify-content-center" style={{ height: '200px', border: attachmentUrl ? 'none' : '1.5px dashed #D1D5DB', backgroundColor: '#F9FAFB' }}>
                         {attachmentUrl ? (
                           <img src={attachmentUrl} alt="Campaign Cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -499,7 +499,7 @@ export const AdminCampaignsPage: React.FC = () => {
                             <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Chọn ảnh</span>
                           </div>
                         )}
-                        
+
                         <label className="position-absolute" style={{ inset: 0, cursor: 'pointer', zIndex: 10 }}>
                           <input type="file" className="d-none" accept="image/jpeg, image/png" onChange={handleFileUpload} disabled={isUploading} />
                         </label>
@@ -510,7 +510,7 @@ export const AdminCampaignsPage: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="col-12 col-md-8">
                       <div className="mb-3">
                         <label className="form-label small fw-bold" style={{ color: '#111827' }}>Tên chiến dịch <span className="text-danger">*</span></label>
@@ -519,7 +519,7 @@ export const AdminCampaignsPage: React.FC = () => {
                           <div className="position-absolute text-muted" style={{ right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem' }}>{campaignName.length}/100</div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-primary bg-opacity-10 rounded-3 p-3" style={{ border: '1px solid rgba(37, 99, 235, 0.1)' }}>
                         <div className="d-flex align-items-center text-primary mb-2 fw-semibold" style={{ fontSize: '0.9rem' }}>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="me-2"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"></path></svg>

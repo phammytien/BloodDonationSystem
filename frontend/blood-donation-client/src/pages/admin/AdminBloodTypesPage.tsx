@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
 import { Search, RefreshCw, FileDown, Plus, Edit2, MoreVertical, Trash2 } from 'lucide-react';
 import { AdminBloodTypeModal } from '../../components/admin/AdminBloodTypeModal';
+import Swal from 'sweetalert2';
 
 interface BloodTypeDto {
   bloodTypeId: number;
@@ -74,16 +75,28 @@ export const AdminBloodTypesPage: React.FC = () => {
 
   // Handle Delete
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn vô hiệu hóa nhóm máu này?')) return;
-    try {
-      await axios.delete(`http://localhost:5028/api/donor/blood-types/${id}`, {
-        headers: { Authorization: `Bearer ${user?.token}` }
-      });
-      toast.success('Vô hiệu hóa nhóm máu thành công!');
-      fetchBloodTypes();
-    } catch (err: any) {
-      toast.error('Lỗi khi xóa nhóm máu.');
-    }
+    Swal.fire({
+      title: 'Xác nhận vô hiệu hóa',
+      text: 'Bạn có chắc chắn muốn vô hiệu hóa nhóm máu này?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Có, vô hiệu hóa!',
+      cancelButtonText: 'Hủy'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.delete(`http://localhost:5028/api/donor/blood-types/${id}`, {
+            headers: { Authorization: `Bearer ${user?.token}` }
+          });
+          toast.success('Vô hiệu hóa nhóm máu thành công!');
+          fetchBloodTypes();
+        } catch (err: any) {
+          toast.error('Lỗi khi xóa nhóm máu.');
+        }
+      }
+    });
   };
 
   // Stats
@@ -102,7 +115,7 @@ export const AdminBloodTypesPage: React.FC = () => {
     if (statusFilter === 'Đã xóa') matchesStatus = bt.status === 2;
 
     return matchesSearch && matchesStatus;
-  });
+  }).sort((a, b) => a.bloodTypeId - b.bloodTypeId);
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredTypes.length / itemsPerPage);
