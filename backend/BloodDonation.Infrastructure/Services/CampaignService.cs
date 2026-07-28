@@ -130,4 +130,57 @@ public class CampaignService : ICampaignService
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<IEnumerable<CampaignCommentDto>> GetCommentsByCampaignIdAsync(int campaignId)
+    {
+        var comments = await _context.CampaignComments
+            .Include(c => c.User)
+            .ThenInclude(u => u.Donor) // Load donor profile if exists
+            .Where(c => c.CampaignId == campaignId)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync();
+
+        return comments.Select(c => new CampaignCommentDto
+        {
+            CommentId = c.CommentId,
+            CampaignId = c.CampaignId,
+            UserId = c.UserId,
+            Username = c.User.Username,
+            FullName = c.User.Donor?.FullName ?? c.User.Username,
+            Content = c.Content,
+            CreatedAt = c.CreatedAt
+        });
+    }
+
+    public async Task<CampaignCommentDto?> AddCommentAsync(int campaignId, int userId, string content)
+    {
+        // Check if campaign exists
+        var campaignExists = await _context.DonationCampaigns.AnyAsync(c => c.CampaignId == campaignId);
+        if (!campaignExists) return null;
+
+        var comment = new CampaignComment
+        {
+            CampaignId = campaignId,
+            UserId = userId,
+            Content = content,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.CampaignComments.Add(comment);
+        await _context.SaveChangesAsync();
+
+        // Fetch user data for DTO
+        var user = await _context.Users.Include(u => u.Donor).FirstOrDefaultAsync(u => u.UserId == userId);
+        
+        return new CampaignCommentDto
+        {
+            CommentId = comment.CommentId,
+            CampaignId = comment.CampaignId,
+            UserId = comment.UserId,
+            Username = user?.Username ?? "",
+            FullName = user?.Donor?.FullName ?? user?.Username,
+            Content = comment.Content,
+            CreatedAt = comment.CreatedAt
+        };
+    }
 }

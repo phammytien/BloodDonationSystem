@@ -113,8 +113,8 @@ export const AdminDonorsPage: React.FC = () => {
       const matchSearch = searchTerm === '' ||
         (item.fullName && item.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (item.email && item.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (item.phone && item.phone.includes(searchTerm)) ||
-        (item.citizenId && item.citizenId.includes(searchTerm));
+        (item.phone && String(item.phone).includes(searchTerm)) ||
+        (item.citizenId && String(item.citizenId).includes(searchTerm));
 
       const matchBloodGroup = bloodGroupFilter === 'Tất cả' || (item.bloodGroup || 'Chưa rõ') === bloodGroupFilter;
 
@@ -125,7 +125,7 @@ export const AdminDonorsPage: React.FC = () => {
         (donationCountFilter === '> 0 lần' && mockCount > 0);
 
       const matchStatus = statusFilter === 'Tất cả' ||
-        (statusFilter === 'Đang hoạt động' && item.isAvailable === true) ||
+        (statusFilter === 'Hoạt động' && item.isAvailable !== false) ||
         (statusFilter === 'Tạm ngưng' && item.isAvailable === false);
 
       return matchSearch && matchBloodGroup && matchCount && matchStatus;
@@ -149,6 +149,8 @@ export const AdminDonorsPage: React.FC = () => {
     setBloodGroupFilter('Tất cả');
     setStatusFilter('Tất cả');
     setDonationCountFilter('Tất cả');
+    setCurrentPage(1);
+    fetchDonors();
   };
 
   // Derive filter options
@@ -405,13 +407,14 @@ export const AdminDonorsPage: React.FC = () => {
                 <th className="py-3 px-4 text-muted fw-semibold border-0" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>NHÓM MÁU <span className="ms-1">↕</span></th>
                 <th className="py-3 px-4 text-muted fw-semibold border-0" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>SỐ LẦN HIẾN <span className="ms-1">↕</span></th>
                 <th className="py-3 px-4 text-muted fw-semibold border-0" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>LẦN CUỐI <span className="ms-1">↕</span></th>
+                <th className="py-3 px-4 text-muted fw-semibold border-0" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>TRẠNG THÁI <span className="ms-1">↕</span></th>
                 <th className="py-3 px-4 text-muted fw-semibold border-0 text-center" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>THAO TÁC</th>
               </tr>
             </thead>
             <tbody className="border-top-0">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-5">
+                  <td colSpan={7} className="text-center py-5">
                     <div className="spinner-border text-danger" role="status">
                       <span className="visually-hidden">Loading...</span>
                     </div>
@@ -419,7 +422,7 @@ export const AdminDonorsPage: React.FC = () => {
                 </tr>
               ) : currentItems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-5 text-muted">Không tìm thấy dữ liệu phù hợp</td>
+                  <td colSpan={7} className="text-center py-5 text-muted">Không tìm thấy dữ liệu phù hợp</td>
                 </tr>
               ) : (
                 currentItems.map((item, index) => {
@@ -440,9 +443,6 @@ export const AdminDonorsPage: React.FC = () => {
                           <div>
                             <div className="fw-semibold d-flex align-items-center gap-2" style={{ color: '#111827', fontSize: '0.95rem' }}>
                               {item.fullName || 'Chưa cập nhật'}
-                              {item.isAvailable === false && (
-                                <span className="badge bg-warning bg-opacity-10 text-warning px-2 py-1" style={{ fontSize: '0.7rem' }}>Bị khóa</span>
-                              )}
                             </div>
                             <div className="text-muted" style={{ fontSize: '0.8rem' }}>CCCD: {item.citizenId || '—'}</div>
                           </div>
@@ -462,6 +462,13 @@ export const AdminDonorsPage: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 text-muted" style={{ fontSize: '0.9rem' }}>
                         {lastDateStr}
+                      </td>
+                      <td className="px-4 py-3">
+                        {item.isAvailable !== false ? (
+                          <span className="badge bg-success bg-opacity-10 text-success px-3 py-1 rounded-pill" style={{ fontSize: '0.8rem', fontWeight: 600 }}>Hoạt động</span>
+                        ) : (
+                          <span className="badge bg-warning bg-opacity-10 text-warning px-3 py-1 rounded-pill" style={{ fontSize: '0.8rem', fontWeight: 600 }}>Khóa</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="d-flex gap-2 justify-content-center">

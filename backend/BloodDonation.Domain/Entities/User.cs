@@ -23,4 +23,5 @@ public class User
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     public virtual ICollection<OtpVerification> OtpVerifications { get; set; } = new List<OtpVerification>();
     public virtual ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
+    public virtual ICollection<CampaignComment> CampaignComments { get; set; } = new List<CampaignComment>();
 }

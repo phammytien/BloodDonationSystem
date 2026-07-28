@@ -4,11 +4,11 @@
 /* === CSS CUSTOM PROPERTIES === */
 :root {
   /* Brand Colors */
-  --primary:          #1B4FD8;   /* Royal Blue */
-  --primary-dark:     #1338A8;
-  --primary-hover:    #1741BE;
-  --primary-light:    #E8F0FE;
-  --primary-mid:      #C7D7FA;
+  --primary:          #D42B2B;   /* Medical Red */
+  --primary-dark:     #B01E1E;
+  --primary-hover:    #C52222;
+  --primary-light:    #FEF0F0;
+  --primary-mid:      #FAD0D0;
 
   --red:              #D42B2B;   /* Medical Red */
   --red-dark:         #B01E1E;
@@ -1031,5 +1031,34 @@ strong, b {
 
 .password-toggle-btn:focus {
   outline: none;
+}
+
+/* SOS Animations */
+@keyframes pulse-red {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse {
+  animation: pulse-red 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.pulse-sos {
+  animation: pulse-bg-red 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-bg-red {
+  0%, 100% {
+    background-color: #FEF2F2;
+  }
+  50% {
+    background-color: #FEE2E2;
+  }
 }
 

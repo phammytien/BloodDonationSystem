@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { toast, ToastContainer } from 'react-toastify';
 import axios from 'axios';
 import { getAvatarChar } from '../../utils/avatarHelper';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface BloodType {
   bloodTypeId: number;
@@ -81,7 +82,7 @@ export const ProfilePage: React.FC = () => {
     // Validate phone - đúng 10 số, chỉ số không ký tự đặc biệt
     if (!phone.trim()) {
       errors.phone = 'Số điện thoại không được để trống';
-    } else if (!/^\d{10}$/.test(phone.trim().replace(/\D/g, ''))) {
+    } else if (!/^\d{10}$/.test(phone.trim())) {
       errors.phone = 'Số điện thoại phải đủ 10 số và chỉ chứa chữ số';
     } else if (!/^0[35789]/.test(phone.trim())) {
       errors.phone = 'Số điện thoại phải bắt đầu bằng 03, 05, 07, 08 hoặc 09';
@@ -92,10 +93,8 @@ export const ProfilePage: React.FC = () => {
       errors.citizenId = 'Số CCCD / Hộ chiếu không được để trống';
     } else if (!/^\d+$/.test(citizenId.trim())) {
       errors.citizenId = 'Số CCCD / Hộ chiếu chỉ được chứa chữ số';
-    } else if (citizenId.trim().length < 9) {
-      errors.citizenId = 'Số CCCD / Hộ chiếu phải có ít nhất 9 ký tự';
-    } else if (citizenId.trim().length > 20) {
-      errors.citizenId = 'Số CCCD / Hộ chiếu không được quá 20 ký tự';
+    } else if (citizenId.trim().length !== 9 && citizenId.trim().length !== 12) {
+      errors.citizenId = 'Số CCCD / Hộ chiếu phải có đúng 9 hoặc 12 chữ số';
     }
 
     // Validate dateOfBirth (must be at least 18 years old)
@@ -225,8 +224,8 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return 'Chưa từng hiến';
+  const formatLastDonationDate = (dateStr: string | null, totalTimes: number) => {
+    if (!dateStr) return totalTimes > 0 ? 'Chưa cập nhật' : 'Chưa từng hiến';
     try {
       return new Date(dateStr).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
     } catch { return dateStr; }
@@ -275,29 +274,67 @@ export const ProfilePage: React.FC = () => {
       <div className="container py-5">
         <div className="row g-4 justify-content-center">
 
-          {/* Left panel: Info summary */}
+          {/* Left panel: Info summary & Donor Card */}
           <div className="col-12 col-lg-4">
-            <div className="bg-white rounded-4 p-4 text-center" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.06)', border: '1px solid #E5E7EB' }}>
-              <div className="d-flex align-items-center justify-content-center rounded-circle mx-auto mb-3" style={{ width: 80, height: 80, backgroundColor: '#EFF6FF', color: '#1B4FD8', fontSize: '2rem', fontWeight: 800 }}>
-                {getAvatarChar(fullName || user?.fullName, user?.username)}
+            <div className="bg-white rounded-4 p-4 text-center mb-4" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.06)', border: '1px solid #E5E7EB' }}>
+              
+              {/* DIGITAL DONOR CARD */}
+              <div className="rounded-4 overflow-hidden text-start mb-4 position-relative" style={{ 
+                background: 'linear-gradient(135deg, #D42B2B 0%, #991B1B 100%)', 
+                color: 'white', 
+                boxShadow: '0 10px 25px rgba(220, 38, 38, 0.3)',
+                padding: '1.5rem',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                {/* Background Pattern */}
+                <svg style={{ position: 'absolute', right: -20, bottom: -20, opacity: 0.1, pointerEvents: 'none' }} width="150" height="150" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+
+                <div className="d-flex justify-content-between align-items-start mb-4 position-relative z-1">
+                  <div>
+                    <div style={{ fontSize: '0.75rem', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '1px' }}>Thẻ Hiến Máu</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.2rem', fontFamily: 'Montserrat' }}>LifeGive</div>
+                  </div>
+                  <div className="bg-white text-danger rounded-circle d-flex align-items-center justify-content-center" style={{ width: 45, height: 45, fontSize: '1.2rem', fontWeight: 900, boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }}>
+                    {profile?.bloodGroup || '?'}
+                  </div>
+                </div>
+
+                <div className="mb-4 position-relative z-1">
+                  <div style={{ fontSize: '0.7rem', opacity: 0.8, textTransform: 'uppercase' }}>Họ và tên</div>
+                  <div style={{ fontWeight: 700, fontSize: '1.1rem', textTransform: 'uppercase', letterSpacing: '1px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{profile?.fullName || 'Người hiến máu'}</div>
+                  
+                  <div className="mt-2" style={{ fontSize: '0.7rem', opacity: 0.8, textTransform: 'uppercase' }}>Số CMND/CCCD</div>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem', letterSpacing: '2px' }}>{profile?.citizenId || '---'}</div>
+                </div>
+
+                <div className="d-flex justify-content-between align-items-end position-relative z-1">
+                  <div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.8, textTransform: 'uppercase' }}>Số lần hiến</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.3rem' }}>{profile?.totalDonationTimes || 0}</div>
+                  </div>
+                  {/* QR Code */}
+                  <div className="bg-white p-1 rounded-2 shadow-sm" style={{ width: 70, height: 70 }}>
+                    <QRCodeSVG 
+                      value={JSON.stringify({
+                        donorId: profile?.donorId,
+                        citizenId: profile?.citizenId,
+                        phone: profile?.phone,
+                        fullName: profile?.fullName
+                      })}
+                      size={62}
+                      level="L"
+                      includeMargin={false}
+                    />
+                  </div>
+                </div>
               </div>
-              <h5 style={{ fontFamily: 'Montserrat', fontWeight: 800, color: '#111827', margin: 0 }}>{fullName || 'Người hiến máu'}</h5>
-              <p className="text-muted small mt-1">{email}</p>
-
-              <hr className="my-4" style={{ borderColor: '#F3F4F6' }} />
-
-              <div className="row text-start g-3">
-                <div className="col-6">
-                  <span className="small text-muted d-block">Nhóm máu</span>
-                  <strong className="text-danger" style={{ fontSize: '1.1rem' }}>{profile?.bloodGroup || '—'}</strong>
-                </div>
-                <div className="col-6">
-                  <span className="small text-muted d-block">Lần hiến</span>
-                  <strong className="text-dark" style={{ fontSize: '1.1rem' }}>{profile?.totalDonationTimes || 0} lần</strong>
-                </div>
+              
+              <div className="row text-start g-3 mt-1">
                 <div className="col-12">
-                  <span className="small text-muted d-block">Lần hiến cuối</span>
-                  <span className="text-dark fw-semibold" style={{ fontSize: '0.88rem' }}>{formatDate(profile?.lastDonationDate || null)}</span>
+                  <span className="small text-muted d-block mb-1">Cập nhật lần cuối</span>
+                  <span className="text-dark fw-semibold" style={{ fontSize: '0.88rem' }}>{formatLastDonationDate(profile?.updatedAt || null, 0)}</span>
                 </div>
               </div>
             </div>
@@ -337,7 +374,8 @@ export const ProfilePage: React.FC = () => {
                     style={getInputStyle('phone')}
                     value={phone}
                     onChange={e => {
-                      setPhone(e.target.value);
+                      const val = e.target.value.replace(/\D/g, '');
+                      setPhone(val);
                       if (validationErrors.phone) setValidationErrors(prev => ({ ...prev, phone: '' }));
                     }}
                     placeholder="VD: 0912345678"
@@ -354,6 +392,8 @@ export const ProfilePage: React.FC = () => {
                     className={getInputClass('email')}
                     style={getInputStyle('email')}
                     value={email}
+                    disabled
+                    readOnly
                     onChange={e => {
                       setEmail(e.target.value);
                       if (validationErrors.email) setValidationErrors(prev => ({ ...prev, email: '' }));
@@ -361,6 +401,9 @@ export const ProfilePage: React.FC = () => {
                     placeholder="VD: donor@lifegive.vn"
                     required
                   />
+                  <div className="form-text" style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                    * Email không thể thay đổi vì dùng để đăng nhập.
+                  </div>
                   {renderFieldError('email')}
                 </div>
 
@@ -373,7 +416,8 @@ export const ProfilePage: React.FC = () => {
                     style={getInputStyle('citizenId')}
                     value={citizenId}
                     onChange={e => {
-                      setCitizenId(e.target.value);
+                      const val = e.target.value.replace(/\D/g, '');
+                      setCitizenId(val);
                       if (validationErrors.citizenId) setValidationErrors(prev => ({ ...prev, citizenId: '' }));
                     }}
                     placeholder="VD: 123456789"

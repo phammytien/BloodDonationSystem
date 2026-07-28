@@ -181,8 +181,8 @@ export const AppointmentPage: React.FC = () => {
         setCampaigns(res.data);
         if (initialCampaignId && res.data.some((c: any) => String(c.campaignId) === initialCampaignId)) {
           setSelectedCampaignId(initialCampaignId);
-        } else if (res.data.length > 0) {
-          setSelectedCampaignId(String(res.data[0].campaignId));
+        } else {
+          setSelectedCampaignId(''); // Không tự động chọn, bắt buộc người dùng tự chọn
         }
       })
       .catch(err => console.error('Lỗi tải chiến dịch', err));
@@ -443,14 +443,19 @@ export const AppointmentPage: React.FC = () => {
                       >
                         {campaigns.length === 0
                           ? <option value="">Đang tải chiến dịch...</option>
-                          : campaigns.map(c => {
-                              const isEnded = new Date(c.endDate) < new Date();
-                              return (
-                                <option key={c.campaignId} value={c.campaignId}>
-                                  {c.campaignName}{isEnded ? ' (Đã kết thúc)' : ''}
-                                </option>
-                              );
-                            })
+                          : (
+                            <>
+                              <option value="" disabled>-- Vui lòng chọn chiến dịch --</option>
+                              {campaigns.map(c => {
+                                const isEnded = new Date(c.endDate) < new Date();
+                                return (
+                                  <option key={c.campaignId} value={c.campaignId}>
+                                    {c.campaignName}{isEnded ? ' (Đã kết thúc)' : ''}
+                                  </option>
+                                );
+                              })}
+                            </>
+                          )
                         }
                       </select>
                     </div>

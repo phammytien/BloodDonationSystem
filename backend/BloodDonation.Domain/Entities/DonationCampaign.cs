@@ -30,4 +30,5 @@ public class DonationCampaign
 
     // Navigation properties
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+    public virtual ICollection<CampaignComment> Comments { get; set; } = new List<CampaignComment>();
 }

@@ -12,4 +12,8 @@ public interface ICampaignService
     Task<DonationCampaign> CreateCampaignAsync(DonationCampaign campaign);
     Task<bool> UpdateCampaignAsync(int id, DonationCampaign campaign);
     Task<bool> DeleteCampaignAsync(int id);
+    
+    // Comments
+    Task<IEnumerable<CampaignCommentDto>> GetCommentsByCampaignIdAsync(int campaignId);
+    Task<CampaignCommentDto?> AddCommentAsync(int campaignId, int userId, string content);
 }

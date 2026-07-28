@@ -9,6 +9,7 @@ export const AdminCampaignsPage: React.FC = () => {
   const { user } = useAuth();
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const isAdmin = user?.roleName === 'Admin';
 
   // Form states
   const [showModal, setShowModal] = useState(false);
@@ -309,7 +310,7 @@ export const AdminCampaignsPage: React.FC = () => {
               </div> */}
             </div>
 
-            <button className="btn btn-light bg-white border d-flex align-items-center gap-2 text-dark fw-semibold" style={{ borderRadius: '0.5rem', fontSize: '0.85rem' }} onClick={() => { setSearchTerm(''); setFilterStatus('all'); setFilterTime('all'); }}>
+            <button className="btn btn-light bg-white border d-flex align-items-center gap-2 text-dark fw-semibold" style={{ borderRadius: '0.5rem', fontSize: '0.85rem' }} onClick={() => { setSearchTerm(''); setFilterStatus('all'); setFilterTime('all'); setCurrentPage(1); fetchCampaigns(); }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
               Làm mới
             </button>
@@ -398,21 +399,23 @@ export const AdminCampaignsPage: React.FC = () => {
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                           </button>
-                          <button
-                            className="btn btn-sm bg-white text-danger rounded-2 border d-flex align-items-center justify-content-center"
-                            onClick={() => confirmDelete(c.campaignId)}
-                            title="Xoá"
-                            style={{ width: '32px', height: '32px', borderColor: '#E5E7EB' }}
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                          </button>
-                          <button
+                          {isAdmin && (
+                            <button
+                              className="btn btn-sm bg-white text-danger rounded-2 border d-flex align-items-center justify-content-center"
+                              onClick={() => confirmDelete(c.campaignId)}
+                              title="Xoá"
+                              style={{ width: '32px', height: '32px', borderColor: '#E5E7EB' }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                          )}
+                          {/* <button
                             className="btn btn-sm bg-white text-secondary rounded-2 border d-flex align-items-center justify-content-center"
                             title="Thêm"
                             style={{ width: '32px', height: '32px', borderColor: '#E5E7EB' }}
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-                          </button>
+                          </button> */}
                         </div>
                       </td>
                     </tr>

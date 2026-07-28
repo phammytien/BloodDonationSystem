@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { BellRing } from 'lucide-react';
 
 interface NotificationItem {
   notificationId: number;
@@ -214,14 +215,14 @@ export const NotificationBell: React.FC = () => {
                 <div
                   key={n.notificationId}
                   onClick={() => handleNotificationClick(n)}
-                  className="px-3 py-2 border-bottom d-flex align-items-start gap-2 position-relative text-start"
+                  className={`px-3 py-2 border-bottom d-flex align-items-start gap-2 position-relative text-start ${n.type === 'SOS' && !n.isRead ? 'pulse-sos' : ''}`}
                   style={{
                     cursor: 'pointer',
-                    backgroundColor: n.isRead ? 'transparent' : '#EFF6FF',
+                    backgroundColor: n.type === 'SOS' ? (n.isRead ? '#FEF2F2' : '#FEE2E2') : (n.isRead ? 'transparent' : '#EFF6FF'),
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = n.isRead ? '#F9FAFB' : '#DBEAFE'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = n.isRead ? 'transparent' : '#EFF6FF'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = n.type === 'SOS' ? '#FEE2E2' : (n.isRead ? '#F9FAFB' : '#DBEAFE')}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = n.type === 'SOS' ? (n.isRead ? '#FEF2F2' : '#FEE2E2') : (n.isRead ? 'transparent' : '#EFF6FF')}
                 >
                   {/* Icon depending on notification type */}
                   <div
@@ -229,11 +230,13 @@ export const NotificationBell: React.FC = () => {
                     style={{
                       width: '28px',
                       height: '28px',
-                      backgroundColor: n.type === 'Remind' ? '#FEF3C7' : n.type === 'ThankYou' ? '#D1FAE5' : '#E0E7FF',
-                      color: n.type === 'Remind' ? '#D97706' : n.type === 'ThankYou' ? '#059669' : '#4F46E5'
+                      backgroundColor: n.type === 'SOS' ? '#DC2626' : n.type === 'Remind' ? '#FEF3C7' : n.type === 'ThankYou' ? '#D1FAE5' : '#E0E7FF',
+                      color: n.type === 'SOS' ? '#FFFFFF' : n.type === 'Remind' ? '#D97706' : n.type === 'ThankYou' ? '#059669' : '#4F46E5'
                     }}
                   >
-                    {n.type === 'Remind' ? (
+                    {n.type === 'SOS' ? (
+                      <BellRing size={14} className={!n.isRead ? "animate-pulse" : ""} />
+                    ) : n.type === 'Remind' ? (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     ) : n.type === 'ThankYou' ? (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
@@ -242,10 +245,9 @@ export const NotificationBell: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Text */}
                   <div className="flex-grow-1" style={{ fontSize: '0.8rem' }}>
-                    <div className="fw-bold text-dark mb-0.5">{n.title}</div>
-                    <div className="text-secondary" style={{ fontSize: '0.78rem', lineHeight: '1.4' }}>{n.content}</div>
+                    <div className={`fw-bold mb-0.5 ${n.type === 'SOS' ? 'text-danger' : 'text-dark'}`}>{n.title}</div>
+                    <div className={n.type === 'SOS' ? 'text-danger opacity-75 fw-medium' : 'text-secondary'} style={{ fontSize: '0.78rem', lineHeight: '1.4' }}>{n.content}</div>
                     <div className="text-muted mt-1" style={{ fontSize: '0.68rem' }}>{formatTime(n.createdAt)}</div>
                   </div>
 

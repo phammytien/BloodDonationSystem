@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
-import { Droplet, Search, Filter, RefreshCw, Plus, Package, CheckCircle2, AlertTriangle, XCircle, Activity, Thermometer, Calendar } from 'lucide-react';
+import { Droplet, Search, Filter, RefreshCw, Plus, Package, CheckCircle2, AlertTriangle, XCircle, Activity, Thermometer, Calendar, BellRing } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export const AdminInventoryPage: React.FC = () => {
@@ -19,6 +19,13 @@ export const AdminInventoryPage: React.FC = () => {
     quantityML: '250',
     expiredDate: '',
     storageLocation: 'Kho Tổng'
+  });
+
+  // SOS Modal
+  const [showSosModal, setShowSosModal] = useState(false);
+  const [sosForm, setSosForm] = useState({
+    bloodTypeId: '',
+    message: ''
   });
 
   // Filters
@@ -53,6 +60,7 @@ export const AdminInventoryPage: React.FC = () => {
       setBloodTypes(res.data);
       if (res.data.length > 0) {
         setNewBag(prev => ({ ...prev, bloodTypeId: res.data[0].bloodTypeId.toString() }));
+        setSosForm(prev => ({ ...prev, bloodTypeId: res.data[0].bloodTypeId.toString() }));
       }
     } catch (err) {
       console.error(err);
@@ -95,6 +103,23 @@ export const AdminInventoryPage: React.FC = () => {
     }
   };
 
+  const handleSosSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post('http://localhost:5028/api/notification/sos', {
+        bloodTypeId: parseInt(sosForm.bloodTypeId),
+        message: sosForm.message
+      }, {
+        headers: { Authorization: `Bearer ${user?.token}` }
+      });
+      toast.success(res.data.message || 'Đã gửi thông báo SOS khẩn cấp!');
+      setShowSosModal(false);
+      setSosForm({ ...sosForm, message: '' });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Lỗi khi phát tín hiệu SOS');
+    }
+  };
+
   const getStatusBadge = (status: number) => {
     switch (status) {
       case 0: return <span className="badge rounded-pill" style={{ backgroundColor: '#DCFCE7', color: '#16A34A', padding: '6px 12px', fontWeight: 600 }}><CheckCircle2 size={12} className="me-1 d-inline" /> Sẵn sàng</span>;
@@ -106,8 +131,10 @@ export const AdminInventoryPage: React.FC = () => {
 
   const filteredInventories = useMemo(() => {
     return inventories.filter(item => {
+      const codeStr = `#${item.inventoryId}`;
       const matchSearch = searchTerm === '' || 
         item.inventoryId.toString().includes(searchTerm) || 
+        codeStr.includes(searchTerm) ||
         (item.storageLocation && item.storageLocation.toLowerCase().includes(searchTerm.toLowerCase()));
         
       const matchBg = bloodGroupFilter === 'Tất cả' || item.bloodGroup === bloodGroupFilter;
@@ -118,7 +145,7 @@ export const AdminInventoryPage: React.FC = () => {
       if (statusFilter === 'Hết hạn') matchStatus = item.status === 2;
 
       return matchSearch && matchBg && matchStatus;
-    }).sort((a, b) => b.inventoryId - a.inventoryId);
+    }).sort((a, b) => a.inventoryId - b.inventoryId);
   }, [inventories, searchTerm, bloodGroupFilter, statusFilter]);
 
   useEffect(() => {
@@ -157,14 +184,24 @@ export const AdminInventoryPage: React.FC = () => {
             Quản lý, theo dõi số lượng và hạn sử dụng túi máu.
           </p>
         </div>
-        <button 
-          className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 fw-medium rounded-3 shadow-sm"
-          style={{ backgroundColor: '#DC2626', borderColor: '#DC2626' }}
-          onClick={() => setShowAddModal(true)}
-        >
-          <Plus size={18} />
-          <span>Nhập túi máu mới</span>
-        </button>
+        <div className="d-flex gap-3">
+          <button 
+            className="btn btn-warning d-flex align-items-center gap-2 px-4 py-2 fw-bold rounded-3 shadow-sm text-dark pulse-button"
+            style={{ backgroundColor: '#FCD34D', borderColor: '#FCD34D' }}
+            onClick={() => setShowSosModal(true)}
+          >
+            <BellRing size={18} className="text-danger" />
+            <span>Kêu gọi SOS</span>
+          </button>
+          <button 
+            className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 fw-medium rounded-3 shadow-sm"
+            style={{ backgroundColor: '#DC2626', borderColor: '#DC2626' }}
+            onClick={() => setShowAddModal(true)}
+          >
+            <Plus size={18} />
+            <span>Nhập túi máu mới</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -257,12 +294,9 @@ export const AdminInventoryPage: React.FC = () => {
           </div>
 
           <div className="ms-auto mt-4 d-flex gap-2">
-            <button className="btn btn-light border d-flex align-items-center justify-content-center" style={{ height: '42px', width: '42px', borderRadius: '8px' }} onClick={resetFilters} title="Làm mới bộ lọc">
-              <Filter size={18} />
-            </button>
-            <button className="btn btn-light border d-flex align-items-center gap-2" style={{ height: '42px', borderRadius: '8px' }} onClick={fetchInventories}>
+            <button className="btn btn-light border d-flex align-items-center gap-2" style={{ height: '42px', borderRadius: '8px' }} onClick={() => { resetFilters(); fetchInventories(); }}>
               <RefreshCw size={16} />
-              <span>Tải lại</span>
+              <span>Làm mới</span>
             </button>
           </div>
         </div>
@@ -333,7 +367,7 @@ export const AdminInventoryPage: React.FC = () => {
                           <option value="2">Hết hạn</option>
                         </select>
                       ) : (
-                        <span className="text-muted" style={{ fontSize: '0.85rem' }}>—</span>
+                        <span className="text-muted" style={{ fontSize: '0.85rem' }}>Không khả dụng</span>
                       )}
                     </td>
                   </tr>
@@ -467,6 +501,65 @@ export const AdminInventoryPage: React.FC = () => {
                     <div className="d-flex gap-2">
                       <button type="button" className="btn btn-light flex-grow-1 py-2 fw-medium rounded-3" onClick={() => setShowAddModal(false)}>Hủy bỏ</button>
                       <button type="submit" className="btn btn-danger flex-grow-1 py-2 fw-medium rounded-3">Lưu Túi Máu</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>, document.body
+      )}
+
+      {/* SOS Modal */}
+      {showSosModal && ReactDOM.createPortal(
+        <>
+          <div className="modal-backdrop fade show" style={{ backgroundColor: 'rgba(220,38,38,0.2)', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}></div>
+          <div className="modal d-block fade-in" tabIndex={-1} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10000, overflowY: 'auto' }}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content rounded-4 border-0 shadow-lg" style={{ borderTop: '5px solid #DC2626' }}>
+                <div className="modal-header border-bottom-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                  <h5 className="fw-bold mb-0 text-danger d-flex align-items-center" style={{ fontFamily: 'Montserrat' }}>
+                    <BellRing size={24} className="me-2 text-danger animate-pulse" />
+                    Kêu gọi máu khẩn cấp (SOS)
+                  </h5>
+                  <button type="button" className="btn-close shadow-none" onClick={() => setShowSosModal(false)}></button>
+                </div>
+                <div className="modal-body p-4">
+                  <div className="alert alert-danger rounded-3 p-3 mb-4 d-flex gap-3 align-items-start">
+                    <AlertTriangle size={24} className="flex-shrink-0 mt-1" />
+                    <div style={{ fontSize: '0.9rem' }}>
+                      <strong>Lưu ý:</strong> Hành động này sẽ lập tức gửi thông báo đẩy và email (nếu có) tới <strong>TẤT CẢ</strong> người hiến máu mang nhóm máu bạn chọn. Vui lòng chỉ sử dụng trong trường hợp thực sự khẩn cấp!
+                    </div>
+                  </div>
+                  <form onSubmit={handleSosSubmit}>
+                    <div className="mb-3">
+                      <label className="form-label fw-bold text-dark mb-2">Nhóm máu cần gọi gấp</label>
+                      <select
+                        className="form-select bg-light border-danger text-danger fw-bold"
+                        style={{ height: '50px', borderRadius: '8px', fontSize: '1.1rem' }}
+                        value={sosForm.bloodTypeId}
+                        onChange={(e) => setSosForm({ ...sosForm, bloodTypeId: e.target.value })}
+                        required
+                      >
+                        {bloodTypes.map(bt => <option key={bt.bloodTypeId} value={bt.bloodTypeId}>{bt.bloodGroup}</option>)}
+                      </select>
+                    </div>
+                    <div className="mb-4">
+                      <label className="form-label fw-bold text-dark mb-2">Lời nhắn khẩn thiết (Tùy chọn)</label>
+                      <textarea
+                        className="form-control bg-light border-0 p-3"
+                        style={{ borderRadius: '8px', minHeight: '100px' }}
+                        placeholder="VD: Bệnh viện XYZ đang cần gấp nhóm máu này cho một ca phẫu thuật tim nghiêm trọng..."
+                        value={sosForm.message}
+                        onChange={(e) => setSosForm({ ...sosForm, message: e.target.value })}
+                      ></textarea>
+                    </div>
+                    <div className="d-flex gap-2 mt-2">
+                      <button type="button" className="btn btn-light flex-grow-1 py-3 fw-medium rounded-3 border" onClick={() => setShowSosModal(false)}>Hủy bỏ</button>
+                      <button type="submit" className="btn btn-danger flex-grow-1 py-3 fw-bold rounded-3 d-flex align-items-center justify-content-center gap-2">
+                        <BellRing size={20} />
+                        PHÁT TÍN HIỆU SOS
+                      </button>
                     </div>
                   </form>
                 </div>

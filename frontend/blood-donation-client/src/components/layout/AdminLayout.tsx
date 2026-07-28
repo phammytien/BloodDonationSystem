@@ -8,6 +8,7 @@ export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const isAdmin = user?.roleName === 'Admin';
 
   const handleLogout = () => {
     logout();
@@ -101,14 +102,22 @@ export const AdminLayout: React.FC = () => {
             <div className="mt-4 mb-2 ps-2 text-muted fw-bold" style={{ fontSize: '0.7rem', letterSpacing: '1px' }}>
               QUẢN LÝ TÀI NGUYÊN
             </div>
-            <NavItem to="/admin/donors" icon={iconUsers} label="Danh sách Donor" />
-            <NavItem to="/admin/blood-types" icon={iconDrop} label="Nhóm máu" />
+            {isAdmin && (
+              <>
+                <NavItem to="/admin/donors" icon={iconUsers} label="Danh sách Donor" />
+                <NavItem to="/admin/blood-types" icon={iconDrop} label="Nhóm máu" />
+              </>
+            )}
             <NavItem to="/admin/inventory" icon={iconBox} label="Kho máu dự trữ" />
 
-            <div className="mt-4 mb-2 ps-2 text-muted fw-bold" style={{ fontSize: '0.7rem', letterSpacing: '1px' }}>
-              HỆ THỐNG
-            </div>
-            <NavItem to="/admin/settings" icon={iconSettings} label="Cài đặt hệ thống" />
+            {isAdmin && (
+              <>
+                <div className="mt-4 mb-2 ps-2 text-muted fw-bold" style={{ fontSize: '0.7rem', letterSpacing: '1px' }}>
+                  HỆ THỐNG
+                </div>
+                <NavItem to="/admin/settings" icon={iconSettings} label="Cài đặt hệ thống" />
+              </>
+            )}
           </div>
         </div>
 
@@ -129,16 +138,18 @@ export const AdminLayout: React.FC = () => {
       <div className="flex-grow-1 d-flex flex-column" style={{ overflowX: 'hidden' }}>
         <div className="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center" style={{ height: '70px', zIndex: 5 }}>
           <div className="text-muted small fw-semibold">
-            <span className="text-danger">Admin Portal</span> <span className="mx-2">/</span> {location.pathname === '/dashboard' ? 'Tổng quan' : location.pathname.includes('/campaigns') ? 'Chiến dịch hiến máu' : 'Quản lý'}
+            <span className="text-danger">Portal Quản lý</span> <span className="mx-2">/</span> {location.pathname === '/dashboard' ? 'Tổng quan' : location.pathname.includes('/campaigns') ? 'Chiến dịch hiến máu' : 'Quản lý'}
           </div>
           <div className="d-flex align-items-center gap-4">
             <NotificationBell />
             <div className="d-flex align-items-center gap-2">
               <div className="text-end d-none d-md-block">
                 <div className="fw-bold" style={{ fontSize: '0.85rem', color: '#111827' }}>{user?.username}</div>
-                <div className="text-muted" style={{ fontSize: '0.75rem' }}>{user?.roleName}</div>
+                <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+                  {isAdmin ? <span className="badge bg-danger">Admin</span> : <span className="badge bg-info text-white">Staff</span>}
+                </div>
               </div>
-              <div className="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold ms-2" style={{ width: '40px', height: '40px', backgroundColor: '#D42B2B', fontSize: '1.2rem' }}>
+              <div className="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold ms-2" style={{ width: '40px', height: '40px', backgroundColor: isAdmin ? '#D42B2B' : '#0dcaf0', fontSize: '1.2rem' }}>
                 {user?.username?.[0]?.toUpperCase()}
               </div>
             </div>

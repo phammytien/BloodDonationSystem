@@ -97,14 +97,15 @@ export const AdminAppointmentsPage: React.FC = () => {
     const matchCampaign = filterCampaignId ? a.campaignId === Number(filterCampaignId) : true;
     const matchStatus = filterStatus ? a.status === Number(filterStatus) : true;
     const searchLower = searchTerm.toLowerCase();
+    const searchId = searchLower.replace('#', '');
     const matchSearch = searchTerm ? (
       (a.donorName && a.donorName.toLowerCase().includes(searchLower)) ||
       (a.donorPhone && a.donorPhone.toLowerCase().includes(searchLower)) ||
-      (a.appointmentId && a.appointmentId.toString().includes(searchLower))
+      (a.appointmentId && a.appointmentId.toString().includes(searchId))
     ) : true;
 
     return matchCampaign && matchStatus && matchSearch;
-  }).sort((a, b) => a.appointmentId - b.appointmentId);
+  }).sort((a, b) => b.appointmentId - a.appointmentId);
 
   // Calculate Stats
   const totalApps = appointments.length;

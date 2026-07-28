@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { getAvatarChar } from '../../utils/avatarHelper';
+import { toast } from 'react-toastify';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const CampaignsPage: React.FC = () => {
+  const { user } = useAuth();
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   
@@ -18,6 +21,16 @@ export const CampaignsPage: React.FC = () => {
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [registrants, setRegistrants] = useState<any[]>([]);
   const [loadingRegistrants, setLoadingRegistrants] = useState(false);
+  const [showAllRegistrants, setShowAllRegistrants] = useState(false);
+  
+  // Comments
+  const [comments, setComments] = useState<any[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     axios.get('http://localhost:5028/api/appointment/campaigns')
@@ -36,13 +49,55 @@ export const CampaignsPage: React.FC = () => {
     if (selectedCampaign) {
       setLoadingRegistrants(true);
       axios.get(`http://localhost:5028/api/appointment/campaign/${selectedCampaign.campaignId}/registrants`)
-        .then(res => setRegistrants(res.data || []))
+        .then(res => {
+          setRegistrants(res.data || []);
+          setShowAllRegistrants(false);
+        })
         .catch(err => console.error('Lỗi tải danh sách người đăng ký', err))
         .finally(() => setLoadingRegistrants(false));
     } else {
       setRegistrants([]);
+      setShowAllRegistrants(false);
     }
   }, [selectedCampaign]);
+
+  // Fetch comments when selectedCampaign changes
+  useEffect(() => {
+    if (selectedCampaign) {
+      setLoadingComments(true);
+      axios.get(`http://localhost:5028/api/campaign/${selectedCampaign.campaignId}/comments`)
+        .then(res => setComments(res.data || []))
+        .catch(err => console.error('Lỗi tải bình luận', err))
+        .finally(() => setLoadingComments(false));
+    } else {
+      setComments([]);
+    }
+  }, [selectedCampaign]);
+
+  const handleSubmitComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !selectedCampaign) return;
+
+    if (!user) {
+      toast.warning('Vui lòng đăng nhập để bình luận!');
+      return;
+    }
+
+    setIsSubmittingComment(true);
+    axios.post(`http://localhost:5028/api/campaign/${selectedCampaign.campaignId}/comments`, 
+      { content: newComment },
+      { headers: { Authorization: `Bearer ${user.token}` } }
+    )
+    .then(res => {
+      setComments([res.data, ...comments]); // Prepend new comment
+      setNewComment('');
+    })
+    .catch(err => {
+      console.error(err);
+      toast.error('Lỗi khi gửi bình luận');
+    })
+    .finally(() => setIsSubmittingComment(false));
+  };
 
   const handleReset = () => {
     setSearch('');
@@ -93,13 +148,25 @@ export const CampaignsPage: React.FC = () => {
     return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
   });
 
+  const totalPages = Math.ceil(filteredCampaigns.length / itemsPerPage);
+  const currentCampaigns = filteredCampaigns.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, timeFilter, locationFilter, sortFilter]);
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Đã sao chép liên kết trang vào clipboard!");
+  };
+
   const getStatusBadge = (startStr: string, endStr: string) => {
     const now = new Date();
     const start = new Date(startStr);
     const end = new Date(endStr);
-    if (now < start) return <span className="badge rounded-pill bg-primary" style={{ backgroundColor: '#DBEAFE', color: '#1D4ED8' }}>Sắp diễn ra</span>;
-    if (now > end) return <span className="badge rounded-pill bg-secondary" style={{ backgroundColor: '#F3F4F6', color: '#4B5563' }}>Đã kết thúc</span>;
-    return <span className="badge rounded-pill bg-success" style={{ backgroundColor: '#D1FAE5', color: '#059669' }}>Đang diễn ra</span>;
+    if (now < start) return <span className="badge rounded-pill px-3 py-1" style={{ backgroundColor: '#FEF3C7', color: '#D97706', fontSize: '0.75rem', fontWeight: 600 }}>Sắp diễn ra</span>;
+    if (now > end) return <span className="badge rounded-pill px-3 py-1" style={{ backgroundColor: '#F3F4F6', color: '#4B5563', fontSize: '0.75rem', fontWeight: 600 }}>Đã kết thúc</span>;
+    return <span className="badge rounded-pill px-3 py-1" style={{ backgroundColor: '#DCFCE7', color: '#16A34A', fontSize: '0.75rem', fontWeight: 600 }}>Đang diễn ra</span>;
   };
 
   const isCampaignEnded = (endStr: string) => new Date() > new Date(endStr);
@@ -122,11 +189,13 @@ export const CampaignsPage: React.FC = () => {
       return <div className="text-center text-muted small py-3">Chưa có người đăng ký nào.</div>;
     }
     
-    return registrants.map((m, i) => (
+    const displayed = showAllRegistrants ? registrants : registrants.slice(0, 3);
+    
+    return displayed.map((m, i) => (
       <div key={i} className="d-flex justify-content-between align-items-center mb-3">
         <div className="d-flex align-items-center gap-2">
           <div className="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold flex-shrink-0" 
-               style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #1B4FD8, #8B5CF6)', fontSize: '0.85rem' }}>
+               style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #DC2626, #F87171)', fontSize: '0.85rem' }}>
             {getAvatarChar(m.donorName || "Anonymous")}
           </div>
           <div>
@@ -150,7 +219,7 @@ export const CampaignsPage: React.FC = () => {
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
               <h2 className="mb-1" style={{ fontFamily: 'Montserrat', fontWeight: 800, color: '#111827' }}>
-                <svg className="me-2" width="24" height="24" viewBox="0 0 24 24" fill="#1B4FD8"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                <svg className="me-2" width="24" height="24" viewBox="0 0 24 24" fill="#DC2626"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                 Chiến dịch hiến máu
               </h2>
               <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>Tham gia các chiến dịch hiến máu nhân đạo để cứu sống nhiều người hơn.</p>
@@ -228,10 +297,10 @@ export const CampaignsPage: React.FC = () => {
               </div>
             ) : (
               <div className="d-flex flex-column gap-3">
-                {filteredCampaigns.map(c => (
+                {currentCampaigns.map(c => (
                   <div key={c.campaignId} onClick={() => setSelectedCampaign(c)} 
-                       className={`card border-0 rounded-4 shadow-sm overflow-hidden p-0 position-relative ${selectedCampaign?.campaignId === c.campaignId ? 'ring-2 ring-primary' : ''}`}
-                       style={{ cursor: 'pointer', transition: 'all 0.2s', border: selectedCampaign?.campaignId === c.campaignId ? '2px solid #1B4FD8' : '1px solid transparent' }}>
+                       className={`card border-0 rounded-4 shadow-sm overflow-hidden p-0 position-relative ${selectedCampaign?.campaignId === c.campaignId ? 'ring-2 ring-danger' : ''}`}
+                       style={{ cursor: 'pointer', transition: 'all 0.2s', border: selectedCampaign?.campaignId === c.campaignId ? '2px solid #DC2626' : '1px solid transparent' }}>
                     <div className="row g-0">
                       <div className="col-md-4">
                         <img src={c.attachmentUrl || 'https://via.placeholder.com/300x200?text=Campaign+Image'} 
@@ -270,7 +339,7 @@ export const CampaignsPage: React.FC = () => {
                             </div>
                             <div className="ms-auto">
                               {!isCampaignEnded(c.endDate) ? (
-                                <Link to={`/appointment?campaignId=${c.campaignId}`} onClick={(e) => e.stopPropagation()} className="btn btn-primary rounded-pill px-4" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Đăng ký ngay</Link>
+                                <Link to={`/appointment?campaignId=${c.campaignId}`} onClick={(e) => e.stopPropagation()} className="btn btn-danger rounded-pill px-4" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Đăng ký ngay</Link>
                               ) : (
                                 <button className="btn btn-secondary rounded-pill px-4" style={{ fontSize: '0.85rem', fontWeight: 600 }} disabled>Đã kết thúc</button>
                               )}
@@ -283,12 +352,15 @@ export const CampaignsPage: React.FC = () => {
                 ))}
                 
                 <div className="d-flex justify-content-between align-items-center mt-3">
-                  <span className="text-muted small">Hiển thị 1 - {filteredCampaigns.length} trong tổng số {campaigns.length} chiến dịch</span>
+                  <span className="text-muted small">Hiển thị {filteredCampaigns.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} - {Math.min(currentPage * itemsPerPage, filteredCampaigns.length)} trong tổng số {filteredCampaigns.length} chiến dịch</span>
                   <div className="d-flex gap-1">
-                    <button className="btn border bg-white rounded text-muted px-2 py-1">&laquo;</button>
-                    <button className="btn border bg-primary text-white rounded px-3 py-1">1</button>
-                    <button className="btn border bg-white rounded text-muted px-3 py-1">2</button>
-                    <button className="btn border bg-white rounded text-muted px-2 py-1">&raquo;</button>
+                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="btn border bg-white rounded text-muted px-2 py-1">&laquo;</button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <button key={page} onClick={() => setCurrentPage(page)} className={`btn border rounded px-3 py-1 ${currentPage === page ? 'bg-danger text-white' : 'bg-white text-muted'}`}>
+                        {page}
+                      </button>
+                    ))}
+                    <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className="btn border bg-white rounded text-muted px-2 py-1">&raquo;</button>
                   </div>
                 </div>
               </div>
@@ -366,7 +438,7 @@ export const CampaignsPage: React.FC = () => {
                       ) : (
                         <button className="btn btn-secondary flex-grow-1 fw-bold py-2 shadow-sm" disabled>Đã kết thúc</button>
                       )}
-                      <button className="btn border bg-white px-3 fw-bold text-muted d-flex align-items-center gap-2 hover-bg-light">
+                      <button onClick={handleShare} className="btn border bg-white px-3 fw-bold text-muted d-flex align-items-center gap-2 hover-bg-light">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                         Chia sẻ
                       </button>
@@ -377,20 +449,87 @@ export const CampaignsPage: React.FC = () => {
                 <div className="bg-white rounded-4 shadow-sm p-4 mb-3">
                   <div className="d-flex justify-content-between align-items-center mb-4">
                     <h6 className="fw-bold m-0">Người đã đăng ký ({selectedCampaign.registrantCount})</h6>
-                    <button className="btn btn-link p-0 text-decoration-none small">Xem tất cả</button>
+                    {registrants.length > 3 && (
+                      <button onClick={() => setShowAllRegistrants(!showAllRegistrants)} className="btn btn-link p-0 text-decoration-none small">
+                        {showAllRegistrants ? 'Thu gọn' : 'Xem tất cả'}
+                      </button>
+                    )}
                   </div>
                   
                   {renderRegistrants()}
 
-                  <button className="btn border w-100 mt-2 text-primary fw-semibold" style={{ fontSize: '0.85rem' }}>Xem danh sách đầy đủ</button>
+                  {registrants.length > 3 && !showAllRegistrants && (
+                    <button onClick={() => setShowAllRegistrants(true)} className="btn border w-100 mt-2 text-danger fw-semibold" style={{ fontSize: '0.85rem' }}>Xem danh sách đầy đủ</button>
+                  )}
                 </div>
 
-                <div className="bg-primary bg-opacity-10 rounded-4 p-3 d-flex gap-3 border border-primary border-opacity-25">
-                  <div className="text-primary mt-1">
+                {/* THẢO LUẬN / COMMENTS */}
+                <div className="bg-white rounded-4 shadow-sm p-4 mb-3">
+                  <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                    Thảo luận ({comments.length})
+                  </h6>
+                  
+                  {/* Comment Input */}
+                  <form onSubmit={handleSubmitComment} className="mb-4">
+                    <div className="d-flex gap-2">
+                      <div className="d-flex align-items-center justify-content-center rounded-circle bg-light text-secondary flex-shrink-0" style={{ width: 36, height: 36, fontWeight: 600 }}>
+                        {user ? getAvatarChar(user.fullName, user.username) : '?'}
+                      </div>
+                      <div className="flex-grow-1 position-relative">
+                        <textarea 
+                          className="form-control" 
+                          rows={1}
+                          placeholder={user ? "Viết bình luận..." : "Vui lòng đăng nhập để bình luận"}
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          disabled={!user || isSubmittingComment}
+                          style={{ fontSize: '0.875rem', borderRadius: '1rem', resize: 'none', paddingRight: '40px' }}
+                        ></textarea>
+                        <button 
+                          type="submit" 
+                          className="btn btn-link position-absolute text-danger" 
+                          style={{ right: '5px', bottom: '0px', padding: '5px' }}
+                          disabled={!user || !newComment.trim() || isSubmittingComment}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+
+                  {/* Comment List */}
+                  <div className="d-flex flex-column gap-3" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                    {loadingComments ? (
+                      <div className="text-center text-muted small py-3">Đang tải bình luận...</div>
+                    ) : comments.length === 0 ? (
+                      <div className="text-center text-muted small py-3">Hãy là người đầu tiên bình luận!</div>
+                    ) : (
+                      comments.map(comment => (
+                        <div key={comment.commentId} className="d-flex gap-2 align-items-start">
+                          <div className="d-flex align-items-center justify-content-center rounded-circle text-white flex-shrink-0" 
+                               style={{ width: 32, height: 32, fontSize: '0.8rem', background: 'linear-gradient(135deg, #4B5563, #6B7280)', fontWeight: 600 }}>
+                            {getAvatarChar(comment.fullName, comment.username)}
+                          </div>
+                          <div className="bg-light rounded-3 p-2 px-3" style={{ fontSize: '0.85rem' }}>
+                            <div className="fw-bold mb-1" style={{ color: '#111827' }}>{comment.fullName}</div>
+                            <div style={{ color: '#374151', whiteSpace: 'pre-wrap' }}>{comment.content}</div>
+                            <div className="text-muted mt-1" style={{ fontSize: '0.7rem' }}>
+                              {new Date(comment.createdAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-danger bg-opacity-10 rounded-4 p-3 d-flex gap-3 border border-danger border-opacity-25">
+                  <div className="text-danger mt-1">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                   </div>
                   <div>
-                    <div className="fw-bold text-primary mb-1" style={{ fontSize: '0.85rem' }}>Lưu ý khi đăng ký</div>
+                    <div className="fw-bold text-danger mb-1" style={{ fontSize: '0.85rem' }}>Lưu ý khi đăng ký</div>
                     <div className="text-muted" style={{ fontSize: '0.75rem', lineHeight: 1.5 }}>Bạn có thể hủy đăng ký trước 24 giờ so với thời gian hiến máu.</div>
                   </div>
                 </div>

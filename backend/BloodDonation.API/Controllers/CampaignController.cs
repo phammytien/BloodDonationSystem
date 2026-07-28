@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BloodDonation.Application.DTOs;
 using BloodDonation.Application.Services;
 using BloodDonation.Domain.Entities;
 
@@ -85,6 +86,46 @@ public class CampaignController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "Lỗi khi xoá chiến dịch.", details = ex.Message });
+        }
+    }
+
+    [HttpGet("{id}/comments")]
+    public async Task<IActionResult> GetComments(int id)
+    {
+        try
+        {
+            var comments = await _campaignService.GetCommentsByCampaignIdAsync(id);
+            return Ok(comments);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi lấy bình luận.", details = ex.Message });
+        }
+    }
+
+    [Authorize]
+    [HttpPost("{id}/comments")]
+    public async Task<IActionResult> AddComment(int id, [FromBody] CampaignCommentRequestDto request)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "Không xác định được người dùng." });
+            }
+
+            var comment = await _campaignService.AddCommentAsync(id, userId, request.Content);
+            if (comment == null)
+            {
+                return NotFound(new { message = "Không tìm thấy chiến dịch." });
+            }
+
+            return Ok(comment);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi thêm bình luận.", details = ex.Message });
         }
     }
 }

@@ -274,22 +274,6 @@ export const AdminSettingsPage: React.FC = () => {
           </div>
           
           <div className="d-flex align-items-center gap-3">
-            <div className="position-relative" style={{ width: '300px' }}>
-              <Search className="position-absolute text-muted" size={16} style={{ left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-              <input 
-                type="text" 
-                className="form-control ps-5 bg-light border-0 rounded-pill" 
-                placeholder="Tìm kiếm theo tên file, thời gian..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ height: '38px', fontSize: '0.85rem' }}
-              />
-            </div>
-            
-            <button className="btn btn-light border d-flex align-items-center gap-2 rounded-3 px-3" style={{ height: '38px' }}>
-              <Filter size={16} />
-              <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>Bộ lọc</span>
-            </button>
             <button className="btn btn-light border d-flex align-items-center justify-content-center rounded-3" style={{ height: '38px', width: '38px' }} onClick={fetchBackups}>
               <RefreshCw size={16} />
             </button>

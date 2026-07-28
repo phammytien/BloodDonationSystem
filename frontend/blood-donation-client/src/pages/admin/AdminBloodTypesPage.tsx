@@ -106,8 +106,10 @@ export const AdminBloodTypesPage: React.FC = () => {
 
   // Filtering
   const filteredTypes = bloodTypes.filter(bt => {
+    const codeStr = `bt-${bt.bloodTypeId.toString().padStart(3, '0')}`;
     const matchesSearch = bt.bloodGroup.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (bt.description && bt.description.toLowerCase().includes(searchTerm.toLowerCase()));
+                          (bt.description && bt.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                          codeStr.includes(searchTerm.toLowerCase());
     
     let matchesStatus = true;
     if (statusFilter === 'Hoạt động') matchesStatus = bt.status === 0;
@@ -179,19 +181,22 @@ export const AdminBloodTypesPage: React.FC = () => {
       {/* Controls */}
       <div className="bg-white p-3 rounded-4 shadow-sm border mb-4 d-flex flex-wrap gap-3 align-items-center justify-content-between">
         <div className="d-flex flex-wrap gap-3 flex-grow-1">
-          <div className="position-relative" style={{ minWidth: '280px' }}>
-            <Search className="position-absolute top-50 translate-middle-y text-muted" size={18} style={{ left: '15px' }} />
-            <input 
-              type="text" 
-              className="form-control bg-light border-0" 
-              placeholder="Tìm kiếm mã nhóm máu, tên nhóm máu..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ paddingLeft: '45px', borderRadius: '10px', height: '45px' }}
-            />
+          <div style={{ minWidth: '320px' }}>
+            <label className="text-muted small mb-1" style={{ fontSize: '0.75rem', fontWeight: 600 }}>Tìm kiếm</label>
+            <div className="position-relative">
+              <Search className="position-absolute top-50 translate-middle-y text-muted" size={18} style={{ left: '15px' }} />
+              <input 
+                type="text" 
+                className="form-control bg-light border-0" 
+                placeholder="Nhập mã hoặc tên nhóm máu..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ paddingLeft: '45px', borderRadius: '10px', height: '45px' }}
+              />
+            </div>
           </div>
           <div style={{ minWidth: '180px' }}>
-            <label className="text-muted small mb-1" style={{ fontSize: '0.75rem' }}>Trạng thái</label>
+            <label className="text-muted small mb-1" style={{ fontSize: '0.75rem', fontWeight: 600 }}>Trạng thái</label>
             <select 
               className="form-select bg-light border-0" 
               value={statusFilter}

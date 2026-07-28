@@ -21,7 +21,7 @@ import { HistoryPage } from './pages/donor/HistoryPage';
 import { ChangePasswordPage } from './pages/auth/ChangePasswordPage';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { DonorLayout } from './components/layout/DonorLayout';
-import { DashboardPage as StaffDashboardPage } from './pages/staff/DashboardPage';
+
 
 const Spinner = () => (
   <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
@@ -83,7 +83,6 @@ function App() {
           {/* Admin / Staff Routes inside AdminLayout */}
           <Route element={<StaffAdminRoute><AdminLayout /></StaffAdminRoute>}>
             <Route path="/dashboard" element={<AdminDashboardPage />} />
-            <Route path="/staff/dashboard" element={<StaffDashboardPage />} />
             <Route path="/admin/campaigns" element={<AdminCampaignsPage />} />
             <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
             <Route path="/admin/donors" element={<AdminDonorsPage />} />

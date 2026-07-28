@@ -49,14 +49,14 @@ export const DonorNavbar: React.FC = () => {
         <Link to="/" className="d-flex align-items-center text-decoration-none gap-2">
           <div
             className="d-flex align-items-center justify-content-center rounded-circle"
-            style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, #1B4FD8 0%, #2563EB 100%)' }}
+            style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, #DC2626 0%, #EF4444 100%)' }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#fff" />
               <path d="M12 7v10M9 12h6" stroke="#fff" strokeWidth="25%" strokeLinecap="round" />
             </svg>
           </div>
-          <span style={{ fontFamily: 'Montserrat', fontWeight: 800, fontSize: '1.25rem', color: '#1B4FD8' }}>LifeGive</span>
+          <span style={{ fontFamily: 'Montserrat', fontWeight: 800, fontSize: '1.25rem', color: '#DC2626' }}>LifeGive</span>
         </Link>
 
         <button className="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -96,7 +96,7 @@ export const DonorNavbar: React.FC = () => {
                       }} 
                       className="dropdown-item py-2 px-3 text-start bg-transparent border-0 w-100" 
                       style={{ fontSize: '0.9rem', color: '#4B5563', transition: 'all 0.2s' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EFF6FF'; e.currentTarget.style.color = '#1B4FD8'; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FEF2F2'; e.currentTarget.style.color = '#DC2626'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#4B5563'; }}
                     >
                       {labels[i]}
@@ -132,10 +132,10 @@ export const DonorNavbar: React.FC = () => {
                     className="d-flex align-items-center justify-content-center rounded-circle border-0"
                     style={{
                       width: '38px', height: '38px',
-                      background: 'linear-gradient(135deg, #1B4FD8 0%, #8B5CF6 100%)',
+                      background: 'linear-gradient(135deg, #DC2626 0%, #F87171 100%)',
                       color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
                       transition: 'all 0.2s ease',
-                      boxShadow: showUserMenu ? '0 4px 12px rgba(27, 79, 216, 0.4)' : '0 2px 8px rgba(27, 79, 216, 0.15)'
+                      boxShadow: showUserMenu ? '0 4px 12px rgba(220, 38, 38, 0.4)' : '0 2px 8px rgba(220, 38, 38, 0.15)'
                     }}
                     onBlur={() => setTimeout(() => setShowUserMenu(false), 150)}
                   >
@@ -145,7 +145,7 @@ export const DonorNavbar: React.FC = () => {
                     <div className="position-absolute end-0 mt-2 bg-white rounded-3 shadow-lg" style={{ minWidth: '220px', zIndex: 1000, border: '1px solid #E5E7EB', animation: 'fadeInDown 0.15s ease' }}>
                       <div className="p-3 border-bottom" style={{ fontSize: '0.82rem', color: '#4B5563' }}>
                         <div className="d-flex align-items-center gap-2 mb-2">
-                          <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #1B4FD8 0%, #8B5CF6 100%)', color: '#fff', fontWeight: 700, fontSize: '0.85rem' }}>
+                          <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #DC2626 0%, #F87171 100%)', color: '#fff', fontWeight: 700, fontSize: '0.85rem' }}>
                             {getAvatarChar(user.fullName, user.username)}
                           </div>
                           <div>
@@ -157,8 +157,8 @@ export const DonorNavbar: React.FC = () => {
                       <div className="p-2">
                         {user.roleName.toLowerCase() === 'donor' && (
                           <>
-                            <Link to="/profile" className="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none rounded-2" style={{ fontSize: '0.85rem', color: '#1B4FD8' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFF6FF')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>Thông tin tài khoản</Link>
-                            <Link to="/history" className="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none rounded-2" style={{ fontSize: '0.85rem', color: '#1B4FD8' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFF6FF')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>Lịch sử hiến máu</Link>
+                            <Link to="/profile" className="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none rounded-2" style={{ fontSize: '0.85rem', color: '#DC2626' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FEF2F2')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>Thông tin tài khoản</Link>
+                            <Link to="/history" className="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none rounded-2" style={{ fontSize: '0.85rem', color: '#DC2626' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FEF2F2')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>Lịch sử hiến máu</Link>
                           </>
                         )}
                         <Link to="/change-password" className="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none rounded-2" style={{ fontSize: '0.85rem', color: '#4B5563' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F3F4F6')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>Đổi mật khẩu</Link>
@@ -171,7 +171,7 @@ export const DonorNavbar: React.FC = () => {
             ) : (
               <>
                 <Link to="/login?redirect=/appointment" className="btn-primary-custom d-flex align-items-center gap-2" style={{ fontFamily: 'Montserrat', fontSize: '0.85rem', padding: '0.55rem 1.2rem' }}>Đăng ký hiến máu</Link>
-                <Link to="/login" style={{ fontFamily: 'Montserrat', fontWeight: 700, fontSize: '0.88rem', color: '#1B4FD8', textDecoration: 'none' }}>Đăng nhập</Link>
+                <Link to="/login" style={{ fontFamily: 'Montserrat', fontWeight: 700, fontSize: '0.88rem', color: '#DC2626', textDecoration: 'none' }}>Đăng nhập</Link>
                 <Link to="/register" className="btn btn-outline-danger fw-bold px-3 py-2 rounded-pill" style={{ fontFamily: 'Montserrat', fontSize: '0.82rem' }}>Đăng ký</Link>
               </>
             )}

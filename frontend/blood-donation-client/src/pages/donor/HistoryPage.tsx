@@ -3,6 +3,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { ToastContainer, toast } from 'react-toastify';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface AppointmentHistory {
   appointmentId: number;
@@ -70,6 +72,30 @@ export const HistoryPage: React.FC = () => {
       </div>
     );
   }
+
+  const handleDownloadCertificate = async (appointment: AppointmentHistory) => {
+    const certElement = document.getElementById(`certificate-${appointment.appointmentId}`);
+    if (!certElement) return;
+
+    // Show briefly to render
+    certElement.style.display = 'block';
+    
+    try {
+      const canvas = await html2canvas(certElement, { scale: 2 });
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      
+      const pdf = new jsPDF('l', 'mm', 'a4'); // landscape A4
+      pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+      pdf.save(`ChungNhanHienMau_REG${appointment.appointmentId}.pdf`);
+      toast.success('Đã tải chứng nhận thành công!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Có lỗi xảy ra khi tạo chứng nhận.');
+    } finally {
+      // Hide again
+      certElement.style.display = 'none';
+    }
+  };
 
   const tabs = ['Tất cả', 'Đang chờ duyệt', 'Đã xác nhận', 'Đã hoàn thành', 'Đã hủy', 'Vắng mặt'];
   
@@ -246,7 +272,74 @@ export const HistoryPage: React.FC = () => {
         ) : (
           <div className="d-flex flex-column gap-3 mb-4">
             {filteredHistory.map(a => (
-              <div key={a.appointmentId} className="history-card p-3">
+              <React.Fragment key={a.appointmentId}>
+                {/* Hidden Certificate Template for completed appointments */}
+                {a.status.toLowerCase() === 'completed' && (
+                  <div 
+                    id={`certificate-${a.appointmentId}`} 
+                    style={{
+                      display: 'none',
+                      width: '1122px', // 297mm equivalent in px at 96dpi
+                      height: '794px', // 210mm
+                      backgroundColor: '#fff',
+                      padding: '40px',
+                      boxSizing: 'border-box',
+                      position: 'absolute',
+                      top: '-9999px',
+                      left: '-9999px',
+                      fontFamily: "'Times New Roman', serif",
+                      backgroundImage: 'radial-gradient(circle, #ffffff 0%, #ffffff 60%, #fef2f2 100%)',
+                      color: '#000'
+                    }}
+                  >
+                    <div style={{ border: '8px double #D42B2B', height: '100%', padding: '40px', position: 'relative', textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.8)' }}>
+                      <h2 style={{ color: '#D42B2B', fontSize: '28px', textTransform: 'uppercase', margin: 0, fontWeight: 700 }}>
+                        CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+                      </h2>
+                      <h3 style={{ fontSize: '20px', fontWeight: 'bold', margin: '10px 0 30px' }}>
+                        Độc lập - Tự do - Hạnh phúc
+                      </h3>
+                      
+                      <div style={{ color: '#D42B2B', marginBottom: '20px' }}>
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                      </div>
+
+                      <h1 style={{ color: '#991B1B', fontSize: '42px', fontWeight: 'bold', margin: '0 0 30px', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                        GIẤY CHỨNG NHẬN HIẾN MÁU TÌNH NGUYỆN
+                      </h1>
+                      
+                      <p style={{ fontSize: '24px', margin: '20px 0' }}>Chứng nhận Ông/Bà: <strong style={{ fontSize: '32px', color: '#111827', marginLeft: '10px' }}>{user?.fullName || 'Người hiến máu'}</strong></p>
+                      
+                      <p style={{ fontSize: '22px', margin: '15px 0' }}>Đã tích cực tham gia hiến máu nhân đạo tại chiến dịch:</p>
+                      <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#1B4FD8', margin: '15px 0' }}>{a.campaignName}</p>
+                      
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', marginTop: '20px', fontSize: '22px' }}>
+                        <p>Thời gian: <strong>{formatDate(a.appointmentDate)}</strong></p>
+                        <p>Địa điểm: <strong>{a.location}</strong></p>
+                      </div>
+                      
+                      <div style={{ marginTop: '60px', display: 'flex', justifyContent: 'space-between', padding: '0 80px' }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <p style={{ fontSize: '20px', marginBottom: '80px', fontStyle: 'italic' }}>Người hiến máu</p>
+                          <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{user?.fullName}</p>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <p style={{ fontSize: '20px', marginBottom: '10px', fontStyle: 'italic' }}>Ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}</p>
+                          <p style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '50px' }}>Đại diện Ban Tổ Chức</p>
+                          <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#D42B2B' }}>LifeGive System</p>
+                        </div>
+                      </div>
+                      
+                      <div style={{ position: 'absolute', bottom: '20px', left: '0', width: '100%', textAlign: 'center', fontSize: '14px', color: '#6B7280', fontStyle: 'italic' }}>
+                        Mã chứng nhận: REG{a.appointmentId.toString().padStart(6, '0')} - Hệ thống quản lý hiến máu LifeGive
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              <div className="history-card p-3">
                 <div className="row g-3 align-items-stretch">
                   {/* Image */}
                   <div className="col-auto">
@@ -301,13 +394,20 @@ export const HistoryPage: React.FC = () => {
                         </span>
                       </div>
                     </div>
-                    <Link to={`/appointment/${a.appointmentId}`} className="btn w-100" style={{ border: '1px solid #DC2626', color: '#DC2626', fontWeight: 600, fontSize: '0.875rem' }}>
+                    <Link to={`/appointment/${a.appointmentId}`} className={`btn w-100 ${a.status.toLowerCase() === 'completed' ? 'mb-2' : ''}`} style={{ border: '1px solid #DC2626', color: '#DC2626', fontWeight: 600, fontSize: '0.875rem' }}>
                       <svg className="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                       Xem chi tiết
                     </Link>
+                    {a.status.toLowerCase() === 'completed' && (
+                      <button onClick={() => handleDownloadCertificate(a)} className="btn btn-danger w-100 fw-bold" style={{ fontSize: '0.875rem' }}>
+                        <svg className="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Tải chứng nhận
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
+              </React.Fragment>
             ))}
           </div>
         )}
