@@ -42,6 +42,7 @@ export const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [avatarLoading, setAvatarLoading] = useState(false);
 
   // Form states
   const [fullName, setFullName] = useState('');
@@ -123,6 +124,38 @@ export const ProfilePage: React.FC = () => {
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    setAvatarLoading(true);
+    try {
+      const res = await axios.post('http://localhost:5028/api/upload', formData, {
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${user?.token}`
+        }
+      });
+      const fileUrl = res.data.url;
+      setProfile(prev => prev ? { ...prev, avatar: fileUrl } : null);
+      toast.success('Tải ảnh lên thành công. Đừng quên bấm Lưu thay đổi nhé!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Lỗi tải ảnh lên. Vui lòng thử lại.');
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
+
+  const getAvatarUrl = (url: string | null | undefined) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `http://localhost:5028${url}`;
   };
 
   useEffect(() => {
@@ -207,7 +240,12 @@ export const ProfilePage: React.FC = () => {
       });
 
       if (user) {
-        login({ ...user, fullName: fullName.trim(), isProfileUpdated: true });
+        login({ 
+          ...user, 
+          fullName: fullName.trim(), 
+          avatarUrl: profile?.avatar || null,
+          isProfileUpdated: true 
+        });
       }
 
       toast.success('Cập nhật thông tin hồ sơ thành công!');
@@ -278,6 +316,34 @@ export const ProfilePage: React.FC = () => {
           <div className="col-12 col-lg-4">
             <div className="bg-white rounded-4 p-4 text-center mb-4" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.06)', border: '1px solid #E5E7EB' }}>
               
+              {/* Avatar Section */}
+              <div className="mb-4 position-relative d-inline-block">
+                <div 
+                  className="rounded-circle overflow-hidden border border-4 border-white shadow-sm d-flex align-items-center justify-content-center bg-light"
+                  style={{ width: '120px', height: '120px' }}
+                >
+                  {avatarLoading ? (
+                    <div className="spinner-border text-danger" role="status" />
+                  ) : profile?.avatar ? (
+                    <img src={getAvatarUrl(profile.avatar) || ''} alt="Avatar" className="w-100 h-100 object-fit-cover" />
+                  ) : (
+                    <span className="fs-1 fw-bold text-danger">{getAvatarChar(profile?.fullName || '')}</span>
+                  )}
+                </div>
+                
+                <label 
+                  className="position-absolute bottom-0 end-0 bg-danger text-white rounded-circle p-2 shadow hover-elevate"
+                  style={{ cursor: 'pointer', transform: 'translate(-5px, -5px)', border: '3px solid white', transition: 'all 0.2s' }}
+                  title="Thay đổi ảnh đại diện"
+                >
+                  <input type="file" accept="image/*" className="d-none" onChange={handleAvatarUpload} disabled={avatarLoading} />
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                </label>
+              </div>
+
+              <h5 className="fw-bold mb-1" style={{ fontFamily: 'Montserrat' }}>{profile?.fullName || 'Người hiến máu'}</h5>
+              <p className="text-muted small mb-4">{profile?.email}</p>
+
               {/* DIGITAL DONOR CARD */}
               <div className="rounded-4 overflow-hidden text-start mb-4 position-relative" style={{ 
                 background: 'linear-gradient(135deg, #D42B2B 0%, #991B1B 100%)', 

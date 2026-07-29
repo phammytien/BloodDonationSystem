@@ -11,6 +11,8 @@ public interface IAppointmentService
     Task<List<CampaignDto>> GetCampaignsAsync();
     Task<bool> RegisterAppointmentAsync(int userId, AppointmentRegisterDto dto);
     Task<List<AppointmentHistoryDto>> GetUserAppointmentHistoryAsync(int userId);
+    Task<AppointmentDetailDto?> GetAppointmentDetailAsync(int appointmentId, int userId);
+
     
     Task<List<CampaignRegistrantDto>> GetCampaignRegistrantsAsync(int campaignId);
     

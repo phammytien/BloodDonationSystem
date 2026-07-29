@@ -86,6 +86,32 @@ public class AppointmentController : ControllerBase
         }
     }
 
+    [Authorize]
+    [HttpGet("history/{id}")]
+    public async Task<IActionResult> GetHistoryDetail(int id)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "Người dùng không hợp lệ hoặc phiên đăng nhập đã hết hạn." });
+            }
+
+            var detail = await _appointmentService.GetAppointmentDetailAsync(id, userId);
+            if (detail == null)
+            {
+                return NotFound(new { message = "Không tìm thấy hồ sơ đăng ký hoặc bạn không có quyền xem." });
+            }
+
+            return Ok(detail);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi tải chi tiết hồ sơ đăng ký.", details = ex.Message });
+        }
+    }
+
     [HttpGet("campaign/{campaignId}/registrants")]
     public async Task<IActionResult> GetCampaignRegistrants(int campaignId)
     {

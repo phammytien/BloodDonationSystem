@@ -17,6 +17,7 @@ import { HomePage } from './pages/donor/HomePage';
 import { AppointmentPage } from './pages/donor/AppointmentPage';
 import { ProfilePage } from './pages/donor/ProfilePage';
 import { CampaignsPage } from './pages/donor/CampaignsPage';
+import { CampaignDetailPage } from './pages/donor/CampaignDetailPage';
 import { HistoryPage } from './pages/donor/HistoryPage';
 import { ChangePasswordPage } from './pages/auth/ChangePasswordPage';
 import { AdminLayout } from './components/layout/AdminLayout';
@@ -73,11 +74,11 @@ function App() {
           <Route element={<DonorLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/campaigns" element={<CampaignsPage />} />
+            <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
             <Route path="/appointment" element={<AppointmentPage />} />
             <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
-            {/* Add more donor routes here later like /campaigns, /my-appointments */}
           </Route>
 
           {/* Admin / Staff Routes inside AdminLayout */}

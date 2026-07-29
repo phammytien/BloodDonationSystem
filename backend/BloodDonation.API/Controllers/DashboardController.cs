@@ -52,7 +52,7 @@ public class DashboardController : ControllerBase
                 })
                 .ToListAsync();
 
-            var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+            var thirtyDaysAgo = DateTime.UtcNow.AddDays(-365);
             var dailyBloodVolumes = await _context.BloodDonations
                 .Where(d => d.DonationDate >= thirtyDaysAgo && d.DonationStatus == DonationStatus.Success)
                 .GroupBy(d => d.DonationDate.Date)

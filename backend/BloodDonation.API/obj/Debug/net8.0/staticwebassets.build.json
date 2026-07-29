@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "yY76feZYj5sHPEfBbGV+fBJdBPyk+GT3NRxYbVOenfM=",
+  "Hash": "nC31/dC2WS1BhcwMUQn87vsj2JdIOIf38FkdbSBu+Ts=",
   "Source": "BloodDonation.API",
   "BasePath": "_content/BloodDonation.API",
   "Mode": "Default",
@@ -150,6 +150,25 @@
       "OriginalItemSpec": "wwwroot\\uploads\\6d6d45b5-2790-4b8b-861f-58f5d35b2f3d.png"
     },
     {
+      "Identity": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.API\\wwwroot\\uploads\\73353733-56b9-4e75-bdc9-e272ee56fd6c.jpg",
+      "SourceId": "BloodDonation.API",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.API\\wwwroot\\",
+      "BasePath": "_content/BloodDonation.API",
+      "RelativePath": "uploads/73353733-56b9-4e75-bdc9-e272ee56fd6c.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\73353733-56b9-4e75-bdc9-e272ee56fd6c.jpg"
+    },
+    {
       "Identity": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.API\\wwwroot\\uploads\\7a7d9545-89b9-4723-ba49-bd89c5264299.jpg",
       "SourceId": "BloodDonation.API",
       "SourceType": "Discovered",
@@ -224,6 +243,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\uploads\\e5f30f00-8a5a-49b3-9d4c-0d2a68b009fd.jpg"
+    },
+    {
+      "Identity": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.API\\wwwroot\\uploads\\fdf1927b-c557-4a2b-bea6-15e8cc7fd010.jpg",
+      "SourceId": "BloodDonation.API",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.API\\wwwroot\\",
+      "BasePath": "_content/BloodDonation.API",
+      "RelativePath": "uploads/fdf1927b-c557-4a2b-bea6-15e8cc7fd010.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\fdf1927b-c557-4a2b-bea6-15e8cc7fd010.jpg"
     },
     {
       "Identity": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.API\\wwwroot\\uploads\\health-checks\\1b53ac45-31fd-41d3-b25c-1bf71c9480c2_file_test.pdf",

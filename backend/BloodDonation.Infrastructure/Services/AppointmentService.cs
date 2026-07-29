@@ -40,7 +40,13 @@ public class AppointmentService : IAppointmentService
                 RegistrantCount = c.Appointments.Count(a => 
                     a.Status == AppointmentStatus.Pending || 
                     a.Status == AppointmentStatus.Confirmed || 
-                    a.Status == AppointmentStatus.Completed)
+                    a.Status == AppointmentStatus.Completed),
+                RegistrantAvatars = c.Appointments
+                    .Where(a => a.Status == AppointmentStatus.Pending || a.Status == AppointmentStatus.Confirmed || a.Status == AppointmentStatus.Completed)
+                    .Where(a => a.Donor.Avatar != null && a.Donor.Avatar != "")
+                    .Select(a => a.Donor.Avatar)
+                    .Take(3)
+                    .ToList()
             })
             .ToListAsync();
     }
@@ -226,6 +232,66 @@ public class AppointmentService : IAppointmentService
                 CreatedAt = a.CreatedAt
             };
         }).ToList();
+    }
+
+    public async Task<AppointmentDetailDto?> GetAppointmentDetailAsync(int appointmentId, int userId)
+    {
+        var donor = await _context.Donors.FirstOrDefaultAsync(d => d.UserId == userId);
+        if (donor == null) return null;
+
+        var appointment = await _context.Appointments
+            .Include(a => a.Campaign)
+            .Include(a => a.HealthCheck)
+            .Include(a => a.BloodDonation)
+                .ThenInclude(bd => bd.BloodType)
+            .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId && a.DonorId == donor.DonorId);
+
+        if (appointment == null) return null;
+
+        var file = await _context.Files.FirstOrDefaultAsync(f => f.AppointmentId == appointmentId);
+
+        var dto = new AppointmentDetailDto
+        {
+            AppointmentId = appointment.AppointmentId,
+            CampaignName = appointment.Campaign.CampaignName,
+            Location = appointment.Campaign.Location,
+            Organizer = appointment.Campaign.Organizer,
+            AppointmentDate = appointment.AppointmentDate,
+            TimeSlot = appointment.TimeSlot,
+            Status = appointment.Status.ToString(),
+            Note = appointment.Note,
+            FileUrl = file?.FilePath,
+            FileName = file?.FileName,
+            CreatedAt = appointment.CreatedAt
+        };
+
+        if (appointment.HealthCheck != null)
+        {
+            dto.HealthCheck = new HealthCheckDto
+            {
+                BloodPressure = appointment.HealthCheck.BloodPressure,
+                Pulse = appointment.HealthCheck.Pulse,
+                Temperature = appointment.HealthCheck.Temperature,
+                Weight = appointment.HealthCheck.Weight,
+                Hemoglobin = appointment.HealthCheck.Hemoglobin,
+                Eligible = appointment.HealthCheck.Eligible,
+                DoctorName = appointment.HealthCheck.DoctorName,
+                CheckDate = appointment.HealthCheck.CheckDate
+            };
+        }
+
+        if (appointment.BloodDonation != null)
+        {
+            dto.BloodDonation = new BloodDonationResultDto
+            {
+                VolumeML = appointment.BloodDonation.VolumeML,
+                BloodGroup = appointment.BloodDonation.BloodType.BloodGroup,
+                StaffName = appointment.BloodDonation.StaffName,
+                DonationDate = appointment.BloodDonation.DonationDate
+            };
+        }
+
+        return dto;
     }
 
     public async Task<List<CampaignRegistrantDto>> GetCampaignRegistrantsAsync(int campaignId)

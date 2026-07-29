@@ -23,4 +23,5 @@ public class CampaignDto
     public string? AttachmentUrl { get; set; }
     public string? AttachmentName { get; set; }
     public int RegistrantCount { get; set; }
+    public List<string?> RegistrantAvatars { get; set; } = new List<string?>();
 }

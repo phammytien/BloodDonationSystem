@@ -47,6 +47,7 @@ export const AdminCampaignsPage: React.FC = () => {
   }, [user]);
 
   const fetchCampaigns = async () => {
+    setLoading(true);
     try {
       const res = await axios.get('http://localhost:5028/api/campaign');
       setCampaigns(res.data);

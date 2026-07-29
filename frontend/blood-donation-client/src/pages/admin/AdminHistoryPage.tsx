@@ -539,7 +539,7 @@ export const AdminHistoryPage: React.FC = () => {
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
               <div className="modal-header bg-danger text-white border-0 py-3">
-                <h5 className="modal-title fw-bold mb-0">Chi Tiết Phiếu Hiến Máu #{selectedDonation.donationId}</h5>
+                <h5 className="modal-title fw-bold mb-0 text-white">Chi Tiết Phiếu Hiến Máu #{selectedDonation.donationId}</h5>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setSelectedDonation(null)}></button>
               </div>
               <div className="modal-body p-4 bg-light">

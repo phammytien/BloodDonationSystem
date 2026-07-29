@@ -139,14 +139,30 @@ export const DonorNavbar: React.FC = () => {
                     }}
                     onBlur={() => setTimeout(() => setShowUserMenu(false), 150)}
                   >
-                    {getAvatarChar(user.fullName, user.username)}
+                    {user.avatarUrl ? (
+                      <img 
+                        src={user.avatarUrl.startsWith('http') ? user.avatarUrl : `http://localhost:5028${user.avatarUrl}`} 
+                        alt="Avatar" 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} 
+                      />
+                    ) : (
+                      getAvatarChar(user.fullName, user.username)
+                    )}
                   </button>
                   {showUserMenu && (
                     <div className="position-absolute end-0 mt-2 bg-white rounded-3 shadow-lg" style={{ minWidth: '220px', zIndex: 1000, border: '1px solid #E5E7EB', animation: 'fadeInDown 0.15s ease' }}>
                       <div className="p-3 border-bottom" style={{ fontSize: '0.82rem', color: '#4B5563' }}>
                         <div className="d-flex align-items-center gap-2 mb-2">
-                          <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #DC2626 0%, #F87171 100%)', color: '#fff', fontWeight: 700, fontSize: '0.85rem' }}>
-                            {getAvatarChar(user.fullName, user.username)}
+                          <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0 overflow-hidden" style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #DC2626 0%, #F87171 100%)', color: '#fff', fontWeight: 700, fontSize: '0.85rem' }}>
+                            {user.avatarUrl ? (
+                              <img 
+                                src={user.avatarUrl.startsWith('http') ? user.avatarUrl : `http://localhost:5028${user.avatarUrl}`} 
+                                alt="Avatar" 
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                              />
+                            ) : (
+                              getAvatarChar(user.fullName, user.username)
+                            )}
                           </div>
                           <div>
                             <div className="fw-bold" style={{ color: '#111827' }}>{getDisplayName(user.fullName, user.username)}</div>

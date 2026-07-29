@@ -8,6 +8,7 @@ export interface UserSession {
   email: string;
   roleName: string;
   fullName: string; // From Donors table — used for avatar
+  avatarUrl?: string | null;
   isProfileUpdated?: boolean;
 }
 
@@ -49,16 +50,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               headers: { Authorization: `Bearer ${parsed.token}` },
             })
             .then((res) => {
-              const enriched: UserSession = { ...parsed, fullName: res.data.fullName || parsed.username };
+              const enriched: UserSession = { 
+                ...parsed, 
+                fullName: res.data.fullName || parsed.username,
+                avatarUrl: res.data.avatar || null
+              };
               setUser(enriched);
               sessionStorage.setItem('bd_user_session', JSON.stringify(enriched));
             })
             .catch(() => {
-              // If fetch fails (expired token etc.), just use existing session
               setUser(parsed);
             })
             .finally(() => setLoading(false));
-          return; // don't setLoading(false) yet — wait for the fetch
+          return; 
         }
 
         setUser(parsed);
