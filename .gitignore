@@ -1,3 +1,5 @@
 # Backend Settings
 backend/BloodDonation.API/appsettings.json
 backend/BloodDonation.API/appsettings.*.json
+bin/
+obj/
