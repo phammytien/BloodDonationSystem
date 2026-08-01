@@ -21,51 +21,46 @@ public class CampaignService : ICampaignService
 
     public async Task<IEnumerable<CampaignDto>> GetAllCampaignsAsync()
     {
-        var campaigns = await _context.DonationCampaigns
-            .Include(c => c.Appointments)
+        return await _context.DonationCampaigns
             .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new CampaignDto
+            {
+                CampaignId = c.CampaignId,
+                CampaignName = c.CampaignName,
+                Description = c.Description,
+                Location = c.Location,
+                Organizer = c.Organizer,
+                StartDate = c.StartDate,
+                EndDate = c.EndDate,
+                MaxParticipants = c.MaxParticipants,
+                Status = (byte)c.Status,
+                AttachmentUrl = c.AttachmentUrl,
+                AttachmentName = c.AttachmentName,
+                RegistrantCount = c.Appointments.Count(a => a.Status != Domain.Enums.AppointmentStatus.Cancelled && a.Status != Domain.Enums.AppointmentStatus.Absent)
+            })
             .ToListAsync();
-
-        return campaigns.Select(c => new CampaignDto
-        {
-            CampaignId = c.CampaignId,
-            CampaignName = c.CampaignName,
-            Description = c.Description,
-            Location = c.Location,
-            Organizer = c.Organizer,
-            StartDate = c.StartDate,
-            EndDate = c.EndDate,
-            MaxParticipants = c.MaxParticipants,
-            Status = (byte)c.Status,
-            AttachmentUrl = c.AttachmentUrl,
-            AttachmentName = c.AttachmentName,
-            RegistrantCount = c.Appointments.Count(a => a.Status != Domain.Enums.AppointmentStatus.Cancelled && a.Status != Domain.Enums.AppointmentStatus.Absent)
-        });
     }
 
     public async Task<CampaignDto?> GetCampaignByIdAsync(int id)
     {
-        var c = await _context.DonationCampaigns
-            .Include(camp => camp.Appointments)
-            .FirstOrDefaultAsync(camp => camp.CampaignId == id);
-
-        if (c == null) return null;
-
-        return new CampaignDto
-        {
-            CampaignId = c.CampaignId,
-            CampaignName = c.CampaignName,
-            Description = c.Description,
-            Location = c.Location,
-            Organizer = c.Organizer,
-            StartDate = c.StartDate,
-            EndDate = c.EndDate,
-            MaxParticipants = c.MaxParticipants,
-            Status = (byte)c.Status,
-            AttachmentUrl = c.AttachmentUrl,
-            AttachmentName = c.AttachmentName,
-            RegistrantCount = c.Appointments.Count(a => a.Status != Domain.Enums.AppointmentStatus.Cancelled && a.Status != Domain.Enums.AppointmentStatus.Absent)
-        };
+        return await _context.DonationCampaigns
+            .Where(camp => camp.CampaignId == id)
+            .Select(c => new CampaignDto
+            {
+                CampaignId = c.CampaignId,
+                CampaignName = c.CampaignName,
+                Description = c.Description,
+                Location = c.Location,
+                Organizer = c.Organizer,
+                StartDate = c.StartDate,
+                EndDate = c.EndDate,
+                MaxParticipants = c.MaxParticipants,
+                Status = (byte)c.Status,
+                AttachmentUrl = c.AttachmentUrl,
+                AttachmentName = c.AttachmentName,
+                RegistrantCount = c.Appointments.Count(a => a.Status != Domain.Enums.AppointmentStatus.Cancelled && a.Status != Domain.Enums.AppointmentStatus.Absent)
+            })
+            .FirstOrDefaultAsync();
     }
 
     public async Task<DonationCampaign> CreateCampaignAsync(DonationCampaign campaign)

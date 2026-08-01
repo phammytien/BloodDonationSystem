@@ -126,6 +126,44 @@ public class AppointmentController : ControllerBase
         }
     }
 
+    [Authorize]
+    [HttpPut("donor/cancel/{appointmentId}")]
+    public async Task<IActionResult> CancelAppointment(int appointmentId)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "Người dùng không hợp lệ hoặc phiên đăng nhập đã hết hạn." });
+            }
+
+            var detail = await _appointmentService.GetAppointmentDetailAsync(appointmentId, userId);
+            if (detail == null)
+            {
+                return NotFound(new { message = "Không tìm thấy hồ sơ đăng ký hoặc bạn không có quyền thao tác." });
+            }
+
+            if (detail.Status != BloodDonation.Domain.Enums.AppointmentStatus.Pending.ToString())
+            {
+                return BadRequest(new { message = "Chỉ có thể hủy đăng ký khi đang ở trạng thái Chờ duyệt." });
+            }
+
+            var result = await _appointmentService.UpdateAppointmentStatusAsync(
+                appointmentId, 
+                BloodDonation.Domain.Enums.AppointmentStatus.Cancelled, 
+                "Người hiến máu tự hủy"
+            );
+
+            if (result) return Ok(new { message = "Hủy đăng ký thành công." });
+            return BadRequest(new { message = "Không thể hủy đăng ký." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi hủy đăng ký.", details = ex.Message });
+        }
+    }
+
     // --- Admin/Staff Endpoints ---
     [Authorize]
     [HttpGet("admin/list")]

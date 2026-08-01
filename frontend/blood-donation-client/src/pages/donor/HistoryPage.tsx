@@ -85,6 +85,32 @@ export const HistoryPage: React.FC = () => {
     );
   }
 
+  const handleCancelRegistration = async (appointmentId: number) => {
+    const confirm = await Swal.fire({
+      title: 'Hủy đăng ký?',
+      text: "Bạn có chắc chắn muốn hủy đăng ký hiến máu này không? Hành động này không thể hoàn tác.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#EF4444',
+      cancelButtonColor: '#6B7280',
+      confirmButtonText: 'Đồng ý hủy',
+      cancelButtonText: 'Không'
+    });
+
+    if (confirm.isConfirmed && user) {
+      try {
+        await axios.put(`http://localhost:5028/api/appointment/donor/cancel/${appointmentId}`, {}, {
+          headers: { Authorization: `Bearer ${user.token}` }
+        });
+        toast.success('Hủy đăng ký thành công.');
+        fetchHistory();
+      } catch (error) {
+        console.error('Error canceling appointment:', error);
+        toast.error('Không thể hủy đăng ký.');
+      }
+    }
+  };
+
   const handleDownloadCertificate = async (appointment: AppointmentHistory) => {
     const certElement = document.getElementById(`certificate-${appointment.appointmentId}`);
     if (!certElement) return;

@@ -63,6 +63,8 @@ interface Props {
   onHide: () => void;
 }
 
+import ReactDOM from 'react-dom';
+
 export const AppointmentDetailModal: React.FC<Props> = ({ appointmentId, show, onHide }) => {
   const { user } = useAuth();
   const [detail, setDetail] = useState<AppointmentDetail | null>(null);
@@ -92,12 +94,13 @@ export const AppointmentDetailModal: React.FC<Props> = ({ appointmentId, show, o
 
   if (!show) return null;
 
-  return (
+  return ReactDOM.createPortal(
     <>
-      <div className="modal-backdrop fade show" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}></div>
-      <div className="modal fade show d-block" tabIndex={-1} onClick={onHide}>
-        <div className="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable" onClick={e => e.stopPropagation()}>
-          <div className="modal-content border-0 rounded-4 shadow" style={{ fontFamily: "'Inter', sans-serif" }}>
+      {/* Backdrop */}
+      <div className="modal-backdrop fade show" style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1040 }}></div>
+      <div className="modal fade show d-block" tabIndex={-1} onClick={onHide} style={{ zIndex: 1050 }}>
+        <div className="modal-dialog modal-xl modal-dialog-centered my-5" onClick={e => e.stopPropagation()}>
+          <div className="modal-content border-0 shadow-lg" style={{ fontFamily: "'Inter', sans-serif", borderRadius: '1.25rem', overflow: 'hidden' }}>
             
             {/* MODAL HEADER */}
             <div className="modal-header border-bottom-0 pb-0 pt-4 px-4 px-md-5 d-flex align-items-start">
@@ -128,12 +131,12 @@ export const AppointmentDetailModal: React.FC<Props> = ({ appointmentId, show, o
                 <div className="row g-4">
                   {/* CỘT TRÁI: THÔNG TIN CHIẾN DỊCH & ĐĂNG KÝ */}
                   <div className="col-12 col-lg-7">
-                    <div className="bg-white rounded-4 p-4 shadow-sm h-100" style={{ border: '1px solid #E5E7EB' }}>
+                    <div className="bg-white rounded-4 p-4 shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
                       <div className="d-flex justify-content-between align-items-start mb-4">
                         <div>
                           <div className="d-flex align-items-center gap-2 mb-1">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1B4FD8" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                            <h6 className="fw-bold mb-0 text-dark">Thông tự Chiến dịch</h6>
+                            <h6 className="fw-bold mb-0 text-dark">Thông tin Chiến dịch</h6>
                           </div>
                         </div>
                         <div>{getStatusBadge(detail.status)}</div>
@@ -191,11 +194,11 @@ export const AppointmentDetailModal: React.FC<Props> = ({ appointmentId, show, o
 
                   {/* CỘT PHẢI: KẾT QUẢ KHÁM SÀNG LỌC & KẾT QUẢ HIẾN MÁU */}
                   <div className="col-12 col-lg-5">
-                    <div className="d-flex flex-column gap-4 h-100">
+                    <div className="d-flex flex-column gap-3">
                       
                       {/* KHÁM SÀNG LỌC */}
-                      <div className="bg-white rounded-4 p-4 shadow-sm flex-grow-1" style={{ border: '1px solid #E5E7EB' }}>
-                        <div className="d-flex align-items-center gap-2 mb-4">
+                      <div className="bg-white rounded-4 p-4 shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
+                        <div className="d-flex align-items-center gap-2 mb-3">
                           <div style={{ width: 36, height: 36, backgroundColor: '#FEF2F2', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
                           </div>
@@ -203,7 +206,7 @@ export const AppointmentDetailModal: React.FC<Props> = ({ appointmentId, show, o
                         </div>
 
                         {!detail.healthCheck ? (
-                          <div className="text-center py-4 rounded-3" style={{ backgroundColor: '#F9FAFB' }}>
+                          <div className="text-center py-3 rounded-3" style={{ backgroundColor: '#F9FAFB' }}>
                             <p className="text-muted mb-0" style={{ fontSize: '0.85rem' }}>Chưa có kết quả.</p>
                           </div>
                         ) : (
@@ -254,7 +257,7 @@ export const AppointmentDetailModal: React.FC<Props> = ({ appointmentId, show, o
                       </div>
 
                       {/* KẾT QUẢ HIẾN MÁU */}
-                      <div className="bg-white rounded-4 p-4 shadow-sm flex-grow-1" style={{ border: '1px solid #E5E7EB' }}>
+                      <div className="bg-white rounded-4 p-4 shadow-sm" style={{ border: '1px solid #E5E7EB' }}>
                         <div className="d-flex align-items-center gap-2 mb-4">
                           <div style={{ width: 36, height: 36, backgroundColor: '#EFF6FF', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B4FD8" strokeWidth="2.5"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
@@ -300,6 +303,7 @@ export const AppointmentDetailModal: React.FC<Props> = ({ appointmentId, show, o
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };

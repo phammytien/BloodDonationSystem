@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast, ToastContainer } from 'react-toastify';
@@ -141,6 +141,8 @@ export const AppointmentPage: React.FC = () => {
   // ── Donor profile state (pre-filled on mount) ────────────────
   const [donorProfile, setDonorProfile] = useState<DonorProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [showProfileError, setShowProfileError] = useState(false);
+  const profileSectionRef = useRef<HTMLDivElement>(null);
 
 
   // Reset appointment date if it falls outside the new campaign's date range
@@ -270,15 +272,15 @@ export const AppointmentPage: React.FC = () => {
         { campaignId: parseInt(selectedCampaignId), appointmentDate, timeSlot, note, fileId: uploadedFileId },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
-      
+
       await Swal.fire({
         icon: 'success',
         title: 'Đăng ký thành công!',
         text: res.data.message || 'Lịch hẹn của bạn đã được ghi nhận.',
-        confirmButtonColor: '#1B4FD8',
+        confirmButtonColor: '#DC2626',
         confirmButtonText: 'Xem lịch sử'
       });
-      
+
       setNote(''); setAppointmentDate('');
       setUploadedFile(null);
       setUploadedFileId(null);
@@ -289,7 +291,7 @@ export const AppointmentPage: React.FC = () => {
         icon: 'error',
         title: 'Không thể đăng ký',
         text: errorMsg,
-        confirmButtonColor: '#1B4FD8',
+        confirmButtonColor: '#DC2626',
         confirmButtonText: 'Đã hiểu'
       });
     } finally {
@@ -298,11 +300,11 @@ export const AppointmentPage: React.FC = () => {
   };
 
   return (
-    <div className="fade-in" style={{ minHeight: '100vh', backgroundColor: '#F8FAFF' }}>
+    <div className="fade-in" style={{ minHeight: '100vh', backgroundColor: '#FFF1F2' }}>
       <ToastContainer position="top-center" autoClose={3000} />
 
       {/* ── HERO HEADER ───────────────────────────────────── */}
-      <div style={{ background: 'linear-gradient(135deg, #1B4FD8 0%, #2563EB 60%, #1D4ED8 100%)', padding: '3rem 0 2rem', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'linear-gradient(135deg, #DC2626 0%, #EF4444 60%, #1D4ED8 100%)', padding: '3rem 0 2rem', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 75% 40%, rgba(255,255,255,0.08) 0%, transparent 55%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.15)' }} />
         <div className="container position-relative" style={{ zIndex: 1 }}>
@@ -322,14 +324,14 @@ export const AppointmentPage: React.FC = () => {
             <div className="bg-white rounded-4 p-4 p-md-5 position-relative overflow-hidden" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.06)', border: '1px solid #E5E7EB' }}>
 
               {/* Subtle watermark decoration */}
-              <svg style={{ position: 'absolute', right: -20, bottom: -20, opacity: 0.03, pointerEvents: 'none' }} width="180" height="180" viewBox="0 0 24 24" fill="#1B4FD8">
+              <svg style={{ position: 'absolute', right: -20, bottom: -20, opacity: 0.03, pointerEvents: 'none' }} width="180" height="180" viewBox="0 0 24 24" fill="#DC2626">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
               </svg>
 
               {!user ? (
                 /* Not logged in overlay */
                 <div className="d-flex flex-column align-items-center justify-content-center text-center py-4">
-                  <div className="d-flex align-items-center justify-content-center rounded-circle mb-3" style={{ width: 64, height: 64, backgroundColor: '#EFF6FF', color: '#1B4FD8' }}>
+                  <div className="d-flex align-items-center justify-content-center rounded-circle mb-3" style={{ width: 64, height: 64, backgroundColor: '#FEF2F2', color: '#DC2626' }}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="28" height="28">
                       <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
@@ -338,7 +340,7 @@ export const AppointmentPage: React.FC = () => {
                   <p className="text-muted small mb-4" style={{ maxWidth: 380, lineHeight: 1.6 }}>
                     Bạn cần đăng nhập để đặt lịch hẹn hiến máu và theo dõi lịch sử đăng ký của mình.
                   </p>
-                  <Link to="/login?redirect=/appointment" className="btn fw-bold rounded-pill px-4 py-2" style={{ fontFamily: 'Montserrat', fontSize: '0.88rem', backgroundColor: '#1B4FD8', color: '#fff' }}>
+                  <Link to="/login?redirect=/appointment" className="btn fw-bold rounded-pill px-4 py-2" style={{ fontFamily: 'Montserrat', fontSize: '0.88rem', backgroundColor: '#DC2626', color: '#fff' }}>
                     Đăng nhập ngay
                   </Link>
                   <p className="text-muted small mt-3 mb-0">
@@ -356,12 +358,12 @@ export const AppointmentPage: React.FC = () => {
                     </div>
                     {/* User profile badge right-aligned */}
                     <div className="col-12 col-md-6 d-flex justify-content-md-end">
-                      <div className="d-flex align-items-center gap-2.5 px-3 py-2" style={{ backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE', borderRadius: '12px' }}>
-                        <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 34, height: 34, background: 'linear-gradient(135deg, #1B4FD8 0%, #8B5CF6 100%)', color: '#fff', fontSize: '0.85rem', fontWeight: 700 }}>
+                      <div className="d-flex align-items-center gap-2.5 px-3 py-2" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FEE2E2', borderRadius: '12px' }}>
+                        <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 34, height: 34, background: 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)', color: '#fff', fontSize: '0.85rem', fontWeight: 700 }}>
                           {getAvatarChar(donorProfile?.fullName || user.fullName, user.username)}
                         </div>
                         <div className="d-flex flex-column text-start">
-                          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1E40AF', lineHeight: '1.2' }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#B91C1C', lineHeight: '1.2' }}>
                             {getDisplayName(donorProfile?.fullName || user.fullName, user.username)}
                           </span>
                           <span style={{ fontSize: '0.72rem', color: '#4B5563', lineHeight: '1.2', marginTop: '2px' }}>
@@ -375,23 +377,23 @@ export const AppointmentPage: React.FC = () => {
                   {/* ── PROFILE INFORMATION PRE-FILLED BOX ────────────────── */}
                   {profileLoading ? (
                     <div className="text-center py-3">
-                      <span className="spinner-border spinner-border-sm" style={{ color: '#1B4FD8' }} />
+                      <span className="spinner-border spinner-border-sm" style={{ color: '#DC2626' }} />
                     </div>
                   ) : donorProfile ? (
-                    <div className="rounded-3 mb-4 overflow-hidden" style={{ border: '1px solid #DBEAFE' }}>
+                    <div className="rounded-3 mb-4 overflow-hidden" style={{ border: '1px solid #FEE2E2' }}>
                       {/* Header bar */}
-                      <div className="d-flex justify-content-between align-items-center px-4 py-3" style={{ backgroundColor: '#EFF6FF', borderBottom: '1px solid #DBEAFE' }}>
-                        <span style={{ fontFamily: 'Montserrat', fontWeight: 700, fontSize: '0.83rem', color: '#1E40AF', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                      <div className="d-flex justify-content-between align-items-center px-4 py-3" style={{ backgroundColor: '#FEF2F2', borderBottom: '1px solid #FEE2E2' }}>
+                        <span style={{ fontFamily: 'Montserrat', fontWeight: 700, fontSize: '0.83rem', color: '#B91C1C', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                           THÔNG TIN NGƯỜI HIẾN MÁU
-                          <span style={{ fontWeight: 400, fontSize: '0.75rem', color: '#60A5FA', marginLeft: 8, textTransform: 'none', letterSpacing: 0 }}>(Tự động đính kèm)</span>
+                          <span style={{ fontWeight: 400, fontSize: '0.75rem', color: '#F87171', marginLeft: 8, textTransform: 'none', letterSpacing: 0 }}>(Tự động đính kèm)</span>
                         </span>
-                        <Link to="/profile" className="text-decoration-none d-flex align-items-center gap-1" style={{ fontSize: '0.78rem', fontWeight: 600, color: '#2563EB' }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <Link to="/profile" className="text-decoration-none d-flex align-items-center gap-1" style={{ fontSize: '0.78rem', fontWeight: 600, color: '#EF4444' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                           Cập nhật thông tin
                         </Link>
                       </div>
                       {/* Fields grid: label on top, value below, 6pt row gap */}
-                      <div className="px-4 py-3" style={{ backgroundColor: '#F8FAFF' }}>
+                      <div className="px-4 py-3" style={{ backgroundColor: '#FFF1F2' }}>
                         <div className="row" style={{ rowGap: '6pt', columnGap: 0 }}>
                           {[
                             { label: 'Họ và tên', value: donorProfile.fullName || 'Chưa cập nhật' },
@@ -405,10 +407,10 @@ export const AppointmentPage: React.FC = () => {
                             { label: 'Địa chỉ', value: donorProfile.province ? `${donorProfile.address ? donorProfile.address + ', ' : ''}${donorProfile.ward}, ${donorProfile.province}` : 'Chưa cập nhật' },
                           ].map((field, idx) => (
                             <div key={idx} className="col-12 col-sm-6 col-md-4" style={{ marginBottom: '6pt' }}>
-                              <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#93C5FD', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
+                              <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#FCA5A5', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
                                 {field.label}
                               </div>
-                              <div style={{ fontSize: '0.86rem', fontWeight: 700, color: field.highlight ? '#1B4FD8' : '#1E293B' }}>
+                              <div style={{ fontSize: '0.86rem', fontWeight: 700, color: field.highlight ? '#DC2626' : '#1E293B' }}>
                                 {field.value}
                               </div>
                             </div>
@@ -417,9 +419,9 @@ export const AppointmentPage: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-3 px-4 py-3 mb-4 d-flex align-items-center gap-2" style={{ backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE', fontSize: '0.82rem', color: '#1E40AF' }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                      Không tìm thấy hồ sơ. Vui lòng <Link to="/profile" className="fw-bold text-decoration-none" style={{ color: '#1B4FD8' }}>cập nhật hồ sơ cá nhân</Link> của bạn.
+                    <div className="rounded-3 px-4 py-3 mb-4 d-flex align-items-center gap-2" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FEE2E2', fontSize: '0.82rem', color: '#B91C1C' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                      Không tìm thấy hồ sơ. Vui lòng <Link to="/profile" className="fw-bold text-decoration-none" style={{ color: '#DC2626' }}>cập nhật hồ sơ cá nhân</Link> của bạn.
                     </div>
                   )}
 
@@ -513,8 +515,8 @@ export const AppointmentPage: React.FC = () => {
                           style={{
                             borderRadius: '8px',
                             fontSize: '0.82rem',
-                            border: '1.5px dashed #1B4FD8',
-                            color: '#1B4FD8',
+                            border: '1.5px dashed #DC2626',
+                            color: '#DC2626',
                             fontFamily: 'Montserrat',
                             fontWeight: 600,
                             padding: '0.5rem 1rem'
@@ -528,25 +530,25 @@ export const AppointmentPage: React.FC = () => {
                             </>
                           ) : (
                             <>
-                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
                               Đính kèm tệp
                             </>
                           )}
                         </button>
                         {uploadedFile && (
-                          <div 
-                            className="d-flex align-items-center justify-content-between px-2.5 rounded-2 flex-grow-1 h-100" 
-                            style={{ 
-                              backgroundColor: '#E8F0FE', 
+                          <div
+                            className="d-flex align-items-center justify-content-between px-2.5 rounded-2 flex-grow-1 h-100"
+                            style={{
+                              backgroundColor: '#E8F0FE',
                               border: '1px solid #C7D7FA',
                               minWidth: '120px',
                               overflow: 'hidden'
                             }}
                           >
                             <div className="d-flex align-items-center gap-1.5 overflow-hidden flex-grow-1">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1B4FD8" strokeWidth="2.5" className="flex-shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                              <span 
-                                className="text-dark small fw-semibold text-truncate" 
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" className="flex-shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+                              <span
+                                className="text-dark small fw-semibold text-truncate"
                                 style={{ fontSize: '0.78rem' }}
                                 title={uploadedFile.name}
                               >
@@ -568,18 +570,18 @@ export const AppointmentPage: React.FC = () => {
                     {/* Selected Campaign Details Box */}
                     {currentCampaign && (
                       <div className="col-12 mt-3">
-                        <div 
-                          className="rounded-3 p-4 text-start" 
-                          style={{ 
-                            background: 'linear-gradient(to right, #F8FAFF 0%, #EFF6FF 100%)', 
-                            border: '1px solid #BFDBFE', 
+                        <div
+                          className="rounded-3 p-4 text-start"
+                          style={{
+                            background: 'linear-gradient(to right, #FFF1F2 0%, #FEF2F2 100%)',
+                            border: '1px solid #FECACA',
                             borderRadius: '12px',
                             animation: 'fadeInDown 0.2s ease'
                           }}
                         >
-                          <h6 className="mb-3 d-flex align-items-center justify-content-between fw-bold" style={{ color: '#1E40AF', fontSize: '0.88rem', letterSpacing: '0.03em' }}>
+                          <h6 className="mb-3 d-flex align-items-center justify-content-between fw-bold" style={{ color: '#B91C1C', fontSize: '0.88rem', letterSpacing: '0.03em' }}>
                             <span className="d-flex align-items-center gap-2">
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
                               THÔNG TIN CHI TIẾT CHIẾN DỊCH ĐÃ CHỌN
                             </span>
                             {isCampaignEnded ? (
@@ -624,34 +626,34 @@ export const AppointmentPage: React.FC = () => {
                                 {currentCampaign.maxParticipants && (
                                   <>
                                     <div className="progress mt-2" style={{ height: '6px', borderRadius: '3px', backgroundColor: '#E5E7EB' }}>
-                                      <div 
-                                        className="progress-bar" 
-                                        role="progressbar" 
-                                        style={{ 
+                                      <div
+                                        className="progress-bar"
+                                        role="progressbar"
+                                        style={{
                                           width: `${Math.min(100, (currentCampaign.registrantCount / currentCampaign.maxParticipants) * 100)}%`,
-                                          backgroundColor: 
-                                            currentCampaign.registrantCount >= currentCampaign.maxParticipants 
-                                              ? '#D42B2B' 
-                                              : (currentCampaign.registrantCount / currentCampaign.maxParticipants) >= 0.8 
-                                                ? '#D97706' 
-                                                : '#1B4FD8',
+                                          backgroundColor:
+                                            currentCampaign.registrantCount >= currentCampaign.maxParticipants
+                                              ? '#D42B2B'
+                                              : (currentCampaign.registrantCount / currentCampaign.maxParticipants) >= 0.8
+                                                ? '#D97706'
+                                                : '#DC2626',
                                           borderRadius: '3px',
                                           transition: 'width 0.3s ease'
-                                        }} 
-                                        aria-valuenow={currentCampaign.registrantCount} 
-                                        aria-valuemin={0} 
+                                        }}
+                                        aria-valuenow={currentCampaign.registrantCount}
+                                        aria-valuemin={0}
                                         aria-valuemax={currentCampaign.maxParticipants}
                                       />
                                     </div>
                                     <div className="d-flex justify-content-between align-items-center mt-1.5 text-muted" style={{ fontSize: '0.72rem' }}>
                                       {isCampaignEnded ? (
                                         <span className="text-danger fw-bold d-flex align-items-center gap-1">
-                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
                                           CHIẾN DỊCH ĐÃ KẾT THÚC
                                         </span>
                                       ) : currentCampaign.registrantCount >= currentCampaign.maxParticipants ? (
                                         <span className="text-danger fw-bold d-flex align-items-center gap-1">
-                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
                                           ĐÃ HẾT SLOT
                                         </span>
                                       ) : (
@@ -672,15 +674,15 @@ export const AppointmentPage: React.FC = () => {
                               {currentCampaign.attachmentUrl && (
                                 <div className="mt-auto">
                                   <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>Tài liệu đính kèm (Kế hoạch / Tuyên bố)</span>
-                                  <a 
-                                    href={currentCampaign.attachmentUrl} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
-                                    className="d-inline-flex align-items-center gap-2 text-decoration-none fw-bold px-3 py-2" 
-                                    style={{ 
-                                      color: '#1B4FD8', 
-                                      backgroundColor: '#E8F0FE', 
-                                      border: '1px solid #BFDBFE',
+                                  <a
+                                    href={currentCampaign.attachmentUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="d-inline-flex align-items-center gap-2 text-decoration-none fw-bold px-3 py-2"
+                                    style={{
+                                      color: '#DC2626',
+                                      backgroundColor: '#E8F0FE',
+                                      border: '1px solid #FECACA',
                                       fontSize: '0.78rem',
                                       transition: 'all 0.2s',
                                       borderRadius: '8px'
@@ -692,7 +694,7 @@ export const AppointmentPage: React.FC = () => {
                                       e.currentTarget.style.backgroundColor = '#E8F0FE';
                                     }}
                                   >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
                                     {currentCampaign.attachmentName || 'TaiLieuDinhKem.pdf'}
                                   </a>
                                 </div>
@@ -709,39 +711,39 @@ export const AppointmentPage: React.FC = () => {
                         type="submit"
                         disabled={formLoading || !canRegister}
                         className="btn fw-bold rounded-pill w-100"
-                        style={{ 
-                          fontFamily: 'Montserrat', 
-                          fontSize: '0.92rem', 
-                          backgroundColor: (!canRegister) ? '#9CA3AF' : '#1B4FD8', 
-                          color: '#fff', 
-                          border: 'none', 
-                          boxShadow: (!canRegister) ? 'none' : '0 6px 20px rgba(27,79,216,0.3)', 
-                          height: 48, 
+                        style={{
+                          fontFamily: 'Montserrat',
+                          fontSize: '0.92rem',
+                          backgroundColor: (!canRegister) ? '#9CA3AF' : '#DC2626',
+                          color: '#fff',
+                          border: 'none',
+                          boxShadow: (!canRegister) ? 'none' : '0 6px 20px rgba(27,79,216,0.3)',
+                          height: 48,
                           transition: 'all 0.2s',
                           cursor: (!canRegister) ? 'not-allowed' : 'pointer'
                         }}
                         onMouseEnter={e => {
-                          if (canRegister) e.currentTarget.style.backgroundColor = '#1E40AF';
+                          if (canRegister) e.currentTarget.style.backgroundColor = '#B91C1C';
                         }}
                         onMouseLeave={e => {
-                          if (canRegister) e.currentTarget.style.backgroundColor = '#1B4FD8';
+                          if (canRegister) e.currentTarget.style.backgroundColor = '#DC2626';
                         }}
                       >
                         {formLoading ? (
                           <><span className="spinner-border spinner-border-sm me-2" />Đang đăng ký...</>
                         ) : isCampaignEnded ? (
                           <span className="d-flex align-items-center justify-content-center gap-2">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
                             Chiến dịch đã kết thúc
                           </span>
                         ) : isCampaignClosedOrCancelled ? (
                           <span className="d-flex align-items-center justify-content-center gap-2">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
                             Chiến dịch đã bị đóng hoặc hủy
                           </span>
                         ) : isCampaignFull ? (
                           <span className="d-flex align-items-center justify-content-center gap-2">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
                             Chiến dịch đã đủ số lượng đăng ký
                           </span>
                         ) : (
@@ -775,11 +777,11 @@ export const AppointmentPage: React.FC = () => {
               },
               {
                 icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
                     <path d="M9 11l3 3L22 4M21 12a9 9 0 1 1-9-9" />
                   </svg>
                 ),
-                bg: '#EFF6FF',
+                bg: '#FEF2F2',
                 title: 'Quy trình nhanh gọn',
                 desc: 'Đăng ký online → Sàng lọc sức khỏe → Hiến máu (10-15 phút) → Nghỉ ngơi & Nhận chứng nhận hiến máu.'
               },
@@ -812,7 +814,7 @@ export const AppointmentPage: React.FC = () => {
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5 style={{ fontFamily: 'Montserrat', fontWeight: 700, color: '#111827', fontSize: '1rem', margin: 0 }}>Lịch sử đăng ký (Gần đây)</h5>
                 {history.length > 0 && (
-                  <Link to="/history" className="text-decoration-none fw-semibold" style={{ fontSize: '0.82rem', color: '#1B4FD8' }}>
+                  <Link to="/history" className="text-decoration-none fw-semibold" style={{ fontSize: '0.82rem', color: '#DC2626' }}>
                     Xem tất cả &rarr;
                   </Link>
                 )}
@@ -863,8 +865,8 @@ export const AppointmentPage: React.FC = () => {
                           <td>{getStatusBadge(a.status)}</td>
                           <td>
                             {a.fileUrl ? (
-                              <a href={`http://localhost:5028${a.fileUrl}`} target="_blank" rel="noopener noreferrer" className="d-inline-flex align-items-center gap-1 text-decoration-none fw-bold small" style={{ color: '#1B4FD8' }} title="Tải xuống">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                              <a href={`http://localhost:5028${a.fileUrl}`} target="_blank" rel="noopener noreferrer" className="d-inline-flex align-items-center gap-1 text-decoration-none fw-bold small" style={{ color: '#DC2626' }} title="Tải xuống">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
                                 Xem
                               </a>
                             ) : <span className="text-muted">—</span>}
@@ -899,7 +901,7 @@ export const AppointmentPage: React.FC = () => {
             width: '46px',
             height: '46px',
             borderRadius: '50%',
-            backgroundColor: '#1B4FD8',
+            backgroundColor: '#DC2626',
             color: '#fff',
             zIndex: 9999,
             cursor: 'pointer',
@@ -915,8 +917,8 @@ export const AppointmentPage: React.FC = () => {
 
       {/* ── PROFILE UPDATE PROMPT MODAL ────────────────────────── */}
       {showProfileModal && (
-        <div 
-          style={{ 
+        <div
+          style={{
             position: 'fixed',
             top: 0,
             left: 0,
@@ -925,23 +927,23 @@ export const AppointmentPage: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'rgba(15, 23, 42, 0.65)', 
-            backdropFilter: 'blur(4px)', 
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
             zIndex: 10000,
             animation: 'fadeIn 0.25s ease'
           }}
         >
-          <div 
-            className="bg-white rounded-4 p-4 text-center shadow-2xl mx-3" 
-            style={{ 
-              maxWidth: '460px', 
+          <div
+            className="bg-white rounded-4 p-4 text-center shadow-2xl mx-3"
+            style={{
+              maxWidth: '460px',
               border: '1px solid #E2E8F0',
               animation: 'fadeInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           >
-            <div 
-              className="d-flex align-items-center justify-content-center rounded-circle mx-auto mb-3" 
-              style={{ width: '64px', height: '64px', backgroundColor: '#EFF6FF', color: '#1B4FD8' }}
+            <div
+              className="d-flex align-items-center justify-content-center rounded-circle mx-auto mb-3"
+              style={{ width: '64px', height: '64px', backgroundColor: '#FEF2F2', color: '#DC2626' }}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="32" height="32">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -955,15 +957,15 @@ export const AppointmentPage: React.FC = () => {
               Chào mừng bạn đến với <strong>LifeGive</strong>! Để có thể đặt lịch hẹn hiến máu và nhận thông tin hỗ trợ tốt nhất, vui lòng hoàn tất cập nhật hồ sơ của bạn.
             </p>
             <div className="d-flex flex-column gap-2">
-              <Link 
-                to="/profile" 
+              <Link
+                to="/profile"
                 className="btn-primary-custom w-100 py-2.5 d-flex align-items-center justify-content-center"
                 style={{ fontSize: '0.9rem' }}
                 onClick={handleDismissModal}
               >
                 Cập nhật ngay
               </Link>
-              <button 
+              <button
                 className="btn btn-link text-decoration-none text-muted small py-2"
                 onClick={handleDismissModal}
               >

@@ -323,11 +323,7 @@ public class AppointmentService : IAppointmentService
 
     public async Task<List<AdminAppointmentDto>> GetAllAppointmentsAsync(AppointmentStatus? status = null, int? campaignId = null)
     {
-        var query = _context.Appointments
-            .Include(a => a.Donor)
-            .ThenInclude(d => d.BloodType)
-            .Include(a => a.Campaign)
-            .AsQueryable();
+        var query = _context.Appointments.AsQueryable();
 
         if (status.HasValue)
         {
@@ -339,27 +335,26 @@ public class AppointmentService : IAppointmentService
             query = query.Where(a => a.CampaignId == campaignId.Value);
         }
 
-        var appointments = await query
+        return await query
             .OrderByDescending(a => a.CreatedAt)
+            .Select(a => new AdminAppointmentDto
+            {
+                AppointmentId = a.AppointmentId,
+                DonorId = a.DonorId,
+                DonorName = a.Donor != null ? a.Donor.FullName : "Không xác định",
+                DonorPhone = a.Donor != null ? a.Donor.Phone : "",
+                DonorEmail = a.Donor != null ? a.Donor.Email : "",
+                DonorCitizenId = a.Donor != null ? a.Donor.CitizenId : "",
+                BloodGroup = a.Donor != null && a.Donor.BloodType != null ? a.Donor.BloodType.BloodGroup : "Chưa rõ",
+                CampaignId = a.CampaignId,
+                CampaignName = a.Campaign != null ? a.Campaign.CampaignName : "Không xác định",
+                AppointmentDate = a.AppointmentDate,
+                TimeSlot = a.TimeSlot,
+                Status = a.Status,
+                Note = a.Note,
+                CreatedAt = a.CreatedAt
+            })
             .ToListAsync();
-
-        return appointments.Select(a => new AdminAppointmentDto
-        {
-            AppointmentId = a.AppointmentId,
-            DonorId = a.DonorId,
-            DonorName = a.Donor?.FullName ?? "Không xác định",
-            DonorPhone = a.Donor?.Phone ?? "",
-            DonorEmail = a.Donor?.Email ?? "",
-            DonorCitizenId = a.Donor?.CitizenId ?? "",
-            BloodGroup = a.Donor?.BloodType?.BloodGroup ?? "Chưa rõ",
-            CampaignId = a.CampaignId,
-            CampaignName = a.Campaign?.CampaignName ?? "Không xác định",
-            AppointmentDate = a.AppointmentDate,
-            TimeSlot = a.TimeSlot,
-            Status = a.Status,
-            Note = a.Note,
-            CreatedAt = a.CreatedAt
-        }).ToList();
     }
 
     public async Task<bool> UpdateAppointmentStatusAsync(int appointmentId, AppointmentStatus status, string adminNote = null)

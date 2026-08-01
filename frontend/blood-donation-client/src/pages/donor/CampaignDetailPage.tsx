@@ -114,7 +114,8 @@ export const CampaignDetailPage = () => {
           <div className="bg-white rounded-4 shadow-sm overflow-hidden mb-4 border-0">
             <div style={{ height: '350px', backgroundColor: '#f8f9fa', position: 'relative' }}>
               <img 
-                src={campaign.attachmentUrl || "https://st2.depositphotos.com/3591429/11952/i/450/depositphotos_119520970-stock-photo-blood-donor-at-donation-with.jpg"} 
+                src={(campaign.attachmentUrl && campaign.attachmentUrl.length > 5) ? campaign.attachmentUrl : "https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&q=80&w=600"} 
+                onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&q=80&w=600"; e.currentTarget.onerror = null; }}
                 alt="Banner" 
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
               />

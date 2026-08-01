@@ -150,7 +150,7 @@ public static class DatabaseSeeder
                 var donor2 = new Donor { 
                     UserId = user2.UserId, 
                     FullName = "Lê Hoàng Nam", 
-                    Gender = false, 
+                    Gender = true, 
                     DateOfBirth = DateTime.UtcNow.AddYears(-25).AddDays(rnd.Next(-300, 300)),
                     CitizenId = "079090000002",
                     Phone = "0900000002",
