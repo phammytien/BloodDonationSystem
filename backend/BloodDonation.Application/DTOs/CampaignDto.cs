@@ -11,9 +11,17 @@ public class CampaignDto
     public string Organizer { get; set; } = null!;
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
+    
+    public DateTime? RegistrationStartDate { get; set; }
+    public DateTime? RegistrationEndDate { get; set; }
+    public DateTime? DonationDate { get; set; }
+    public TimeSpan? StartTime { get; set; }
+    public TimeSpan? EndTime { get; set; }
+    
     public int? MaxParticipants { get; set; }
     public byte Status { get; set; }
     public string? AttachmentUrl { get; set; }
     public string? AttachmentName { get; set; }
     public int RegistrantCount { get; set; }
+    public List<string?> RegistrantAvatars { get; set; } = new List<string?>();
 }

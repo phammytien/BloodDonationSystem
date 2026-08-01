@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { toast, ToastContainer } from 'react-toastify';
 import axios from 'axios';
-import { getAvatarChar, getDisplayName } from '../utils/avatarHelper';
-import { ChangePasswordModal } from '../components/ChangePasswordModal';
-import { NotificationBell } from '../components/NotificationBell';
+import { getAvatarChar } from '../../utils/avatarHelper';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface BloodType {
   bloodTypeId: number;
@@ -35,16 +34,15 @@ interface DonorProfile {
 }
 
 export const ProfilePage: React.FC = () => {
-  const { user, logout, login } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState<DonorProfile | null>(null);
   const [bloodTypes, setBloodTypes] = useState<BloodType[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [avatarLoading, setAvatarLoading] = useState(false);
 
   // Form states
   const [fullName, setFullName] = useState('');
@@ -85,7 +83,7 @@ export const ProfilePage: React.FC = () => {
     // Validate phone - đúng 10 số, chỉ số không ký tự đặc biệt
     if (!phone.trim()) {
       errors.phone = 'Số điện thoại không được để trống';
-    } else if (!/^\d{10}$/.test(phone.trim().replace(/\D/g, ''))) {
+    } else if (!/^\d{10}$/.test(phone.trim())) {
       errors.phone = 'Số điện thoại phải đủ 10 số và chỉ chứa chữ số';
     } else if (!/^0[35789]/.test(phone.trim())) {
       errors.phone = 'Số điện thoại phải bắt đầu bằng 03, 05, 07, 08 hoặc 09';
@@ -96,10 +94,8 @@ export const ProfilePage: React.FC = () => {
       errors.citizenId = 'Số CCCD / Hộ chiếu không được để trống';
     } else if (!/^\d+$/.test(citizenId.trim())) {
       errors.citizenId = 'Số CCCD / Hộ chiếu chỉ được chứa chữ số';
-    } else if (citizenId.trim().length < 9) {
-      errors.citizenId = 'Số CCCD / Hộ chiếu phải có ít nhất 9 ký tự';
-    } else if (citizenId.trim().length > 20) {
-      errors.citizenId = 'Số CCCD / Hộ chiếu không được quá 20 ký tự';
+    } else if (citizenId.trim().length !== 9 && citizenId.trim().length !== 12) {
+      errors.citizenId = 'Số CCCD / Hộ chiếu phải có đúng 9 hoặc 12 chữ số';
     }
 
     // Validate dateOfBirth (must be at least 18 years old)
@@ -128,6 +124,38 @@ export const ProfilePage: React.FC = () => {
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    setAvatarLoading(true);
+    try {
+      const res = await axios.post('http://localhost:5028/api/upload', formData, {
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${user?.token}`
+        }
+      });
+      const fileUrl = res.data.url;
+      setProfile(prev => prev ? { ...prev, avatar: fileUrl } : null);
+      toast.success('Tải ảnh lên thành công. Đừng quên bấm Lưu thay đổi nhé!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Lỗi tải ảnh lên. Vui lòng thử lại.');
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
+
+  const getAvatarUrl = (url: string | null | undefined) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `http://localhost:5028${url}`;
   };
 
   useEffect(() => {
@@ -207,12 +235,17 @@ export const ProfilePage: React.FC = () => {
         totalDonationTimes: profile?.totalDonationTimes || 0
       };
 
-      const response = await axios.put('http://localhost:5028/api/donor/profile', payload, {
+      await axios.put('http://localhost:5028/api/donor/profile', payload, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
 
       if (user) {
-        login({ ...user, fullName: fullName.trim(), isProfileUpdated: true });
+        login({ 
+          ...user, 
+          fullName: fullName.trim(), 
+          avatarUrl: profile?.avatar || null,
+          isProfileUpdated: true 
+        });
       }
 
       toast.success('Cập nhật thông tin hồ sơ thành công!');
@@ -229,8 +262,8 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return 'Chưa từng hiến';
+  const formatLastDonationDate = (dateStr: string | null, totalTimes: number) => {
+    if (!dateStr) return totalTimes > 0 ? 'Chưa cập nhật' : 'Chưa từng hiến';
     try {
       return new Date(dateStr).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
     } catch { return dateStr; }
@@ -274,128 +307,100 @@ export const ProfilePage: React.FC = () => {
     <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFF' }}>
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* ── NAVBAR ─────────────────────────────────────────── */}
-      <nav className="navbar navbar-expand-lg sticky-top bg-white" style={{ borderBottom: '1px solid #E5E7EB', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-        <div className="container">
-          <Link to="/" className="d-flex align-items-center text-decoration-none gap-2">
-            <div className="d-flex align-items-center justify-content-center rounded-circle" style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#1B4FD8,#2563EB)' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#fff" />
-                <path d="M12 7v10M9 12h6" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <span style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.2rem', color: '#1B4FD8' }}>LifeGive</span>
-          </Link>
 
-          <div className="d-flex align-items-center gap-3 ms-auto">
-            <Link to="/" className="text-muted text-decoration-none small fw-semibold" style={{ fontFamily: 'Nunito' }}>← Trang chủ</Link>
-            <Link to="/profile" className="text-decoration-none small fw-semibold" style={{ fontFamily: 'Nunito', color: '#1B4FD8' }}>Thông tin tài khoản</Link>
-            <Link to="/appointment" className="text-muted text-decoration-none small fw-semibold" style={{ fontFamily: 'Nunito' }}>Lịch hẹn của tôi</Link>
-            <Link to="/change-password" className="text-muted text-decoration-none small fw-semibold" style={{ fontFamily: 'Nunito' }}>Đổi mật khẩu</Link>
-            {user && <NotificationBell />}
-            <div className="position-relative">
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="d-flex align-items-center justify-content-center rounded-circle border-0"
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  background: 'linear-gradient(135deg, #1B4FD8 0%, #8B5CF6 100%)',
-                  color: '#fff',
-                  fontWeight: 700,
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: showUserMenu ? '0 4px 12px rgba(27, 79, 216, 0.4)' : '0 2px 8px rgba(27, 79, 216, 0.15)'
-                }}
-                tabIndex={0}
-              >
-                {getAvatarChar(fullName || user?.fullName, user?.username)}
-              </button>
-              {showUserMenu && (
-                <div
-                  className="position-absolute end-0 mt-2 bg-white rounded-3 shadow-lg"
-                  style={{
-                    minWidth: '210px',
-                    zIndex: 1000,
-                    border: '1px solid #E5E7EB',
-                    animation: 'fadeInDown 0.15s ease'
-                  }}
-                >
-                  <div className="p-3 border-bottom" style={{ fontSize: '0.8rem', color: '#4B5563' }}>
-                    <div className="d-flex align-items-center gap-2 mb-2">
-                      <div
-                        className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
-                        style={{
-                          width: '30px',
-                          height: '30px',
-                          background: 'linear-gradient(135deg, #1B4FD8 0%, #8B5CF6 100%)',
-                          color: '#fff',
-                          fontWeight: 700,
-                          fontSize: '0.8rem'
-                        }}
-                      >
-                        {getAvatarChar(fullName || user?.fullName, user?.username)}
-                      </div>
-                      <div>
-                        <div className="fw-bold" style={{ color: '#111827', fontSize: '0.82rem' }}>{getDisplayName(fullName || user?.fullName, user?.username)}</div>
-                        <div style={{ color: '#9CA3AF', fontSize: '0.7rem' }}>{user?.email}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-2">
-                    <button
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        logout();
-                      }}
-                      className="w-100 d-flex align-items-center gap-2 px-3 py-2 border-0 bg-transparent rounded-2 text-start"
-                      style={{
-                        fontSize: '0.82rem',
-                        color: '#D42B2B',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FEF0F0')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
-                      Đăng xuất
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
 
       <div className="container py-5">
         <div className="row g-4 justify-content-center">
 
-          {/* Left panel: Info summary */}
+          {/* Left panel: Info summary & Donor Card */}
           <div className="col-12 col-lg-4">
-            <div className="bg-white rounded-4 p-4 text-center" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.06)', border: '1px solid #E5E7EB' }}>
-              <div className="d-flex align-items-center justify-content-center rounded-circle mx-auto mb-3" style={{ width: 80, height: 80, backgroundColor: '#EFF6FF', color: '#1B4FD8', fontSize: '2rem', fontWeight: 800 }}>
-                {getAvatarChar(fullName || user?.fullName, user?.username)}
+            <div className="bg-white rounded-4 p-4 text-center mb-4" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.06)', border: '1px solid #E5E7EB' }}>
+              
+              {/* Avatar Section */}
+              <div className="mb-4 position-relative d-inline-block">
+                <div 
+                  className="rounded-circle overflow-hidden border border-4 border-white shadow-sm d-flex align-items-center justify-content-center bg-light"
+                  style={{ width: '120px', height: '120px' }}
+                >
+                  {avatarLoading ? (
+                    <div className="spinner-border text-danger" role="status" />
+                  ) : profile?.avatar ? (
+                    <img src={getAvatarUrl(profile.avatar) || ''} alt="Avatar" className="w-100 h-100 object-fit-cover" />
+                  ) : (
+                    <span className="fs-1 fw-bold text-danger">{getAvatarChar(profile?.fullName || '')}</span>
+                  )}
+                </div>
+                
+                <label 
+                  className="position-absolute bottom-0 end-0 bg-danger text-white rounded-circle p-2 shadow hover-elevate"
+                  style={{ cursor: 'pointer', transform: 'translate(-5px, -5px)', border: '3px solid white', transition: 'all 0.2s' }}
+                  title="Thay đổi ảnh đại diện"
+                >
+                  <input type="file" accept="image/*" className="d-none" onChange={handleAvatarUpload} disabled={avatarLoading} />
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                </label>
               </div>
-              <h5 style={{ fontFamily: 'Montserrat', fontWeight: 800, color: '#111827', margin: 0 }}>{fullName || 'Người hiến máu'}</h5>
-              <p className="text-muted small mt-1">{email}</p>
 
-              <hr className="my-4" style={{ borderColor: '#F3F4F6' }} />
+              <h5 className="fw-bold mb-1" style={{ fontFamily: 'Montserrat' }}>{profile?.fullName || 'Người hiến máu'}</h5>
+              <p className="text-muted small mb-4">{profile?.email}</p>
 
-              <div className="row text-start g-3">
-                <div className="col-6">
-                  <span className="small text-muted d-block">Nhóm máu</span>
-                  <strong className="text-danger" style={{ fontSize: '1.1rem' }}>{profile?.bloodGroup || '—'}</strong>
+              {/* DIGITAL DONOR CARD */}
+              <div className="rounded-4 overflow-hidden text-start mb-4 position-relative" style={{ 
+                background: 'linear-gradient(135deg, #D42B2B 0%, #991B1B 100%)', 
+                color: 'white', 
+                boxShadow: '0 10px 25px rgba(220, 38, 38, 0.3)',
+                padding: '1.5rem',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                {/* Background Pattern */}
+                <svg style={{ position: 'absolute', right: -20, bottom: -20, opacity: 0.1, pointerEvents: 'none' }} width="150" height="150" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+
+                <div className="d-flex justify-content-between align-items-start mb-4 position-relative z-1">
+                  <div>
+                    <div style={{ fontSize: '0.75rem', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '1px' }}>Thẻ Hiến Máu</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.2rem', fontFamily: 'Montserrat' }}>LifeGive</div>
+                  </div>
+                  <div className="bg-white text-danger rounded-circle d-flex align-items-center justify-content-center" style={{ width: 45, height: 45, fontSize: '1.2rem', fontWeight: 900, boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }}>
+                    {profile?.bloodGroup || '?'}
+                  </div>
                 </div>
-                <div className="col-6">
-                  <span className="small text-muted d-block">Lần hiến</span>
-                  <strong className="text-dark" style={{ fontSize: '1.1rem' }}>{profile?.totalDonationTimes || 0} lần</strong>
+
+                <div className="mb-4 position-relative z-1">
+                  <div style={{ fontSize: '0.7rem', opacity: 0.8, textTransform: 'uppercase' }}>Họ và tên</div>
+                  <div style={{ fontWeight: 700, fontSize: '1.1rem', textTransform: 'uppercase', letterSpacing: '1px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{profile?.fullName || 'Người hiến máu'}</div>
+                  
+                  <div className="mt-2" style={{ fontSize: '0.7rem', opacity: 0.8, textTransform: 'uppercase' }}>Số CMND/CCCD</div>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem', letterSpacing: '2px' }}>{profile?.citizenId || '---'}</div>
                 </div>
+
+                <div className="d-flex justify-content-between align-items-end position-relative z-1">
+                  <div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.8, textTransform: 'uppercase' }}>Số lần hiến</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.3rem' }}>{profile?.totalDonationTimes || 0}</div>
+                  </div>
+                  {/* QR Code */}
+                  <div className="bg-white p-1 rounded-2 shadow-sm" style={{ width: 70, height: 70 }}>
+                    <QRCodeSVG 
+                      value={JSON.stringify({
+                        donorId: profile?.donorId,
+                        citizenId: profile?.citizenId,
+                        phone: profile?.phone,
+                        fullName: profile?.fullName
+                      })}
+                      size={62}
+                      level="L"
+                      includeMargin={false}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="row text-start g-3 mt-1">
                 <div className="col-12">
-                  <span className="small text-muted d-block">Lần hiến cuối</span>
-                  <span className="text-dark fw-semibold" style={{ fontSize: '0.88rem' }}>{formatDate(profile?.lastDonationDate || null)}</span>
+                  <span className="small text-muted d-block mb-1">Cập nhật lần cuối</span>
+                  <span className="text-dark fw-semibold" style={{ fontSize: '0.88rem' }}>{formatLastDonationDate(profile?.updatedAt || null, 0)}</span>
                 </div>
               </div>
             </div>
@@ -435,7 +440,8 @@ export const ProfilePage: React.FC = () => {
                     style={getInputStyle('phone')}
                     value={phone}
                     onChange={e => {
-                      setPhone(e.target.value);
+                      const val = e.target.value.replace(/\D/g, '');
+                      setPhone(val);
                       if (validationErrors.phone) setValidationErrors(prev => ({ ...prev, phone: '' }));
                     }}
                     placeholder="VD: 0912345678"
@@ -452,6 +458,8 @@ export const ProfilePage: React.FC = () => {
                     className={getInputClass('email')}
                     style={getInputStyle('email')}
                     value={email}
+                    disabled
+                    readOnly
                     onChange={e => {
                       setEmail(e.target.value);
                       if (validationErrors.email) setValidationErrors(prev => ({ ...prev, email: '' }));
@@ -459,6 +467,9 @@ export const ProfilePage: React.FC = () => {
                     placeholder="VD: donor@lifegive.vn"
                     required
                   />
+                  <div className="form-text" style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                    * Email không thể thay đổi vì dùng để đăng nhập.
+                  </div>
                   {renderFieldError('email')}
                 </div>
 
@@ -471,7 +482,8 @@ export const ProfilePage: React.FC = () => {
                     style={getInputStyle('citizenId')}
                     value={citizenId}
                     onChange={e => {
-                      setCitizenId(e.target.value);
+                      const val = e.target.value.replace(/\D/g, '');
+                      setCitizenId(val);
                       if (validationErrors.citizenId) setValidationErrors(prev => ({ ...prev, citizenId: '' }));
                     }}
                     placeholder="VD: 123456789"

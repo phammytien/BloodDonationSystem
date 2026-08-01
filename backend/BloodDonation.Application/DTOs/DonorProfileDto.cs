@@ -16,6 +16,7 @@ public class DonorProfileDto
 
     [Required(ErrorMessage = "Số CCCD/Hộ chiếu là bắt buộc")]
     [StringLength(20, MinimumLength = 9, ErrorMessage = "Số CCCD/Hộ chiếu phải từ 9-20 ký tự")]
+    [RegularExpression(@"^(\d{9}|\d{12})$", ErrorMessage = "CCCD phải gồm đúng 9 hoặc 12 chữ số")]
     public string? CitizenId { get; set; }
 
     [Required(ErrorMessage = "Số điện thoại là bắt buộc")]
@@ -53,11 +54,7 @@ public class DonorProfileDto
     public DateTime? LastDonationDate { get; set; }
 
     public int TotalDonationTimes { get; set; } = 0;
+    public bool IsAvailable { get; set; } = true;
     public DateTime? UpdatedAt { get; set; }
 }
 
-public class BloodTypeDto
-{
-    public int BloodTypeId { get; set; }
-    public string BloodGroup { get; set; } = null!;
-}

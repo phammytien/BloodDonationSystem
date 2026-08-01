@@ -5,15 +5,28 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { OtpPage } from './pages/auth/OtpPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { HomePage } from './pages/HomePage';
-import { AppointmentPage } from './pages/AppointmentPage';
-import { ProfilePage } from './pages/ProfilePage';
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { AdminCampaignsPage } from './pages/admin/AdminCampaignsPage';
+import { AdminAppointmentsPage } from './pages/admin/AdminAppointmentsPage';
+import { AdminDonorsPage } from './pages/admin/AdminDonorsPage';
+import { AdminInventoryPage } from './pages/admin/AdminInventoryPage';
+import { AdminHistoryPage } from './pages/admin/AdminHistoryPage';
+import { AdminBloodTypesPage } from './pages/admin/AdminBloodTypesPage';
+import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
+import { HomePage } from './pages/donor/HomePage';
+import { AppointmentPage } from './pages/donor/AppointmentPage';
+import { ProfilePage } from './pages/donor/ProfilePage';
+import { CampaignsPage } from './pages/donor/CampaignsPage';
+import { CampaignDetailPage } from './pages/donor/CampaignDetailPage';
+import { HistoryPage } from './pages/donor/HistoryPage';
 import { ChangePasswordPage } from './pages/auth/ChangePasswordPage';
+import { AdminLayout } from './components/layout/AdminLayout';
+import { DonorLayout } from './components/layout/DonorLayout';
+
 
 const Spinner = () => (
   <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-    <div className="spinner-border text-primary" role="status">
+    <div className="spinner-border text-danger" role="status">
       <span className="visually-hidden">Đang tải...</span>
     </div>
   </div>
@@ -51,24 +64,34 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Auth pages — blocked for logged-in users */}
+          {/* Auth pages — blocked for logged-in users - NO LAYOUT */}
           <Route path="/login" element={<AnonymousRoute><LoginPage /></AnonymousRoute>} />
           <Route path="/register" element={<AnonymousRoute><RegisterPage /></AnonymousRoute>} />
           <Route path="/verify-otp" element={<AnonymousRoute><OtpPage /></AnonymousRoute>} />
           <Route path="/forgot-password" element={<AnonymousRoute><ForgotPasswordPage /></AnonymousRoute>} />
 
-          {/* Public home */}
-          <Route path="/" element={<HomePage />} />
+          {/* Donor Routes (Protected or other public pages) inside DonorLayout */}
+          <Route element={<DonorLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/campaigns" element={<CampaignsPage />} />
+            <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
+            <Route path="/appointment" element={<AppointmentPage />} />
+            <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
+          </Route>
 
-          {/* Blood donation appointment — public page, but form requires auth */}
-          <Route path="/appointment" element={<AppointmentPage />} />
-
-          {/* Account and donor profile management */}
-          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-          <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
-
-          {/* Admin / Staff dashboard — Donors are blocked */}
-          <Route path="/dashboard" element={<StaffAdminRoute><DashboardPage /></StaffAdminRoute>} />
+          {/* Admin / Staff Routes inside AdminLayout */}
+          <Route element={<StaffAdminRoute><AdminLayout /></StaffAdminRoute>}>
+            <Route path="/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/admin/campaigns" element={<AdminCampaignsPage />} />
+            <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
+            <Route path="/admin/donors" element={<AdminDonorsPage />} />
+            <Route path="/admin/inventory" element={<AdminInventoryPage />} />
+            <Route path="/admin/history" element={<AdminHistoryPage />} />
+            <Route path="/admin/settings" element={<AdminSettingsPage />} />
+            <Route path="/admin/blood-types" element={<AdminBloodTypesPage />} />
+          </Route>
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

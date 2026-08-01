@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import axios from 'axios';
@@ -22,11 +22,7 @@ export const DashboardPage: React.FC = () => {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const handleLogout = () => {
-    navigate('/');       // navigate FIRST — prevents StaffAdminRoute flash to /login
-    logout();            // then clear user state
-    toast.success('Đăng xuất thành công!');
-  };
+
 
   useEffect(() => {
     const fetchHistory = async () => {

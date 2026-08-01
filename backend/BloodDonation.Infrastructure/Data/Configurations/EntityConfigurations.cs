@@ -78,6 +78,19 @@ public class BloodTypeConfiguration : IEntityTypeConfiguration<BloodType>
         builder.Property(bt => bt.BloodGroup)
             .IsRequired()
             .HasMaxLength(5);
+
+        builder.Property(bt => bt.Description)
+            .HasMaxLength(255);
+
+        builder.Property(bt => bt.Status)
+            .HasDefaultValue(0);
+
+        builder.Property(bt => bt.CreatedBy)
+            .HasMaxLength(100);
+
+        builder.Property(bt => bt.CreatedAt)
+            .HasColumnType("datetime")
+            .HasDefaultValueSql("GETUTCDATE()");
     }
 }
 
@@ -452,5 +465,32 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
             .WithMany(u => u.AuditLogs)
             .HasForeignKey(al => al.UserId)
             .OnDelete(DeleteBehavior.SetNull);
+    }
+}
+
+public class CampaignCommentConfiguration : IEntityTypeConfiguration<CampaignComment>
+{
+    public void Configure(EntityTypeBuilder<CampaignComment> builder)
+    {
+        builder.ToTable("CampaignComments");
+        builder.HasKey(cc => cc.CommentId);
+
+        builder.Property(cc => cc.Content)
+            .IsRequired()
+            .HasMaxLength(1000);
+
+        builder.Property(cc => cc.CreatedAt)
+            .HasColumnType("datetime")
+            .HasDefaultValueSql("GETUTCDATE()");
+
+        builder.HasOne(cc => cc.Campaign)
+            .WithMany(dc => dc.Comments)
+            .HasForeignKey(cc => cc.CampaignId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(cc => cc.User)
+            .WithMany(u => u.CampaignComments)
+            .HasForeignKey(cc => cc.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

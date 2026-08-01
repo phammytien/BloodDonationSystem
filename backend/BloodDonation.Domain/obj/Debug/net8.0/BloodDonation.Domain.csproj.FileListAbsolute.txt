@@ -9,3 +9,15 @@ D:\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonati
 D:\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\refint\BloodDonation.Domain.dll
 D:\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.pdb
 D:\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\ref\BloodDonation.Domain.dll
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.Domain\bin\Debug\net8.0\BloodDonation.Domain.deps.json
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.Domain\bin\Debug\net8.0\BloodDonation.Domain.dll
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.Domain\bin\Debug\net8.0\BloodDonation.Domain.pdb
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.AssemblyInfoInputs.cache
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.AssemblyInfo.cs
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.csproj.CoreCompileInputs.cache
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.sourcelink.json
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.dll
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\refint\BloodDonation.Domain.dll
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\BloodDonation.Domain.pdb
+D:\KHACHHANG\nienluan\BloodDonationSystem\BloodDonationSystem\backend\BloodDonation.Domain\obj\Debug\net8.0\ref\BloodDonation.Domain.dll

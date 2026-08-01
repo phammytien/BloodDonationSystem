@@ -8,6 +8,7 @@ export interface UserSession {
   email: string;
   roleName: string;
   fullName: string; // From Donors table — used for avatar
+  avatarUrl?: string | null;
   isProfileUpdated?: boolean;
 }
 
@@ -30,8 +31,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   useEffect(() => {
-    // Restore session from localStorage on startup
-    const storedUser = localStorage.getItem('bd_user_session');
+    // Restore session from sessionStorage on startup
+    const storedUser = sessionStorage.getItem('bd_user_session');
     if (storedUser) {
       try {
         const parsed: UserSession = JSON.parse(storedUser);
@@ -49,22 +50,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               headers: { Authorization: `Bearer ${parsed.token}` },
             })
             .then((res) => {
-              const enriched: UserSession = { ...parsed, fullName: res.data.fullName || parsed.username };
+              const enriched: UserSession = { 
+                ...parsed, 
+                fullName: res.data.fullName || parsed.username,
+                avatarUrl: res.data.avatar || null
+              };
               setUser(enriched);
-              localStorage.setItem('bd_user_session', JSON.stringify(enriched));
+              sessionStorage.setItem('bd_user_session', JSON.stringify(enriched));
             })
             .catch(() => {
-              // If fetch fails (expired token etc.), just use existing session
               setUser(parsed);
             })
             .finally(() => setLoading(false));
-          return; // don't setLoading(false) yet — wait for the fetch
+          return; 
         }
 
         setUser(parsed);
       } catch (e) {
         console.error('Failed to parse stored user session', e);
-        localStorage.removeItem('bd_user_session');
+        sessionStorage.removeItem('bd_user_session');
       }
     }
     setLoading(false);
@@ -72,11 +76,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = (session: UserSession) => {
     setUser(session);
-    localStorage.setItem('bd_user_session', JSON.stringify(session));
+    sessionStorage.setItem('bd_user_session', JSON.stringify(session));
   };
 
   const logout = () => {
-    localStorage.removeItem('bd_user_session');
+    sessionStorage.removeItem('bd_user_session');
     sessionStorage.removeItem('profile_prompt_dismissed');
     localStorage.setItem('logout_success_toast', 'true');
     setUser(null);

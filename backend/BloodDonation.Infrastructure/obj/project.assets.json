@@ -3769,11 +3769,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\BloodDonationSystem\\backend\\BloodDonation.Infrastructure\\BloodDonation.Infrastructure.csproj",
+      "projectUniqueName": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.Infrastructure\\BloodDonation.Infrastructure.csproj",
       "projectName": "BloodDonation.Infrastructure",
-      "projectPath": "D:\\BloodDonationSystem\\backend\\BloodDonation.Infrastructure\\BloodDonation.Infrastructure.csproj",
+      "projectPath": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.Infrastructure\\BloodDonation.Infrastructure.csproj",
       "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
-      "outputPath": "D:\\BloodDonationSystem\\backend\\BloodDonation.Infrastructure\\obj\\",
+      "outputPath": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\PC\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -3788,11 +3788,11 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\BloodDonationSystem\\backend\\BloodDonation.Application\\BloodDonation.Application.csproj": {
-              "projectPath": "D:\\BloodDonationSystem\\backend\\BloodDonation.Application\\BloodDonation.Application.csproj"
+            "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.Application\\BloodDonation.Application.csproj": {
+              "projectPath": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.Application\\BloodDonation.Application.csproj"
             },
-            "D:\\BloodDonationSystem\\backend\\BloodDonation.Domain\\BloodDonation.Domain.csproj": {
-              "projectPath": "D:\\BloodDonationSystem\\backend\\BloodDonation.Domain\\BloodDonation.Domain.csproj"
+            "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.Domain\\BloodDonation.Domain.csproj": {
+              "projectPath": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.Domain\\BloodDonation.Domain.csproj"
             }
           }
         }
