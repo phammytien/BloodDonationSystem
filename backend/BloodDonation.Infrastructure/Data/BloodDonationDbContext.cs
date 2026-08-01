@@ -23,6 +23,7 @@ public class BloodDonationDbContext : DbContext
     public DbSet<OtpVerification> OtpVerifications { get; set; } = null!;
     public DbSet<FileRecord> Files { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+    public DbSet<CampaignComment> CampaignComments { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

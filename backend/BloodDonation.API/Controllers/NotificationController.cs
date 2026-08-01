@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BloodDonation.Infrastructure.Data;
 using BloodDonation.Domain.Entities;
+using BloodDonation.Application.DTOs;
 
 namespace BloodDonation.API.Controllers;
 
@@ -108,6 +109,51 @@ public class NotificationController : ControllerBase
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Đã đánh dấu đọc tất cả thông báo." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống.", details = ex.Message });
+        }
+    }
+
+    [HttpPost("sos")]
+    [Authorize(Roles = "Admin,Staff")]
+    public async Task<IActionResult> SendSos([FromBody] SosRequestDto request)
+    {
+        try
+        {
+            var bloodType = await _context.BloodTypes.FindAsync(request.BloodTypeId);
+            if (bloodType == null) return NotFound(new { message = "Nhóm máu không tồn tại." });
+
+            var donorUserIds = await _context.Donors
+                .Where(d => d.BloodTypeId == request.BloodTypeId && d.IsAvailable)
+                .Select(d => d.UserId)
+                .Distinct()
+                .ToListAsync();
+
+            if (!donorUserIds.Any())
+            {
+                return BadRequest(new { message = $"Không tìm thấy người hiến máu nào có nhóm máu {bloodType.BloodGroup}." });
+            }
+
+            var messageContent = string.IsNullOrWhiteSpace(request.Message) 
+                ? $"🚨 SOS: Bệnh viện đang cần gấp nhóm máu {bloodType.BloodGroup}. Vui lòng đến hỗ trợ ngay nếu bạn có thể!"
+                : request.Message;
+
+            var notifications = donorUserIds.Select(uid => new Notification
+            {
+                UserId = uid,
+                Title = $"🚨 KÊU GỌI MÁU KHẨN CẤP: Nhóm {bloodType.BloodGroup}",
+                Content = messageContent,
+                Type = "SOS",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            }).ToList();
+
+            _context.Notifications.AddRange(notifications);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = $"Đã phát tín hiệu SOS tới {donorUserIds.Count} người hiến máu nhóm {bloodType.BloodGroup}." });
         }
         catch (Exception ex)
         {

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "gcB4eZL2pu0=",
+  "dgSpecHash": "lIuORGQbIAs=",
   "success": true,
-  "projectFilePath": "D:\\BloodDonationSystem\\backend\\BloodDonation.API\\BloodDonation.API.csproj",
+  "projectFilePath": "D:\\KHACHHANG\\nienluan\\BloodDonationSystem\\BloodDonationSystem\\backend\\BloodDonation.API\\BloodDonation.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\PC\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
     "C:\\Users\\PC\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.1\\automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",
