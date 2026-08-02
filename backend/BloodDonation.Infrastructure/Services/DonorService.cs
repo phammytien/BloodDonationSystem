@@ -196,7 +196,7 @@ public class DonorService : IDonorService
         return true;
     }
 
-    public async Task<PaginatedList<DonorProfileDto>> GetAllDonorsAsync(string search = null, int pageIndex = 1, int pageSize = 10)
+    public async Task<PaginatedList<DonorProfileDto>> GetAllDonorsAsync(string? search = null, int pageIndex = 1, int pageSize = 10)
     {
         var query = _context.Donors
             .Include(d => d.BloodType)

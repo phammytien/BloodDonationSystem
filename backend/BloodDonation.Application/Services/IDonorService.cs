@@ -14,7 +14,7 @@ public interface IDonorService
     Task<bool> DeleteBloodTypeAsync(int id);
     
     // Admin methods
-    Task<PaginatedList<DonorProfileDto>> GetAllDonorsAsync(string search = null, int pageIndex = 1, int pageSize = 10);
+    Task<PaginatedList<DonorProfileDto>> GetAllDonorsAsync(string? search = null, int pageIndex = 1, int pageSize = 10);
     Task<DonorProfileDto> CreateDonorAdminAsync(DonorProfileDto dto);
     Task<bool> UpdateDonorAdminAsync(int donorId, DonorProfileDto dto);
     Task<bool> DeleteDonorAdminAsync(int donorId);

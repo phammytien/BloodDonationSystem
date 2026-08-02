@@ -18,5 +18,5 @@ public interface IAppointmentService
     
     // Admin methods
     Task<PaginatedList<AdminAppointmentDto>> GetAllAppointmentsAsync(AppointmentStatus? status = null, int? campaignId = null, string? searchTerm = null, int pageIndex = 1, int pageSize = 10);
-    Task<bool> UpdateAppointmentStatusAsync(int appointmentId, AppointmentStatus status, string adminNote = null);
+    Task<bool> UpdateAppointmentStatusAsync(int appointmentId, AppointmentStatus status, string? adminNote = null);
 }
