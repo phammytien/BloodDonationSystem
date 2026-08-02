@@ -67,7 +67,7 @@ public class AppointmentController : ControllerBase
 
     [Authorize]
     [HttpGet("history")]
-    public async Task<IActionResult> GetHistory()
+    public async Task<IActionResult> GetHistory([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
@@ -77,7 +77,7 @@ public class AppointmentController : ControllerBase
                 return Unauthorized(new { message = "Người dùng không hợp lệ hoặc phiên đăng nhập đã hết hạn." });
             }
 
-            var history = await _appointmentService.GetUserAppointmentHistoryAsync(userId);
+            var history = await _appointmentService.GetUserAppointmentHistoryAsync(userId, pageIndex, pageSize);
             return Ok(history);
         }
         catch (Exception ex)
@@ -167,7 +167,7 @@ public class AppointmentController : ControllerBase
     // --- Admin/Staff Endpoints ---
     [Authorize]
     [HttpGet("admin/list")]
-    public async Task<IActionResult> GetAdminAppointments([FromQuery] byte? status = null, [FromQuery] int? campaignId = null)
+    public async Task<IActionResult> GetAdminAppointments([FromQuery] byte? status = null, [FromQuery] int? campaignId = null, [FromQuery] string? searchTerm = null, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
@@ -183,7 +183,7 @@ public class AppointmentController : ControllerBase
                 parsedStatus = (BloodDonation.Domain.Enums.AppointmentStatus)status.Value;
             }
 
-            var appointments = await _appointmentService.GetAllAppointmentsAsync(parsedStatus, campaignId);
+            var appointments = await _appointmentService.GetAllAppointmentsAsync(parsedStatus, campaignId, searchTerm, pageIndex, pageSize);
             return Ok(appointments);
         }
         catch (Exception ex)

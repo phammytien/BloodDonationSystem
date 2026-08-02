@@ -16,6 +16,7 @@ import { RobotoRegular } from '../../assets/fonts/Roboto-Regular';
 export const AdminDonorsPage: React.FC = () => {
   const { user } = useAuth();
   const [donors, setDonors] = useState<DonorProfileDto[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // Modal State
@@ -37,11 +38,22 @@ export const AdminDonorsPage: React.FC = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const url = 'http://localhost:5028/api/Donor/admin/list';
-      const res = await axios.get(url, {
+      const params = new URLSearchParams({
+        pageIndex: currentPage.toString(),
+        pageSize: itemsPerPage.toString()
+      });
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+      // Note: Backend currently only supports text search via API, 
+      // complex filtering (status, bloodGroup) would ideally also be pushed to server.
+      // For now, we rely on backend for text search & pagination.
+      
+      const res = await axios.get(`http://localhost:5028/api/Donor/admin/list?${params.toString()}`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
-      setDonors(res.data);
+      setDonors(res.data.items);
+      setTotalItems(res.data.totalCount);
     } catch (err: any) {
       console.error(err);
       toast.error('Không thể tải danh sách người hiến máu.');
@@ -105,20 +117,15 @@ export const AdminDonorsPage: React.FC = () => {
 
   useEffect(() => {
     fetchDonors();
-  }, [user]);
+  }, [user, currentPage, itemsPerPage, searchTerm]); // re-fetch when pagination or search changes
 
-  // Derived filtered donors
+  // Since we moved pagination to server, filteredDonors is just donors for now,
+  // but if we want to keep bloodGroupFilter locally, we can still filter the current page.
+  // Ideally, all filters should be sent to the backend.
   const filteredDonors = useMemo(() => {
     return donors.filter(item => {
-      const matchSearch = searchTerm === '' ||
-        (item.fullName && item.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (item.email && item.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (item.phone && String(item.phone).includes(searchTerm)) ||
-        (item.citizenId && String(item.citizenId).includes(searchTerm));
-
       const matchBloodGroup = bloodGroupFilter === 'Tất cả' || (item.bloodGroup || 'Chưa rõ') === bloodGroupFilter;
-
-      // Status filter logic based on isAvailable
+      
       const mockCount = item.donorId ? (item.donorId % 5) : 0;
       const matchCount = donationCountFilter === 'Tất cả' ||
         (donationCountFilter === '0 lần' && mockCount === 0) ||
@@ -128,20 +135,16 @@ export const AdminDonorsPage: React.FC = () => {
         (statusFilter === 'Hoạt động' && item.isAvailable !== false) ||
         (statusFilter === 'Tạm ngưng' && item.isAvailable === false);
 
-      return matchSearch && matchBloodGroup && matchCount && matchStatus;
-    }).sort((a, b) => (a.donorId || 0) - (b.donorId || 0));
-  }, [donors, searchTerm, bloodGroupFilter, statusFilter, donationCountFilter]);
+      return matchBloodGroup && matchCount && matchStatus;
+    });
+  }, [donors, bloodGroupFilter, statusFilter, donationCountFilter]);
 
   // Reset page to 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, bloodGroupFilter, statusFilter, donationCountFilter]);
 
-  // Pagination derived
-  const currentItems = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredDonors.slice(start, start + itemsPerPage);
-  }, [filteredDonors, currentPage, itemsPerPage]);
+  const currentItems = filteredDonors; // We don't slice locally anymore
 
   // Reset filters
   const resetFilters = () => {
@@ -150,17 +153,16 @@ export const AdminDonorsPage: React.FC = () => {
     setStatusFilter('Tất cả');
     setDonationCountFilter('Tất cả');
     setCurrentPage(1);
-    fetchDonors();
   };
 
-  // Derive filter options
-  const uniqueBloodGroups = useMemo(() => Array.from(new Set(donors.map(d => d.bloodGroup || 'Chưa rõ'))), [donors]);
+  // Derive filter options (ideally from a separate API or stored list, but keeping this for compatibility)
+  const uniqueBloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
   // Stats calculation
-  const totalDonors = donors.length;
-  const activeDonors = Math.floor(donors.length * 0.82);
-  const last6Months = Math.floor(donors.length * 0.29);
-  const newThisMonth = Math.floor(donors.length * 0.05) || 5;
+  const totalDonors = totalItems;
+  const activeDonors = Math.floor(totalItems * 0.82);
+  const last6Months = Math.floor(totalItems * 0.29);
+  const newThisMonth = Math.floor(totalItems * 0.05) || 5;
 
   // Export handlers
   const exportToExcel = async () => {
@@ -527,7 +529,7 @@ export const AdminDonorsPage: React.FC = () => {
         {!loading && (
           <div className="p-4 border-top d-flex justify-content-between align-items-center bg-white flex-wrap gap-3">
             <div className="text-muted" style={{ fontSize: '0.9rem' }}>
-              Hiển thị {(currentPage - 1) * itemsPerPage + (filteredDonors.length > 0 ? 1 : 0)} - {Math.min(currentPage * itemsPerPage, filteredDonors.length)} trong tổng số {filteredDonors.length} mục
+              Hiển thị {(currentPage - 1) * itemsPerPage + (currentItems.length > 0 ? 1 : 0)} - {Math.min(currentPage * itemsPerPage, totalItems)} trong tổng số {totalItems} mục
             </div>
 
             <div className="d-flex align-items-center gap-3">
@@ -557,7 +559,7 @@ export const AdminDonorsPage: React.FC = () => {
                 >
                   &laquo;
                 </button>
-                {Array.from({ length: Math.max(1, Math.ceil(filteredDonors.length / itemsPerPage)) }, (_, i) => i + 1).map(page => (
+                {Array.from({ length: Math.max(1, Math.ceil(totalItems / itemsPerPage)) }, (_, i) => i + 1).map(page => (
                   <button
                     key={page}
                     className={`btn border d-flex align-items-center justify-content-center fw-medium ${currentPage === page ? 'btn-danger text-white' : 'btn-white text-dark'}`}
@@ -570,7 +572,7 @@ export const AdminDonorsPage: React.FC = () => {
                 <button
                   className="btn btn-light border d-flex align-items-center justify-content-center"
                   style={{ width: 36, height: 36, borderRadius: '8px' }}
-                  disabled={currentPage === Math.ceil(filteredDonors.length / itemsPerPage) || filteredDonors.length === 0}
+                  disabled={currentPage === Math.ceil(totalItems / itemsPerPage) || totalItems === 0}
                   onClick={() => setCurrentPage(p => p + 1)}
                 >
                   &raquo;

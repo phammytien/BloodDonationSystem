@@ -6,6 +6,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import Swal from 'sweetalert2';
 
 interface AppointmentHistory {
   appointmentId: number;
@@ -56,15 +57,28 @@ export const HistoryPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Tất cả');
 
+  // Pagination
+  const [pageIndex, setPageIndex] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+
   // Modal State
   const [showModal, setShowModal] = useState(false);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | null>(null);
 
-  useEffect(() => {
+  const fetchHistory = (page: number = 1) => {
     if (!user) return;
     setLoading(true);
-    axios.get('http://localhost:5028/api/appointment/history', { headers: { Authorization: `Bearer ${user.token}` } })
-      .then(res => setHistory(res.data))
+    axios.get(`http://localhost:5028/api/appointment/history?pageIndex=${page}&pageSize=10`, { headers: { Authorization: `Bearer ${user.token}` } })
+      .then(res => {
+        if (page === 1) {
+          setHistory(res.data.items);
+        } else {
+          setHistory(prev => [...prev, ...res.data.items]);
+        }
+        setTotalCount(res.data.totalCount);
+        setHasMore(res.data.pageIndex < res.data.totalPages);
+      })
       .catch(err => {
         console.error(err);
         if (err.response?.status === 401) {
@@ -74,7 +88,20 @@ export const HistoryPage: React.FC = () => {
         }
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    setPageIndex(1);
+    fetchHistory(1);
   }, [user]);
+
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      const nextPage = pageIndex + 1;
+      setPageIndex(nextPage);
+      fetchHistory(nextPage);
+    }
+  };
 
   if (!user) {
     return (
@@ -137,8 +164,8 @@ export const HistoryPage: React.FC = () => {
 
   const tabs = ['Tất cả', 'Đang chờ duyệt', 'Đã xác nhận', 'Đã hoàn thành', 'Đã hủy', 'Vắng mặt'];
 
-  // Calculate stats
-  const total = history.length;
+  // Calculate stats - Note: this is based on current loaded items, in a real app this should come from a separate API summary
+  const total = totalCount || history.length;
   const completed = history.filter(x => x.status.toLowerCase() === 'completed').length;
   const pending = history.filter(x => x.status.toLowerCase() === 'pending').length;
   const volume = completed * 350;
@@ -432,9 +459,9 @@ export const HistoryPage: React.FC = () => {
                           </span>
                         </div>
                       </div>
-                      <button 
+                      <button
                         onClick={() => { setSelectedAppointmentId(a.appointmentId); setShowModal(true); }}
-                        className={`btn w-100 ${a.status.toLowerCase() === 'completed' ? 'mb-2' : ''}`} 
+                        className={`btn w-100 ${a.status.toLowerCase() === 'completed' ? 'mb-2' : ''}`}
                         style={{ border: '1px solid #DC2626', color: '#DC2626', fontWeight: 600, fontSize: '0.875rem' }}
                       >
                         <svg className="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
@@ -454,29 +481,34 @@ export const HistoryPage: React.FC = () => {
           </div>
         )}
 
-        {/* PAGINATION FOOTER */}
+        {/* LOAD MORE */}
+        {!loading && hasMore && (
+          <div className="text-center mt-4">
+            <button className="btn btn-outline-danger px-5 rounded-pill" onClick={handleLoadMore}>
+              Tải thêm dữ liệu
+            </button>
+          </div>
+        )}
+        
+        {loading && (
+          <div className="text-center py-4">
+            <div className="spinner-border text-danger spinner-border-sm" />
+          </div>
+        )}
+        
+        {/* SUMMARY INFO */}
         {!loading && filteredHistory.length > 0 && (
-          <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top text-muted" style={{ fontSize: '0.875rem' }}>
-            <div>Hiển thị 1 - {filteredHistory.length} trong tổng số {filteredHistory.length} đăng ký</div>
-            <div className="d-flex align-items-center gap-3">
-              <div className="btn-group">
-                <button className="btn btn-light btn-sm px-3" disabled>&laquo;</button>
-                <button className="btn btn-danger btn-sm px-3">1</button>
-                <button className="btn btn-light btn-sm px-3" disabled>&raquo;</button>
-              </div>
-              <select className="form-select form-select-sm" style={{ width: 'auto' }}>
-                <option>10 / trang</option>
-              </select>
-            </div>
+          <div className="text-center mt-3 text-muted" style={{ fontSize: '0.875rem' }}>
+            Hiển thị {filteredHistory.length} / {totalCount} kết quả
           </div>
         )}
 
       </div>
-      
-      <AppointmentDetailModal 
-        show={showModal} 
-        onHide={() => setShowModal(false)} 
-        appointmentId={selectedAppointmentId} 
+
+      <AppointmentDetailModal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        appointmentId={selectedAppointmentId}
       />
     </div>
   );

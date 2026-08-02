@@ -196,7 +196,7 @@ public class DonorService : IDonorService
         return true;
     }
 
-    public async Task<List<DonorProfileDto>> GetAllDonorsAsync(string search = null)
+    public async Task<PaginatedList<DonorProfileDto>> GetAllDonorsAsync(string search = null, int pageIndex = 1, int pageSize = 10)
     {
         var query = _context.Donors
             .Include(d => d.BloodType)
@@ -212,11 +212,15 @@ public class DonorService : IDonorService
                 (d.CitizenId != null && d.CitizenId.Contains(searchLower)));
         }
 
+        var totalCount = await query.CountAsync();
+
         var donors = await query
             .OrderByDescending(d => d.CreatedAt)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
-        return donors.Select(d => new DonorProfileDto
+        var items = donors.Select(d => new DonorProfileDto
         {
             DonorId = d.DonorId,
             FullName = d.FullName,
@@ -239,6 +243,8 @@ public class DonorService : IDonorService
             IsAvailable = d.IsAvailable,
             UpdatedAt = d.UpdatedAt
         }).ToList();
+
+        return new PaginatedList<DonorProfileDto>(items, totalCount, pageIndex, pageSize);
     }
 
     public async Task<DonorProfileDto> CreateDonorAdminAsync(DonorProfileDto dto)

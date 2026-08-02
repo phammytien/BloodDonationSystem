@@ -149,13 +149,13 @@ public class DonorController : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Staff")]
     [HttpGet("admin/list")]
-    public async Task<IActionResult> GetAdminDonors([FromQuery] string? search = null)
+    public async Task<IActionResult> GetAllDonors([FromQuery] string? search, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
-            var donors = await _donorService.GetAllDonorsAsync(search);
+            var donors = await _donorService.GetAllDonorsAsync(search, pageIndex, pageSize);
             return Ok(donors);
         }
         catch (Exception ex)

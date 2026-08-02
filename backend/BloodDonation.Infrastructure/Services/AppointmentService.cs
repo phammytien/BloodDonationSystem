@@ -196,19 +196,25 @@ public class AppointmentService : IAppointmentService
         return true;
     }
 
-    public async Task<List<AppointmentHistoryDto>> GetUserAppointmentHistoryAsync(int userId)
+    public async Task<PaginatedList<AppointmentHistoryDto>> GetUserAppointmentHistoryAsync(int userId, int pageIndex = 1, int pageSize = 10)
     {
         var donor = await _context.Donors.FirstOrDefaultAsync(d => d.UserId == userId);
         if (donor == null)
         {
-            return new List<AppointmentHistoryDto>();
+            return new PaginatedList<AppointmentHistoryDto> { Items = new List<AppointmentHistoryDto>(), TotalCount = 0, PageIndex = pageIndex, PageSize = pageSize };
         }
 
-        var appointments = await _context.Appointments
+        var query = _context.Appointments
             .Include(a => a.Campaign)
-            .Where(a => a.DonorId == donor.DonorId)
+            .Where(a => a.DonorId == donor.DonorId);
+            
+        var totalCount = await query.CountAsync();
+        
+        var appointments = await query
             .OrderByDescending(a => a.AppointmentDate)
             .ThenByDescending(a => a.CreatedAt)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
         var appointmentIds = appointments.Select(a => a.AppointmentId).ToList();
@@ -216,7 +222,7 @@ public class AppointmentService : IAppointmentService
             .Where(f => f.AppointmentId.HasValue && appointmentIds.Contains(f.AppointmentId.Value))
             .ToListAsync();
 
-        return appointments.Select(a => {
+        var items = appointments.Select(a => {
             var file = files.FirstOrDefault(f => f.AppointmentId == a.AppointmentId);
             return new AppointmentHistoryDto
             {
@@ -232,6 +238,14 @@ public class AppointmentService : IAppointmentService
                 CreatedAt = a.CreatedAt
             };
         }).ToList();
+        
+        return new PaginatedList<AppointmentHistoryDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageIndex = pageIndex,
+            PageSize = pageSize
+        };
     }
 
     public async Task<AppointmentDetailDto?> GetAppointmentDetailAsync(int appointmentId, int userId)
@@ -321,9 +335,12 @@ public class AppointmentService : IAppointmentService
         return registrants;
     }
 
-    public async Task<List<AdminAppointmentDto>> GetAllAppointmentsAsync(AppointmentStatus? status = null, int? campaignId = null)
+    public async Task<PaginatedList<AdminAppointmentDto>> GetAllAppointmentsAsync(AppointmentStatus? status = null, int? campaignId = null, string? searchTerm = null, int pageIndex = 1, int pageSize = 10)
     {
-        var query = _context.Appointments.AsQueryable();
+        var query = _context.Appointments
+            .Include(a => a.Donor)
+            .Include(a => a.Campaign)
+            .AsQueryable();
 
         if (status.HasValue)
         {
@@ -334,9 +351,23 @@ public class AppointmentService : IAppointmentService
         {
             query = query.Where(a => a.CampaignId == campaignId.Value);
         }
+        
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            searchTerm = searchTerm.ToLower();
+            query = query.Where(a => 
+                (a.Donor != null && a.Donor.FullName.ToLower().Contains(searchTerm)) ||
+                (a.Donor != null && a.Donor.Phone.Contains(searchTerm)) ||
+                a.AppointmentId.ToString() == searchTerm
+            );
+        }
+        
+        var totalCount = await query.CountAsync();
 
-        return await query
+        var items = await query
             .OrderByDescending(a => a.CreatedAt)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
             .Select(a => new AdminAppointmentDto
             {
                 AppointmentId = a.AppointmentId,
@@ -355,6 +386,14 @@ public class AppointmentService : IAppointmentService
                 CreatedAt = a.CreatedAt
             })
             .ToListAsync();
+            
+        return new PaginatedList<AdminAppointmentDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageIndex = pageIndex,
+            PageSize = pageSize
+        };
     }
 
     public async Task<bool> UpdateAppointmentStatusAsync(int appointmentId, AppointmentStatus status, string adminNote = null)

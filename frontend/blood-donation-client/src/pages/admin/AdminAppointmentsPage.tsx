@@ -12,6 +12,7 @@ import { RobotoRegular } from '../../assets/fonts/Roboto-Regular';
 export const AdminAppointmentsPage: React.FC = () => {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<any[]>([]);
 
@@ -36,8 +37,11 @@ export const AdminAppointmentsPage: React.FC = () => {
 
   useEffect(() => {
     fetchCampaigns();
+  }, []);
+
+  useEffect(() => {
     fetchAppointments();
-  }, [user]);
+  }, [user, currentPage, filterCampaignId, filterStatus, searchTerm]);
 
   const fetchCampaigns = async () => {
     try {
@@ -51,11 +55,20 @@ export const AdminAppointmentsPage: React.FC = () => {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      // We fetch all to handle search & stats on frontend
-      const res = await axios.get('http://localhost:5028/api/appointment/admin/list', {
+      
+      const params = new URLSearchParams({
+        pageIndex: currentPage.toString(),
+        pageSize: itemsPerPage.toString(),
+      });
+      if (filterCampaignId) params.append('campaignId', filterCampaignId);
+      if (filterStatus) params.append('status', filterStatus);
+      if (searchTerm) params.append('searchTerm', searchTerm);
+
+      const res = await axios.get(`http://localhost:5028/api/appointment/admin/list?${params.toString()}`, {
         headers: { Authorization: `Bearer ${user?.token}` }
       });
-      setAppointments(res.data);
+      setAppointments(res.data.items);
+      setTotalItems(res.data.totalCount);
     } catch (err) {
       toast.error('Lỗi khi tải danh sách đơn đăng ký', { position: 'top-center' });
     } finally {
@@ -92,23 +105,11 @@ export const AdminAppointmentsPage: React.FC = () => {
     }
   };
 
-  // Filter Logic
-  const filteredAppointments = appointments.filter(a => {
-    const matchCampaign = filterCampaignId ? a.campaignId === Number(filterCampaignId) : true;
-    const matchStatus = filterStatus ? a.status === Number(filterStatus) : true;
-    const searchLower = searchTerm.toLowerCase();
-    const searchId = searchLower.replace('#', '');
-    const matchSearch = searchTerm ? (
-      (a.donorName && a.donorName.toLowerCase().includes(searchLower)) ||
-      (a.donorPhone && a.donorPhone.toLowerCase().includes(searchLower)) ||
-      (a.appointmentId && a.appointmentId.toString().includes(searchId))
-    ) : true;
+  // We no longer filter locally
+  const filteredAppointments = appointments;
 
-    return matchCampaign && matchStatus && matchSearch;
-  }).sort((a, b) => b.appointmentId - a.appointmentId);
-
-  // Calculate Stats
-  const totalApps = appointments.length;
+  // Calculate Stats - Now these represent stats for current view, ideally should have a stats API
+  const totalApps = totalItems;
   const pendingApps = appointments.filter(a => a.status === 0).length;
   const completedApps = appointments.filter(a => a.status === 2).length;
   const todayApps = appointments.filter(a => {
@@ -534,7 +535,7 @@ export const AdminAppointmentsPage: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredAppointments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(a => (
+                  filteredAppointments.map(a => (
                     <tr key={a.appointmentId} style={{ transition: 'all 0.2s' }}>
                       <td className="py-3 px-4">
                         <div className="fw-bold text-dark" style={{ fontSize: '0.95rem' }}>#{a.appointmentId}</div>
@@ -586,14 +587,14 @@ export const AdminAppointmentsPage: React.FC = () => {
             </table>
           </div>
 
-          {!loading && filteredAppointments.length > 0 && (
+          {!loading && totalItems > 0 && (
             <div className="p-3 border-top d-flex justify-content-between align-items-center">
               <span className="text-muted small">
-                Hiển thị {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredAppointments.length)} trong tổng số {filteredAppointments.length} mục
+                Hiển thị {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} trong tổng số {totalItems} mục
               </span>
               <Pagination
                 currentPage={currentPage}
-                totalItems={filteredAppointments.length}
+                totalItems={totalItems}
                 itemsPerPage={itemsPerPage}
                 onPageChange={setCurrentPage}
               />

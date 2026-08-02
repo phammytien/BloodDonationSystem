@@ -10,13 +10,13 @@ public interface IAppointmentService
 {
     Task<List<CampaignDto>> GetCampaignsAsync();
     Task<bool> RegisterAppointmentAsync(int userId, AppointmentRegisterDto dto);
-    Task<List<AppointmentHistoryDto>> GetUserAppointmentHistoryAsync(int userId);
+    Task<PaginatedList<AppointmentHistoryDto>> GetUserAppointmentHistoryAsync(int userId, int pageIndex = 1, int pageSize = 10);
     Task<AppointmentDetailDto?> GetAppointmentDetailAsync(int appointmentId, int userId);
 
     
     Task<List<CampaignRegistrantDto>> GetCampaignRegistrantsAsync(int campaignId);
     
     // Admin methods
-    Task<List<AdminAppointmentDto>> GetAllAppointmentsAsync(AppointmentStatus? status = null, int? campaignId = null);
+    Task<PaginatedList<AdminAppointmentDto>> GetAllAppointmentsAsync(AppointmentStatus? status = null, int? campaignId = null, string? searchTerm = null, int pageIndex = 1, int pageSize = 10);
     Task<bool> UpdateAppointmentStatusAsync(int appointmentId, AppointmentStatus status, string adminNote = null);
 }
