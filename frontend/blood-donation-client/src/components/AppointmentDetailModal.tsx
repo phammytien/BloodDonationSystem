@@ -182,7 +182,7 @@ export const AppointmentDetailModal: React.FC<Props> = ({ appointmentId, show, o
                                   <strong className="text-primary" style={{ fontSize: '0.9rem' }}>{detail.fileName}</strong>
                                 </div>
                                 {detail.fileUrl && (
-                                  <a href={detail.fileUrl} target="_blank" rel="noreferrer" className="btn btn-sm btn-primary">Xem</a>
+                                  <a href={`http://localhost:5028${detail.fileUrl}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-primary">Xem</a>
                                 )}
                               </div>
                             </div>

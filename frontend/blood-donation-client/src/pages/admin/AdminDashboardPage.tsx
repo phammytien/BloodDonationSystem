@@ -15,6 +15,7 @@ import {
   ArcElement
 } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
+import Swal from 'sweetalert2';
 import { getAvatarChar } from '../../utils/avatarHelper';
 
 ChartJS.register(
@@ -54,6 +55,37 @@ export const AdminDashboardPage: React.FC = () => {
           headers: { Authorization: `Bearer ${user.token}` }
         });
         setStats(res.data);
+
+        // Hiển thị thông báo nếu có đơn chờ duyệt (chỉ hiển thị 1 lần mỗi phiên)
+        if (res.data.pendingAppointments > 0) {
+          const notified = sessionStorage.getItem('notifiedPendingAppts');
+          if (!notified) {
+            toast.info(`Có ${res.data.pendingAppointments} đơn đăng ký hiến máu đang chờ duyệt!`, {
+              position: "top-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              theme: "colored"
+            });
+            Swal.fire({
+              title: 'Cần phê duyệt',
+              text: `Có ${res.data.pendingAppointments} đơn đăng ký hiến máu đang chờ bạn duyệt!`,
+              icon: 'info',
+              confirmButtonText: 'Xem ngay',
+              confirmButtonColor: '#3B82F6',
+              showCancelButton: true,
+              cancelButtonText: 'Đóng',
+              cancelButtonColor: '#9CA3AF'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                window.location.href = '/admin/appointments';
+              }
+            });
+            sessionStorage.setItem('notifiedPendingAppts', 'true');
+          }
+        }
       } catch (err: any) {
         console.error(err);
         toast.error('Không thể tải dữ liệu thống kê');

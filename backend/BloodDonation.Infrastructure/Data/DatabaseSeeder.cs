@@ -19,7 +19,7 @@ public static class DatabaseSeeder
         var context = scope.ServiceProvider.GetRequiredService<BloodDonationDbContext>();
 
         // Uncomment the line below to reset the database completely
-        await context.Database.EnsureDeletedAsync();
+        // await context.Database.EnsureDeletedAsync();
         await context.Database.MigrateAsync();
 
         // 1. Roles

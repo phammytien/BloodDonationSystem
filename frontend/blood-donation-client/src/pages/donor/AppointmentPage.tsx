@@ -145,18 +145,28 @@ export const AppointmentPage: React.FC = () => {
   const profileSectionRef = useRef<HTMLDivElement>(null);
 
 
-  // Reset appointment date if it falls outside the new campaign's date range
+  // Reset or auto-fill appointment date based on the new campaign's date range
   useEffect(() => {
     if (!currentCampaign) return;
-    const todayStr = new Date().toISOString().split('T')[0];
+    // Helper to get local date string YYYY-MM-DD to avoid timezone bugs
+    const getLocalDateStr = (d: Date) => {
+      const offset = d.getTimezoneOffset();
+      const localDate = new Date(d.getTime() - (offset * 60 * 1000));
+      return localDate.toISOString().split('T')[0];
+    };
+    
+    const todayStr = getLocalDateStr(new Date());
     const campaignStartStr = currentCampaign.startDate.split('T')[0];
     const minDate = campaignStartStr > todayStr ? campaignStartStr : todayStr;
     const maxDate = currentCampaign.endDate.split('T')[0];
 
-    if (appointmentDate && (appointmentDate < minDate || appointmentDate > maxDate)) {
+    // Auto-select if there's only 1 valid day
+    if (minDate === maxDate) {
+      setAppointmentDate(minDate);
+    } else if (appointmentDate && (appointmentDate < minDate || appointmentDate > maxDate)) {
       setAppointmentDate('');
     }
-  }, [selectedCampaignId]);
+  }, [selectedCampaignId, currentCampaign, appointmentDate]);
 
   // Scroll detection
   useEffect(() => {
@@ -209,7 +219,7 @@ export const AppointmentPage: React.FC = () => {
     axios.get('http://localhost:5028/api/appointment/history', {
       headers: { Authorization: `Bearer ${user.token}` }
     })
-      .then(res => setHistory(res.data))
+      .then(res => setHistory(res.data.items || []))
       .catch(err => { console.error(err); toast.error('Không thể tải lịch sử.'); })
       .finally(() => setHistoryLoading(false));
   };
@@ -304,29 +314,62 @@ export const AppointmentPage: React.FC = () => {
       <ToastContainer position="top-center" autoClose={3000} />
 
       {/* ── HERO HEADER ───────────────────────────────────── */}
-      <div style={{ background: 'linear-gradient(135deg, #DC2626 0%, #EF4444 60%, #1D4ED8 100%)', padding: '3rem 0 2rem', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 75% 40%, rgba(255,255,255,0.08) 0%, transparent 55%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.15)' }} />
-        <div className="container position-relative" style={{ zIndex: 1 }}>
-          <span style={{ display: 'inline-block', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', marginBottom: '0.4rem' }}>Đặt lịch trực tuyến</span>
-          <h1 style={{ fontFamily: 'Montserrat', fontWeight: 800, fontSize: '1.85rem', color: '#fff', margin: '0.3rem 0 0.5rem' }}>Đăng Ký Hiến Máu Nhân Đạo</h1>
-          <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: '0.9rem', maxWidth: 620, lineHeight: 1.6, margin: 0 }}>
-            Chọn chiến dịch phù hợp, đặt lịch hẹn và theo dõi trạng thái xét duyệt của bạn ngay tại đây.
-          </p>
+      <div style={{
+        background: 'linear-gradient(135deg, #FDF2F2 0%, #FEE2E2 50%, #FECACA 100%)',
+        padding: '3rem 0 5rem',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Wavy background decoration */}
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.5, backgroundImage: 'radial-gradient(#F87171 1px, transparent 1px)', backgroundSize: '20px 20px', pointerEvents: 'none' }} />
+        <div className="container position-relative d-flex justify-content-between align-items-center" style={{ zIndex: 1 }}>
+          <div style={{ maxWidth: 600 }}>
+            <span style={{ display: 'inline-block', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#DC2626', backgroundColor: '#FEE2E2', padding: '0.3rem 0.8rem', borderRadius: '20px', marginBottom: '1rem' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14" className="me-2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>
+              ĐẶT LỊCH TRỰC TUYẾN
+            </span>
+            <h1 style={{ fontFamily: 'Montserrat', fontWeight: 800, fontSize: '2.5rem', color: '#1E293B', margin: '0.3rem 0 0.8rem', lineHeight: 1.3 }}>Đăng Ký Hiến Máu Nhân Đạo</h1>
+            <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: 1.6, margin: 0, maxWidth: '400px' }}>
+              Chọn chiến dịch phù hợp, đặt lịch hẹn và theo dõi trạng thái xét duyệt của bạn ngay tại đây.
+            </p>
+          </div>
+          {/* Decorative Blood Drop Area */}
+          <div className="d-none d-lg-block position-relative" style={{ width: 160, height: 160, marginRight: '40px' }}>
+            <div style={{ width: 140, height: 140, borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)', background: 'linear-gradient(135deg, #EF4444 0%, #B91C1C 100%)', boxShadow: '0 10px 30px rgba(220,38,38,0.4)', position: 'absolute', top: 10, right: 10 }} className="d-flex align-items-center justify-content-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" width="48" height="48" style={{ transform: 'rotate(45deg)' }}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            {/* Floating hearts */}
+            <svg viewBox="0 0 24 24" fill="#FCA5A5" width="24" height="24" style={{ position: 'absolute', top: 0, left: -20, opacity: 0.8, animation: 'pulse 2s infinite' }}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+            <svg viewBox="0 0 24 24" fill="#F87171" width="32" height="32" style={{ position: 'absolute', bottom: -10, left: -40, opacity: 0.6, animation: 'pulse 3s infinite' }}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+            {/* Background pattern */}
+            <div style={{ position: 'absolute', right: '-80px', top: '20px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', opacity: 0.3 }}>
+              {Array.from({length: 16}).map((_, i) => <div key={i} style={{width: '6px', height: '6px', backgroundColor: '#fff', borderRadius: '50%'}}></div>)}
+            </div>
+          </div>
         </div>
+        {/* Wave effect SVG at bottom */}
+        <svg style={{ position: 'absolute', bottom: -2, left: 0, right: 0, width: '100%', height: 60 }} preserveAspectRatio="none" viewBox="0 0 1440 320" fill="#FFF1F2">
+          <path fillOpacity="1" d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+        </svg>
       </div>
 
       <div className="container py-5">
         <div className="row g-4">
 
           {/* ── TOP: Horizontal Rectangle Form Card ──────────────────── */}
-          <div className="col-12">
-            <div className="bg-white rounded-4 p-4 p-md-5 position-relative overflow-hidden" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.06)', border: '1px solid #E5E7EB' }}>
+          <div className="col-12" style={{ marginTop: '-40px', zIndex: 10, position: 'relative' }}>
+            <div className="bg-white rounded-4 p-4 p-md-5 position-relative" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.06)', border: '1px solid #E5E7EB' }}>
+              
+              {/* Decorative background layer for clipping the watermark without clipping the badge */}
+              <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: '1rem', pointerEvents: 'none', zIndex: 0 }}>
+                {/* Subtle watermark decoration */}
+                <svg style={{ position: 'absolute', right: -20, bottom: -20, opacity: 0.03 }} width="180" height="180" viewBox="0 0 24 24" fill="#DC2626">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+              </div>
 
-              {/* Subtle watermark decoration */}
-              <svg style={{ position: 'absolute', right: -20, bottom: -20, opacity: 0.03, pointerEvents: 'none' }} width="180" height="180" viewBox="0 0 24 24" fill="#DC2626">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
+              {/* Keep contents above the watermark layer */}
+              <div style={{ position: 'relative', zIndex: 1 }}>
 
               {!user ? (
                 /* Not logged in overlay */
@@ -349,27 +392,21 @@ export const AppointmentPage: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                /* Form for logged-in Donor (Sleek Horizontal Layout) */
+                /* Form for logged-in Donor */
                 <div>
-                  <div className="row align-items-center g-3 mb-4">
-                    <div className="col-12 col-md-6">
-                      <h4 style={{ fontFamily: 'Montserrat', fontWeight: 800, color: '#111827', margin: 0, fontSize: '1.25rem' }}>Điền thông tin đặt lịch hẹn</h4>
-                      <p className="text-muted small mb-0">Hồ sơ người hiến máu sẽ được đính kèm tự động vào lịch hẹn này.</p>
-                    </div>
-                    {/* User profile badge right-aligned */}
-                    <div className="col-12 col-md-6 d-flex justify-content-md-end">
-                      <div className="d-flex align-items-center gap-2.5 px-3 py-2" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FEE2E2', borderRadius: '12px' }}>
-                        <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 34, height: 34, background: 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)', color: '#fff', fontSize: '0.85rem', fontWeight: 700 }}>
-                          {getAvatarChar(donorProfile?.fullName || user.fullName, user.username)}
-                        </div>
-                        <div className="d-flex flex-column text-start">
-                          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#B91C1C', lineHeight: '1.2' }}>
-                            {getDisplayName(donorProfile?.fullName || user.fullName, user.username)}
-                          </span>
-                          <span style={{ fontSize: '0.72rem', color: '#4B5563', lineHeight: '1.2', marginTop: '2px' }}>
-                            {user.email}
-                          </span>
-                        </div>
+                  {/* User profile badge right-aligned, overlapping */}
+                  <div className="d-none d-md-flex justify-content-end mb-4" style={{ marginTop: '-75px', position: 'relative', zIndex: 2 }}>
+                    <div className="d-flex align-items-center gap-2.5 px-3 py-2 bg-white rounded-pill shadow-sm" style={{ border: '1px solid #FEE2E2', paddingRight: '1.5rem' }}>
+                      <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 34, height: 34, background: 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)', color: '#fff', fontSize: '0.85rem', fontWeight: 700 }}>
+                        {getAvatarChar(donorProfile?.fullName || user.fullName, user.username)}
+                      </div>
+                      <div className="d-flex flex-column text-start">
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1E293B', lineHeight: '1.2' }}>
+                          {getDisplayName(donorProfile?.fullName || user.fullName, user.username)}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: '#64748B', lineHeight: '1.2', marginTop: '2px' }}>
+                          {user.email}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -407,7 +444,7 @@ export const AppointmentPage: React.FC = () => {
                             { label: 'Địa chỉ', value: donorProfile.province ? `${donorProfile.address ? donorProfile.address + ', ' : ''}${donorProfile.ward}, ${donorProfile.province}` : 'Chưa cập nhật' },
                           ].map((field, idx) => (
                             <div key={idx} className="col-12 col-sm-6 col-md-4" style={{ marginBottom: '6pt' }}>
-                              <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#FCA5A5', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
+                              <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
                                 {field.label}
                               </div>
                               <div style={{ fontSize: '0.86rem', fontWeight: 700, color: field.highlight ? '#DC2626' : '#1E293B' }}>
@@ -448,8 +485,8 @@ export const AppointmentPage: React.FC = () => {
                           : (
                             <>
                               <option value="" disabled>-- Vui lòng chọn chiến dịch --</option>
-                              {campaigns.map(c => {
-                                const isEnded = new Date(c.endDate) < new Date();
+                              {campaigns.filter(c => new Date(c.endDate) >= new Date()).map(c => {
+                                const isEnded = false; // We already filtered them out
                                 return (
                                   <option key={c.campaignId} value={c.campaignId}>
                                     {c.campaignName}{isEnded ? ' (Đã kết thúc)' : ''}
@@ -473,10 +510,16 @@ export const AppointmentPage: React.FC = () => {
                         onChange={e => setAppointmentDate(e.target.value)}
                         min={
                           currentCampaign
-                            ? (currentCampaign.startDate.split('T')[0] > new Date().toISOString().split('T')[0]
-                              ? currentCampaign.startDate.split('T')[0]
-                              : new Date().toISOString().split('T')[0])
-                            : new Date().toISOString().split('T')[0]
+                            ? (() => {
+                                const offset = new Date().getTimezoneOffset();
+                                const todayLocal = new Date(new Date().getTime() - (offset * 60 * 1000)).toISOString().split('T')[0];
+                                const start = currentCampaign.startDate.split('T')[0];
+                                return start > todayLocal ? start : todayLocal;
+                              })()
+                            : (() => {
+                                const offset = new Date().getTimezoneOffset();
+                                return new Date(new Date().getTime() - (offset * 60 * 1000)).toISOString().split('T')[0];
+                              })()
                         }
                         max={currentCampaign ? currentCampaign.endDate.split('T')[0] : undefined}
                         required
@@ -500,7 +543,7 @@ export const AppointmentPage: React.FC = () => {
                     {/* File Upload for Health Check */}
                     <div className="col-12 col-md-6 col-lg-3">
                       <label className="form-label small fw-semibold text-muted mb-1">Phiếu khám sức khỏe (nếu có)</label>
-                      <div className="d-flex align-items-center gap-2" style={{ height: 46 }}>
+                      <div className="d-flex align-items-center gap-2">
                         <input
                           type="file"
                           id="health-check-file"
@@ -511,252 +554,204 @@ export const AppointmentPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => document.getElementById('health-check-file')?.click()}
-                          className={`btn btn-outline-primary d-flex align-items-center justify-content-center gap-2 h-100 ${uploadedFile ? '' : 'w-100'}`}
+                          className={`btn d-flex flex-column align-items-center justify-content-center w-100`}
                           style={{
                             borderRadius: '8px',
-                            fontSize: '0.82rem',
-                            border: '1.5px dashed #DC2626',
+                            backgroundColor: '#FEF2F2',
+                            border: '1.5px dashed #FCA5A5',
                             color: '#DC2626',
                             fontFamily: 'Montserrat',
                             fontWeight: 600,
-                            padding: '0.5rem 1rem'
+                            padding: '1rem',
+                            minHeight: '60px'
                           }}
                           disabled={fileUploading}
                         >
                           {fileUploading ? (
-                            <>
+                            <div className="d-flex align-items-center gap-2">
                               <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
-                              Đang tải...
-                            </>
+                              <span style={{ fontSize: '0.82rem' }}>Đang tải...</span>
+                            </div>
+                          ) : uploadedFile ? (
+                            <div className="d-flex align-items-center justify-content-between w-100">
+                              <div className="d-flex align-items-center gap-1.5 overflow-hidden flex-grow-1">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" className="flex-shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+                                <span className="text-dark small fw-semibold text-truncate" style={{ fontSize: '0.78rem' }}>
+                                  {uploadedFile.name}
+                                </span>
+                              </div>
+                              <div
+                                onClick={(e) => { e.stopPropagation(); handleRemoveFile(); }}
+                                className="ms-2 flex-shrink-0 text-danger"
+                                style={{ fontSize: '1rem', lineHeight: 1 }}
+                              >
+                                &times;
+                              </div>
+                            </div>
                           ) : (
                             <>
-                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
-                              Đính kèm tệp
+                              <div className="d-flex align-items-center gap-1">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                                Đính kèm tệp
+                              </div>
+                              <div style={{ fontSize: '0.65rem', color: '#9CA3AF', marginTop: '4px', fontWeight: 400 }}>Định dạng: PDF, JPG, PNG (Tối đa 5MB)</div>
                             </>
                           )}
                         </button>
-                        {uploadedFile && (
-                          <div
-                            className="d-flex align-items-center justify-content-between px-2.5 rounded-2 flex-grow-1 h-100"
-                            style={{
-                              backgroundColor: '#E8F0FE',
-                              border: '1px solid #C7D7FA',
-                              minWidth: '120px',
-                              overflow: 'hidden'
-                            }}
-                          >
-                            <div className="d-flex align-items-center gap-1.5 overflow-hidden flex-grow-1">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" className="flex-shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
-                              <span
-                                className="text-dark small fw-semibold text-truncate"
-                                style={{ fontSize: '0.78rem' }}
-                                title={uploadedFile.name}
-                              >
-                                {uploadedFile.name}
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={handleRemoveFile}
-                              className="btn-close ms-1 flex-shrink-0"
-                              style={{ width: '6px', height: '6px', fontSize: '0.55rem' }}
-                              aria-label="Remove"
-                            />
-                          </div>
-                        )}
                       </div>
                     </div>
 
                     {/* Selected Campaign Details Box */}
                     {currentCampaign && (
-                      <div className="col-12 mt-3">
+                      <div className="col-12 mt-4">
                         <div
-                          className="rounded-3 p-4 text-start"
+                          className="rounded-4 overflow-hidden"
                           style={{
-                            background: 'linear-gradient(to right, #FFF1F2 0%, #FEF2F2 100%)',
-                            border: '1px solid #FECACA',
-                            borderRadius: '12px',
+                            background: '#FFF5F5',
+                            border: '1px solid #FEE2E2',
                             animation: 'fadeInDown 0.2s ease'
                           }}
                         >
-                          <h6 className="mb-3 d-flex align-items-center justify-content-between fw-bold" style={{ color: '#B91C1C', fontSize: '0.88rem', letterSpacing: '0.03em' }}>
-                            <span className="d-flex align-items-center gap-2">
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
-                              THÔNG TIN CHI TIẾT CHIẾN DỊCH ĐÃ CHỌN
-                            </span>
-                            {isCampaignEnded ? (
-                              <span className="badge bg-danger text-white rounded-pill px-2.5 py-1" style={{ fontSize: '0.7rem', fontFamily: 'Montserrat' }}>
-                                CHIẾN DỊCH ĐÃ KẾT THÚC
-                              </span>
-                            ) : isCampaignClosedOrCancelled ? (
-                              <span className="badge bg-secondary text-white rounded-pill px-2.5 py-1" style={{ fontSize: '0.7rem', fontFamily: 'Montserrat' }}>
-                                ĐÃ ĐÓNG ĐĂNG KÝ
-                              </span>
-                            ) : null}
-                          </h6>
-                          <div className="row g-3" style={{ fontSize: '0.85rem' }}>
-                            <div className="col-12 col-md-6">
+                          <div className="p-4 row g-4">
+                            <div className="col-12 col-md-6 border-end border-danger border-opacity-25 pe-md-4">
+                              <h6 className="mb-3 d-flex align-items-center fw-bold text-danger" style={{ fontSize: '0.9rem', letterSpacing: '0.03em' }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="me-2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                                Thông tin chi tiết chiến dịch đã chọn
+                              </h6>
                               <div className="mb-2">
-                                <span className="text-muted fw-semibold d-block" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>Tên chiến dịch</span>
-                                <strong className="text-dark" style={{ fontSize: '0.9rem' }}>{currentCampaign.campaignName}</strong>
+                                <span className="text-muted d-block small mb-1">Tên chiến dịch</span>
+                                <strong className="text-dark" style={{ fontSize: '0.95rem' }}>{currentCampaign.campaignName}</strong>
                               </div>
                               <div className="mb-2">
-                                <span className="text-muted fw-semibold d-block" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>Ban tổ chức</span>
-                                <span className="text-dark fw-semibold">{currentCampaign.organizer}</span>
+                                <span className="text-muted d-block small mb-1">Ban tổ chức</span>
+                                <strong className="text-dark" style={{ fontSize: '0.85rem' }}>{currentCampaign.organizer}</strong>
                               </div>
                               <div className="mb-2">
-                                <span className="text-muted fw-semibold d-block" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>Thời gian tổ chức</span>
-                                <span className="text-dark fw-semibold">
+                                <span className="text-muted d-block small mb-1">Thời gian tổ chức</span>
+                                <strong className="text-dark d-flex align-items-center gap-1" style={{ fontSize: '0.85rem' }}>
                                   {new Date(currentCampaign.startDate).toLocaleDateString('vi-VN')} - {new Date(currentCampaign.endDate).toLocaleDateString('vi-VN')}
-                                </span>
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" width="14" height="14" className="ms-1" style={{backgroundColor: '#FEF2F2', borderRadius: '4px'}}><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                                </strong>
                               </div>
-                              <div className="mb-2">
-                                <span className="text-muted fw-semibold d-block" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>Địa điểm hiến máu</span>
-                                <span className="text-dark fw-semibold">{currentCampaign.location}</span>
+                              <div className="mb-3">
+                                <span className="text-muted d-block small mb-1">Địa điểm hiến máu</span>
+                                <strong className="text-dark d-flex align-items-center gap-1" style={{ fontSize: '0.85rem' }}>
+                                  {currentCampaign.location}
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="#A855F7" strokeWidth="2" width="14" height="14" className="ms-1" style={{backgroundColor: '#F3E8FF', borderRadius: '4px'}}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                                </strong>
                               </div>
-                              <div className="mt-3">
-                                <span className="text-muted fw-semibold d-block" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>Giới hạn đăng ký & Số lượng đã nhận</span>
-                                <div className="d-flex align-items-center gap-2 mt-1">
-                                  <strong className="text-dark" style={{ fontSize: '0.95rem' }}>{currentCampaign.registrantCount} người</strong>
+                              <div>
+                                <span className="text-muted d-block small mb-1">Giới hạn đăng ký & số lượng đã nhận</span>
+                                <div className="d-flex align-items-center gap-2 mb-1">
+                                  <strong className="text-dark" style={{ fontSize: '0.85rem' }}>{currentCampaign.registrantCount} người</strong>
                                   <span className="text-muted">/</span>
-                                  <span className="text-secondary fw-semibold" style={{ fontSize: '0.85rem' }}>
+                                  <strong className="text-secondary d-flex align-items-center gap-1" style={{ fontSize: '0.85rem' }}>
                                     {currentCampaign.maxParticipants ? `Tối đa ${currentCampaign.maxParticipants} người` : 'Không giới hạn'}
-                                  </span>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#EC4899" strokeWidth="2" width="14" height="14" className="ms-1" style={{backgroundColor: '#FDF2F8', borderRadius: '4px'}}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                                  </strong>
                                 </div>
                                 {currentCampaign.maxParticipants && (
-                                  <>
-                                    <div className="progress mt-2" style={{ height: '6px', borderRadius: '3px', backgroundColor: '#E5E7EB' }}>
-                                      <div
-                                        className="progress-bar"
-                                        role="progressbar"
-                                        style={{
-                                          width: `${Math.min(100, (currentCampaign.registrantCount / currentCampaign.maxParticipants) * 100)}%`,
-                                          backgroundColor:
-                                            currentCampaign.registrantCount >= currentCampaign.maxParticipants
-                                              ? '#D42B2B'
-                                              : (currentCampaign.registrantCount / currentCampaign.maxParticipants) >= 0.8
-                                                ? '#D97706'
-                                                : '#DC2626',
-                                          borderRadius: '3px',
-                                          transition: 'width 0.3s ease'
-                                        }}
-                                        aria-valuenow={currentCampaign.registrantCount}
-                                        aria-valuemin={0}
-                                        aria-valuemax={currentCampaign.maxParticipants}
-                                      />
-                                    </div>
-                                    <div className="d-flex justify-content-between align-items-center mt-1.5 text-muted" style={{ fontSize: '0.72rem' }}>
-                                      {isCampaignEnded ? (
-                                        <span className="text-danger fw-bold d-flex align-items-center gap-1">
-                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
-                                          CHIẾN DỊCH ĐÃ KẾT THÚC
-                                        </span>
-                                      ) : currentCampaign.registrantCount >= currentCampaign.maxParticipants ? (
-                                        <span className="text-danger fw-bold d-flex align-items-center gap-1">
-                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-                                          ĐÃ HẾT SLOT
-                                        </span>
-                                      ) : (
-                                        <span>Còn lại: <strong className="text-dark">{Math.max(0, currentCampaign.maxParticipants - currentCampaign.registrantCount)}</strong> chỗ trống</span>
-                                      )}
-                                    </div>
-                                  </>
+                                  <div className="text-dark small mt-2">
+                                    Còn lại: <strong className="text-dark">{Math.max(0, currentCampaign.maxParticipants - currentCampaign.registrantCount)} chỗ trống</strong>
+                                  </div>
                                 )}
                               </div>
                             </div>
-                            <div className="col-12 col-md-6 d-flex flex-column justify-content-between">
-                              <div className="mb-3">
-                                <span className="text-muted fw-semibold d-block" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>Giới thiệu / Nội dung</span>
-                                <p className="text-secondary mb-0" style={{ fontSize: '0.8rem', lineHeight: '1.5', whiteSpace: 'pre-line' }}>
-                                  {currentCampaign.description || 'Chưa có mô tả chi tiết cho chiến dịch này.'}
-                                </p>
-                              </div>
-                              {currentCampaign.attachmentUrl && (
-                                <div className="mt-auto">
-                                  <span className="text-muted fw-semibold d-block mb-1" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>Tài liệu đính kèm (Kế hoạch / Tuyên bố)</span>
-                                  <a
-                                    href={currentCampaign.attachmentUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="d-inline-flex align-items-center gap-2 text-decoration-none fw-bold px-3 py-2"
-                                    style={{
-                                      color: '#DC2626',
-                                      backgroundColor: '#E8F0FE',
-                                      border: '1px solid #FECACA',
-                                      fontSize: '0.78rem',
-                                      transition: 'all 0.2s',
-                                      borderRadius: '8px'
-                                    }}
-                                    onMouseEnter={e => {
-                                      e.currentTarget.style.backgroundColor = '#C7D7FA';
-                                    }}
-                                    onMouseLeave={e => {
-                                      e.currentTarget.style.backgroundColor = '#E8F0FE';
-                                    }}
-                                  >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
-                                    {currentCampaign.attachmentName || 'TaiLieuDinhKem.pdf'}
-                                  </a>
+                            
+                            <div className="col-12 col-md-6 position-relative ps-md-4">
+                                {/* Watermark heart drop on right */}
+                                <svg style={{ position: 'absolute', right: '10%', top: '50%', transform: 'translateY(-50%)', opacity: 0.05, pointerEvents: 'none' }} width="140" height="140" viewBox="0 0 24 24" fill="#DC2626">
+                                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                                </svg>
+                                <div className="position-relative" style={{ zIndex: 1 }}>
+                                  <span className="text-muted d-block small mb-1">Giới thiệu / Nội dung</span>
+                                  <p className="text-secondary mb-0" style={{ fontSize: '0.85rem', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
+                                    {currentCampaign.description || 'Chưa có mô tả chi tiết cho chiến dịch này.'}
+                                  </p>
+                                  {currentCampaign.attachmentUrl && (
+                                    <div className="mt-3">
+                                      <span className="text-muted d-block small mb-1">Tài liệu đính kèm (Kế hoạch / Tuyên bố)</span>
+                                      <a
+                                        href={currentCampaign.attachmentUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="d-inline-flex align-items-center gap-2 text-decoration-none fw-bold px-3 py-2"
+                                        style={{
+                                          color: '#DC2626',
+                                          backgroundColor: '#FEF2F2',
+                                          border: '1px solid #FCA5A5',
+                                          fontSize: '0.78rem',
+                                          transition: 'all 0.2s',
+                                          borderRadius: '8px'
+                                        }}
+                                        onMouseEnter={e => {
+                                          e.currentTarget.style.backgroundColor = '#FEE2E2';
+                                        }}
+                                        onMouseLeave={e => {
+                                          e.currentTarget.style.backgroundColor = '#FEF2F2';
+                                        }}
+                                      >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+                                        {currentCampaign.attachmentName || 'TaiLieuDinhKem.pdf'}
+                                      </a>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
                             </div>
                           </div>
+                          
+                          {/* Submit button attached to the bottom of the details box */}
+                          <button
+                            type="submit"
+                            disabled={formLoading || !canRegister}
+                            className="btn fw-bold w-100 py-3 rounded-0"
+                            style={{
+                              fontFamily: 'Montserrat',
+                              fontSize: '0.95rem',
+                              backgroundColor: (!canRegister) ? '#9CA3AF' : '#EA4335',
+                              color: '#fff',
+                              border: 'none',
+                              transition: 'all 0.2s',
+                              cursor: (!canRegister) ? 'not-allowed' : 'pointer'
+                            }}
+                            onMouseEnter={e => {
+                              if (canRegister) e.currentTarget.style.backgroundColor = '#D93025';
+                            }}
+                            onMouseLeave={e => {
+                              if (canRegister) e.currentTarget.style.backgroundColor = '#EA4335';
+                            }}
+                          >
+                            {formLoading ? (
+                              <><span className="spinner-border spinner-border-sm me-2" />Đang xử lý...</>
+                            ) : isCampaignEnded ? (
+                              <span className="d-flex align-items-center justify-content-center gap-2">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="18" height="18"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+                                Chiến dịch đã kết thúc
+                              </span>
+                            ) : isCampaignClosedOrCancelled ? (
+                              <span className="d-flex align-items-center justify-content-center gap-2">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="18" height="18"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+                                Chiến dịch đã bị đóng hoặc hủy
+                              </span>
+                            ) : isCampaignFull ? (
+                              <span className="d-flex align-items-center justify-content-center gap-2">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="18" height="18"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+                                Chiến dịch đã đủ số lượng đăng ký
+                              </span>
+                            ) : (
+                              <span className="d-flex align-items-center justify-content-center gap-2">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="18" height="18"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+                                Gửi yêu cầu đăng ký hiến máu
+                              </span>
+                            )}
+                          </button>
                         </div>
                       </div>
                     )}
-
-                    {/* Full-width submit button */}
-                    <div className="col-12 mt-3">
-                      <button
-                        type="submit"
-                        disabled={formLoading || !canRegister}
-                        className="btn fw-bold rounded-pill w-100"
-                        style={{
-                          fontFamily: 'Montserrat',
-                          fontSize: '0.92rem',
-                          backgroundColor: (!canRegister) ? '#9CA3AF' : '#DC2626',
-                          color: '#fff',
-                          border: 'none',
-                          boxShadow: (!canRegister) ? 'none' : '0 6px 20px rgba(27,79,216,0.3)',
-                          height: 48,
-                          transition: 'all 0.2s',
-                          cursor: (!canRegister) ? 'not-allowed' : 'pointer'
-                        }}
-                        onMouseEnter={e => {
-                          if (canRegister) e.currentTarget.style.backgroundColor = '#B91C1C';
-                        }}
-                        onMouseLeave={e => {
-                          if (canRegister) e.currentTarget.style.backgroundColor = '#DC2626';
-                        }}
-                      >
-                        {formLoading ? (
-                          <><span className="spinner-border spinner-border-sm me-2" />Đang đăng ký...</>
-                        ) : isCampaignEnded ? (
-                          <span className="d-flex align-items-center justify-content-center gap-2">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
-                            Chiến dịch đã kết thúc
-                          </span>
-                        ) : isCampaignClosedOrCancelled ? (
-                          <span className="d-flex align-items-center justify-content-center gap-2">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
-                            Chiến dịch đã bị đóng hoặc hủy
-                          </span>
-                        ) : isCampaignFull ? (
-                          <span className="d-flex align-items-center justify-content-center gap-2">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
-                            Chiến dịch đã đủ số lượng đăng ký
-                          </span>
-                        ) : (
-                          <span className="d-flex align-items-center justify-content-center gap-2">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
-                            Gửi yêu cầu đăng ký hiến máu
-                          </span>
-                        )}
-                      </button>
-                    </div>
                   </form>
                 </div>
               )}
+              </div>
             </div>
           </div>
 
@@ -878,7 +873,7 @@ export const AppointmentPage: React.FC = () => {
                   {history.length > 3 && (
                     <div className="text-center mt-3">
                       <Link to="/history" className="text-decoration-none fw-bold" style={{ fontSize: '0.85rem', color: '#6B7280' }}>
-                        Xem tất cả lịch sử ({history.length})
+                        Xem tất cả lịch sử ({history.length > 3 ? 'nhiều hơn 3' : history.length})
                       </Link>
                     </div>
                   )}

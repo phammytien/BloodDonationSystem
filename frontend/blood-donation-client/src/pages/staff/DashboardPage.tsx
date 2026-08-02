@@ -33,7 +33,7 @@ export const DashboardPage: React.FC = () => {
             Authorization: `Bearer ${user.token}`
           }
         });
-        setHistory(res.data);
+        setHistory(res.data.items || []);
       } catch (err) {
         console.error('Lỗi khi tải lịch sử đăng ký', err);
         toast.error('Không thể tải lịch sử đăng ký hiến máu.');
