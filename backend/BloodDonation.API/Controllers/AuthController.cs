@@ -111,6 +111,10 @@ public class AuthController : ControllerBase
         {
             return BadRequest(new { message = ex.Message, isOtpVerificationRequired = true });
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống.", details = ex.Message });

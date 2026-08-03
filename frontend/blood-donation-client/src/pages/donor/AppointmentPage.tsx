@@ -311,9 +311,7 @@ export const AppointmentPage: React.FC = () => {
 
   return (
     <div className="fade-in" style={{ minHeight: '100vh', backgroundColor: '#FFF1F2' }}>
-      <ToastContainer position="top-center" autoClose={3000} />
-
-      {/* ── HERO HEADER ───────────────────────────────────── */}
+{/* ── HERO HEADER ───────────────────────────────────── */}
       <div style={{
         background: 'linear-gradient(135deg, #FDF2F2 0%, #FEE2E2 50%, #FECACA 100%)',
         padding: '3rem 0 5rem',

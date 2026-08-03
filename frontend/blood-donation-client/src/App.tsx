@@ -9,6 +9,7 @@ import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminCampaignsPage } from './pages/admin/AdminCampaignsPage';
 import { AdminAppointmentsPage } from './pages/admin/AdminAppointmentsPage';
 import { AdminDonorsPage } from './pages/admin/AdminDonorsPage';
+import { AdminStaffPage } from './pages/admin/AdminStaffPage';
 import { AdminInventoryPage } from './pages/admin/AdminInventoryPage';
 import { AdminHistoryPage } from './pages/admin/AdminHistoryPage';
 import { AdminBloodTypesPage } from './pages/admin/AdminBloodTypesPage';
@@ -59,9 +60,12 @@ const AnonymousRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <Navigate to={isDonor(user.roleName) ? '/' : '/dashboard'} replace />;
 };
 
+import { ToastContainer } from 'react-toastify';
+
 function App() {
   return (
     <AuthProvider>
+      <ToastContainer position="top-center" autoClose={3000} theme="colored" />
       <Router>
         <Routes>
           {/* Auth pages — blocked for logged-in users - NO LAYOUT */}
@@ -87,6 +91,7 @@ function App() {
             <Route path="/admin/campaigns" element={<AdminCampaignsPage />} />
             <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
             <Route path="/admin/donors" element={<AdminDonorsPage />} />
+            <Route path="/admin/staffs" element={<AdminStaffPage />} />
             <Route path="/admin/inventory" element={<AdminInventoryPage />} />
             <Route path="/admin/history" element={<AdminHistoryPage />} />
             <Route path="/admin/settings" element={<AdminSettingsPage />} />

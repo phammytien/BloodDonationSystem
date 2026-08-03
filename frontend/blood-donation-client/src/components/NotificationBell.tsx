@@ -116,12 +116,18 @@ export const NotificationBell: React.FC = () => {
     if (user?.roleName === 'Admin' || user?.roleName === 'Staff') {
         if (n.title.toLowerCase().includes('đăng ký hiến máu mới') || n.type === 'StatusUpdate') {
             navigate('/admin/appointments');
-        } else if (n.title.toLowerCase().includes('chiến dịch')) {
+        } else if (n.title.toLowerCase().includes('chiến dịch') || n.type.startsWith('Campaign')) {
             navigate('/admin/campaigns');
         }
     } else {
-        if (n.title.toLowerCase().includes('chiến dịch')) {
-            navigate('/');
+        if (n.title.toLowerCase().includes('chiến dịch') || n.type.startsWith('Campaign')) {
+            // Kiểm tra xem type có chứa ID chiến dịch không (VD: Campaign|123)
+            if (n.type.includes('|')) {
+                const campaignId = n.type.split('|')[1];
+                navigate(`/campaigns/${campaignId}`);
+            } else {
+                navigate('/campaigns');
+            }
         } else {
             navigate('/history');
         }

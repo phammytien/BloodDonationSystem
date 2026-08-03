@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
@@ -130,9 +131,9 @@ export const AdminDonorModal: React.FC<AdminDonorModalProps> = ({ show, onHide, 
 
   if (!show) return null;
 
-  return (
+  return createPortal(
     <>
-      <div className="modal-backdrop fade show" style={{ zIndex: 1040, backgroundColor: 'rgba(0,0,0,0.5)' }}></div>
+      <div className="modal-backdrop fade show" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 1040, backgroundColor: 'rgba(0,0,0,0.5)' }}></div>
       <div className="modal fade show d-block" tabIndex={-1} role="dialog" style={{ zIndex: 1055 }}>
         <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
           <div className="modal-content rounded-4 border-0 shadow-lg bg-white">
@@ -218,6 +219,7 @@ export const AdminDonorModal: React.FC<AdminDonorModalProps> = ({ show, onHide, 
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };

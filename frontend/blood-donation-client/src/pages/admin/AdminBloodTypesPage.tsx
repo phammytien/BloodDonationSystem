@@ -5,6 +5,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Search, RefreshCw, FileDown, Plus, Edit2, MoreVertical, Trash2 } from 'lucide-react';
 import { AdminBloodTypeModal } from '../../components/admin/AdminBloodTypeModal';
 import Swal from 'sweetalert2';
+import * as ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 interface BloodTypeDto {
   bloodTypeId: number;
@@ -131,6 +133,90 @@ export const AdminBloodTypesPage: React.FC = () => {
     });
   };
 
+  const exportToExcel = async () => {
+    if (filteredTypes.length === 0) {
+      toast.info('Không có dữ liệu để xuất.');
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('DanhSachNhomMau', {
+      views: [{ showGridLines: false }]
+    });
+
+    // 1. Tựa đề chính (Title)
+    sheet.mergeCells('A1:F1');
+    const titleCell = sheet.getCell('A1');
+    titleCell.value = 'DANH SÁCH NHÓM MÁU';
+    titleCell.font = { name: 'Arial', size: 18, bold: true, color: { argb: 'FFC00000' } }; // Dark red
+    titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    titleCell.border = {
+      top: { style: 'thin', color: { argb: 'FF006600' } }, // Green border like screenshot
+      left: { style: 'thin', color: { argb: 'FF006600' } },
+      right: { style: 'thin', color: { argb: 'FF006600' } },
+      bottom: { style: 'thin', color: { argb: 'FF006600' } }
+    };
+
+    // 2. Subtitle (Tổng số)
+    sheet.mergeCells('A2:F2');
+    const subTitleCell = sheet.getCell('A2');
+    subTitleCell.value = `Tổng số: ${filteredTypes.length} nhóm máu`;
+    subTitleCell.font = { name: 'Arial', size: 11, italic: true, color: { argb: 'FF808080' } };
+    subTitleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+    // 3. Header row
+    const headerRow = sheet.getRow(4);
+    const headers = ['Mã Nhóm Máu', 'Tên Nhóm Máu', 'Mô Tả', 'Trạng Thái', 'Người Tạo', 'Ngày Tạo'];
+    headers.forEach((headerText, index) => {
+      const cell = headerRow.getCell(index + 1);
+      cell.value = headerText;
+      cell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC00000' } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      cell.border = {
+        top: { style: 'thin' }, left: { style: 'thin' },
+        bottom: { style: 'thin' }, right: { style: 'thin' }
+      };
+    });
+
+    // 4. Data rows
+    filteredTypes.forEach((bt, rowIndex) => {
+      const code = `BT-${bt.bloodTypeId.toString().padStart(3, '0')}`;
+      let statusStr = 'Hoạt động';
+      if (bt.status === 1) statusStr = 'Tạm ngưng';
+      if (bt.status === 2) statusStr = 'Đã xóa';
+
+      const row = sheet.getRow(5 + rowIndex);
+      const rowData = [code, bt.bloodGroup, bt.description || '', statusStr, bt.createdBy || 'admin', formatDateTime(bt.createdAt)];
+      
+      rowData.forEach((val, colIndex) => {
+        const cell = row.getCell(colIndex + 1);
+        cell.value = val;
+        cell.font = { name: 'Arial', size: 11 };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = {
+          top: { style: 'thin' }, left: { style: 'thin' },
+          bottom: { style: 'thin' }, right: { style: 'thin' }
+        };
+      });
+    });
+
+    // 5. Column widths
+    sheet.getColumn(1).width = 15;
+    sheet.getColumn(2).width = 15;
+    sheet.getColumn(3).width = 30;
+    sheet.getColumn(4).width = 15;
+    sheet.getColumn(5).width = 15;
+    sheet.getColumn(6).width = 20;
+
+    // Generate and Download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, `DanhSachNhomMau_${new Date().getTime()}.xlsx`);
+    
+    toast.success('Đã xuất file Excel thành công!');
+  };
+
   return (
     <div className="fade-in">
       <div className="d-flex justify-content-between align-items-end mb-4">
@@ -214,7 +300,7 @@ export const AdminBloodTypesPage: React.FC = () => {
           <button className="btn btn-light px-4 py-2 fw-medium border" onClick={fetchBloodTypes} style={{ borderRadius: '10px', color: '#4B5563' }}>
             <RefreshCw size={18} className="me-2" /> Làm mới
           </button>
-          <button className="btn btn-outline-success px-4 py-2 fw-medium" style={{ borderRadius: '10px' }}>
+          <button className="btn btn-outline-success px-4 py-2 fw-medium" onClick={exportToExcel} style={{ borderRadius: '10px' }}>
             <FileDown size={18} className="me-2" /> Xuất Excel
           </button>
         </div>

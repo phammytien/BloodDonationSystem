@@ -105,6 +105,7 @@ export const AdminLayout: React.FC = () => {
             {isAdmin && (
               <>
                 <NavItem to="/admin/donors" icon={iconUsers} label="Danh sách Donor" />
+                <NavItem to="/admin/staffs" icon={iconSupport} label="Nhân viên y tế" />
                 <NavItem to="/admin/blood-types" icon={iconDrop} label="Nhóm máu" />
               </>
             )}

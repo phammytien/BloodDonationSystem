@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save } from 'lucide-react';
 
 interface BloodTypeDto {
@@ -32,9 +33,9 @@ export const AdminBloodTypeModal: React.FC<AdminBloodTypeModalProps> = ({ show, 
 
   if (!show) return null;
 
-  return (
+  return createPortal(
     <>
-      <div className="modal-backdrop fade show" style={{ zIndex: 1040, backgroundColor: 'rgba(0,0,0,0.5)' }}></div>
+      <div className="modal-backdrop fade show" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 1040, backgroundColor: 'rgba(0,0,0,0.5)' }}></div>
       <div className="modal fade show d-block" tabIndex={-1} role="dialog" style={{ zIndex: 1055 }}>
         <div className="modal-dialog modal-dialog-centered" role="document">
           <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '16px' }}>
@@ -108,6 +109,7 @@ export const AdminBloodTypeModal: React.FC<AdminBloodTypeModalProps> = ({ show, 
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };

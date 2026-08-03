@@ -74,9 +74,7 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="container py-5 fade-in">
-      <ToastContainer position="top-right" autoClose={3000} />
-
-      {/* Top Navbar */}
+{/* Top Navbar */}
       <div className="d-flex justify-content-between align-items-center mb-5 pb-3 border-bottom">
         <Link className="d-flex align-items-center text-decoration-none" to="/">
           <svg width="35" height="35" viewBox="0 0 24 24" fill="none" className="me-2">

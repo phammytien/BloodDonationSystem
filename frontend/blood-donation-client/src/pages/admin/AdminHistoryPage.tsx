@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
 import { useAuth } from '../../contexts/AuthContext';
+import { Pagination } from '../../components/common/Pagination';
 import { getAvatarChar } from '../../utils/avatarHelper';
 import { Download, Search, RefreshCw, Eye, Droplet, Calendar, Users, Trash2 } from 'lucide-react';
 import ExcelJS from 'exceljs';
@@ -38,6 +39,11 @@ export const AdminHistoryPage: React.FC = () => {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  const maskPhone = (phone?: string) => {
+    if (!phone || phone.length < 6) return phone;
+    return phone.slice(0, 3) + '****' + phone.slice(-3);
+  };
 
   const fetchHistory = async () => {
     if (!user) return;
@@ -324,7 +330,7 @@ export const AdminHistoryPage: React.FC = () => {
 
       <div className="bg-white rounded-4 shadow-sm overflow-hidden" style={{ border: '1px solid #F3F4F6' }}>
         {/* Filters */}
-        <div className="p-3 border-bottom bg-white d-flex gap-3 align-items-center flex-wrap">
+        <div className="p-3 border-bottom bg-white d-flex gap-3 align-items-end flex-wrap">
           <div className="position-relative flex-grow-1" style={{ minWidth: '250px' }}>
             <Search className="position-absolute text-muted" size={18} style={{ left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
@@ -363,7 +369,7 @@ export const AdminHistoryPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="ms-auto mt-4">
+          <div className="ms-auto">
             <button className="btn btn-light border d-flex align-items-center gap-2" style={{ height: '42px', borderRadius: '8px' }} onClick={resetFilters}>
               <RefreshCw size={16} />
               <span>Làm mới</span>
@@ -417,7 +423,7 @@ export const AdminHistoryPage: React.FC = () => {
                           <div>
                             <div className="fw-semibold" style={{ color: '#111827', fontSize: '0.95rem' }}>{item.donorName}</div>
                             <div className="text-muted" style={{ fontSize: '0.85rem' }}>{item.donorEmail}</div>
-                            {item.donorPhone && <div className="text-muted" style={{ fontSize: '0.85rem' }}>📞 {item.donorPhone}</div>}
+                            {item.donorPhone && <div className="text-muted" style={{ fontSize: '0.85rem' }}>📞 {maskPhone(item.donorPhone)}</div>}
                           </div>
                         </div>
                       </td>
@@ -501,32 +507,12 @@ export const AdminHistoryPage: React.FC = () => {
               </div>
 
               <div className="d-flex gap-1">
-                <button
-                  className="btn btn-light border d-flex align-items-center justify-content-center"
-                  style={{ width: 36, height: 36, borderRadius: '8px' }}
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(p => p - 1)}
-                >
-                  &laquo;
-                </button>
-                {Array.from({ length: Math.ceil(filteredHistory.length / itemsPerPage) }, (_, i) => i + 1).map(page => (
-                  <button
-                    key={page}
-                    className={`btn border d-flex align-items-center justify-content-center fw-medium ${currentPage === page ? 'btn-danger text-white' : 'btn-white text-dark'}`}
-                    style={{ width: 36, height: 36, borderRadius: '8px' }}
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </button>
-                ))}
-                <button
-                  className="btn btn-light border d-flex align-items-center justify-content-center"
-                  style={{ width: 36, height: 36, borderRadius: '8px' }}
-                  disabled={currentPage === Math.ceil(filteredHistory.length / itemsPerPage) || filteredHistory.length === 0}
-                  onClick={() => setCurrentPage(p => p + 1)}
-                >
-                  &raquo;
-                </button>
+                <Pagination 
+                  currentPage={currentPage}
+                  totalItems={filteredHistory.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                />
               </div>
             </div>
           </div>

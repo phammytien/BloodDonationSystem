@@ -200,7 +200,14 @@ public class AuthService : IAuthService
 
         if (!user.IsActive)
         {
-            throw new InvalidOperationException("Tài khoản chưa được kích hoạt. Vui lòng xác thực OTP.");
+            if (user.Role.RoleName == "Donor")
+            {
+                throw new InvalidOperationException("Tài khoản chưa được kích hoạt. Vui lòng xác thực OTP.");
+            }
+            else
+            {
+                throw new UnauthorizedAccessException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
+            }
         }
 
         // Fetch Donor FullName (if Donor role)

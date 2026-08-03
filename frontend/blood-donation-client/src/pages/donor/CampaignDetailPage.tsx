@@ -98,9 +98,7 @@ export const CampaignDetailPage = () => {
 
   return (
     <div className="container py-5 fade-in">
-      <ToastContainer position="top-center" autoClose={3000} theme="colored" />
-      
-      {/* Breadcrumb / Back button */}
+{/* Breadcrumb / Back button */}
       <div className="mb-4">
         <Link to="/campaigns" className="text-decoration-none text-muted d-flex align-items-center gap-2 hover-text-danger transition-all">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>

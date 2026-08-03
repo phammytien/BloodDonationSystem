@@ -147,8 +147,7 @@ export const ForgotPasswordPage: React.FC = () => {
 
   return (
     <div className="auth-wrapper fade-in">
-      <ToastContainer position="top-right" autoClose={3000} />
-      <div className="auth-container">
+<div className="auth-container">
         {/* Left Sidebar */}
         <div className="auth-sidebar d-flex flex-column justify-content-between">
           <div>

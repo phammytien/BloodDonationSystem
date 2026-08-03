@@ -50,26 +50,72 @@ public static class DatabaseSeeder
         }
 
         // 3. Admin & Staff
-        var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Email == "admin@lifegive.vn");
-        if (adminUser == null)
+        // 2. Admin User
+        var adminRoleRef = await context.Roles.FirstAsync(r => r.RoleName == "Admin");
+        var admin = await context.Users.FirstOrDefaultAsync(u => u.Email == "admin@lifegive.vn");
+        if (admin == null)
         {
-            adminUser = new User { Username = "admin", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"), Email = "admin@lifegive.vn", Phone = "0900000000", RoleId = adminRole.RoleId, IsActive = true, CreatedAt = DateTime.UtcNow };
-            context.Users.Add(adminUser);
+            admin = new User { Username = "admin", FullName = "Quản Trị Viên", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"), Email = "admin@lifegive.vn", RoleId = adminRoleRef.RoleId, IsActive = true, CreatedAt = DateTime.UtcNow };
+            context.Users.Add(admin);
         }
+        await context.SaveChangesAsync();
 
+        // 3. Staff Users
+        var staffRoleRef = await context.Roles.FirstAsync(r => r.RoleName == "Staff");
+        
         var staff1 = await context.Users.FirstOrDefaultAsync(u => u.Email == "staff01@lifegive.vn");
         if (staff1 == null)
         {
-            staff1 = new User { Username = "staff01", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Staff@123"), Email = "staff01@lifegive.vn", Phone = "0900000001", RoleId = staffRole.RoleId, IsActive = true, CreatedAt = DateTime.UtcNow };
+            staff1 = new User { Username = "staff01", FullName = "Nguyễn Văn Thành", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Staff@123"), Email = "staff01@lifegive.vn", Phone = "0900000001", RoleId = staffRoleRef.RoleId, IsActive = true, CreatedAt = DateTime.UtcNow };
             context.Users.Add(staff1);
+        }
+        else
+        {
+            bool updated = false;
+            if (string.IsNullOrEmpty(staff1.FullName) || staff1.FullName == "Nguyễn Văn Nhân Viên 1" || staff1.FullName == "staff01") { staff1.FullName = "Nguyễn Văn Thành"; updated = true; }
+            if (updated) context.Users.Update(staff1);
         }
 
         var staff2 = await context.Users.FirstOrDefaultAsync(u => u.Email == "staff02@lifegive.vn");
         if (staff2 == null)
         {
-            staff2 = new User { Username = "staff02", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Staff@123"), Email = "staff02@lifegive.vn", Phone = "0900000002", RoleId = staffRole.RoleId, IsActive = true, CreatedAt = DateTime.UtcNow };
+            staff2 = new User { Username = "staff02", FullName = "Trần Thu Thủy", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Staff@123"), Email = "staff02@lifegive.vn", Phone = "0900000002", RoleId = staffRoleRef.RoleId, IsActive = true, CreatedAt = DateTime.UtcNow };
             context.Users.Add(staff2);
         }
+
+        var staff3 = await context.Users.FirstOrDefaultAsync(u => u.Email == "nguyen.hoa@lifegive.vn");
+        if (staff3 == null)
+        {
+            staff3 = new User { Username = "nguyen.hoa", FullName = "Nguyễn Thị Hoa", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Staff@123"), Email = "nguyen.hoa@lifegive.vn", Phone = "0900000003", RoleId = staffRoleRef.RoleId, IsActive = true, CreatedAt = DateTime.UtcNow };
+            context.Users.Add(staff3);
+        }
+        else if (string.IsNullOrEmpty(staff3.FullName))
+        {
+            staff3.FullName = "Nguyễn Thị Hoa";
+        }
+
+        var staff4 = await context.Users.FirstOrDefaultAsync(u => u.Email == "tran.binh@lifegive.vn");
+        if (staff4 == null)
+        {
+            staff4 = new User { Username = "tran.binh", FullName = "Trần Thanh Bình", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Staff@123"), Email = "tran.binh@lifegive.vn", Phone = "0900000004", RoleId = staffRoleRef.RoleId, IsActive = true, CreatedAt = DateTime.UtcNow };
+            context.Users.Add(staff4);
+        }
+        else if (string.IsNullOrEmpty(staff4.FullName))
+        {
+            staff4.FullName = "Trần Thanh Bình";
+        }
+
+        var staff5 = await context.Users.FirstOrDefaultAsync(u => u.Email == "le.tuan@lifegive.vn");
+        if (staff5 == null)
+        {
+            staff5 = new User { Username = "le.tuan", FullName = "Lê Minh Tuấn", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Staff@123"), Email = "le.tuan@lifegive.vn", Phone = "0900000005", RoleId = staffRoleRef.RoleId, IsActive = false, CreatedAt = DateTime.UtcNow };
+            context.Users.Add(staff5);
+        }
+        else if (string.IsNullOrEmpty(staff5.FullName))
+        {
+            staff5.FullName = "Lê Minh Tuấn";
+        }
+
         await context.SaveChangesAsync();
 
         // 4. Donors

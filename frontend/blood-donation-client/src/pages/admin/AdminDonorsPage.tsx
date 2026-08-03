@@ -33,7 +33,19 @@ export const AdminDonorsPage: React.FC = () => {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [editingDonor, setEditingDonor] = useState<any>(null);
 
+  const maskPhone = (phone?: string) => {
+    if (!phone || phone.length < 6) return phone;
+    return phone.slice(0, 3) + '****' + phone.slice(-3);
+  };
+
+  const maskCCCD = (cccd?: string) => {
+    if (!cccd || cccd.length < 6) return cccd;
+    return cccd.slice(0, 3) + '*****' + cccd.slice(-3);
+  };
+
+  // 1) Lấy danh sách Donor
   const fetchDonors = async () => {
     if (!user) return;
     setLoading(true);
@@ -344,7 +356,7 @@ export const AdminDonorsPage: React.FC = () => {
 
       <div className="bg-white rounded-4 shadow-sm overflow-hidden" style={{ border: '1px solid #F3F4F6' }}>
         {/* Filters */}
-        <div className="p-3 border-bottom bg-white d-flex gap-3 align-items-center flex-wrap">
+        <div className="p-3 border-bottom bg-white d-flex gap-3 align-items-end flex-wrap">
           <div className="position-relative flex-grow-1" style={{ minWidth: '250px' }}>
             <Search className="position-absolute text-muted" size={18} style={{ left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
@@ -383,7 +395,7 @@ export const AdminDonorsPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="ms-auto mt-4 d-flex gap-2">
+          <div className="ms-auto d-flex gap-2">
             <button className="btn btn-light border d-flex align-items-center gap-2" style={{ height: '42px', borderRadius: '8px' }} onClick={resetFilters}>
               <RefreshCw size={16} />
               <span>Làm mới</span>
@@ -446,12 +458,12 @@ export const AdminDonorsPage: React.FC = () => {
                             <div className="fw-semibold d-flex align-items-center gap-2" style={{ color: '#111827', fontSize: '0.95rem' }}>
                               {item.fullName || 'Chưa cập nhật'}
                             </div>
-                            <div className="text-muted" style={{ fontSize: '0.8rem' }}>CCCD: {item.citizenId || '—'}</div>
+                            <div className="text-muted" style={{ fontSize: '0.8rem' }}>CCCD: {item.citizenId ? maskCCCD(item.citizenId) : '—'}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <div style={{ color: '#374151', fontSize: '0.9rem', fontWeight: 500 }}>{item.phone || '—'}</div>
+                        <div style={{ color: '#374151', fontSize: '0.9rem', fontWeight: 500 }}>{item.phone ? maskPhone(item.phone) : '—'}</div>
                         <div className="text-muted" style={{ fontSize: '0.85rem' }}>{item.email}</div>
                       </td>
                       <td className="px-4 py-3">

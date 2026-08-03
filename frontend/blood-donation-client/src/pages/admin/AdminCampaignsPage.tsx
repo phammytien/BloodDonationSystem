@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast, ToastContainer } from 'react-toastify';
 import { Pagination } from '../../components/common/Pagination';
+import Swal from 'sweetalert2';
 
 export const AdminCampaignsPage: React.FC = () => {
   const { user } = useAuth();
@@ -35,7 +36,7 @@ export const AdminCampaignsPage: React.FC = () => {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -147,17 +148,38 @@ export const AdminCampaignsPage: React.FC = () => {
         await axios.put(`http://localhost:5028/api/campaign/${currentId}`, payload, {
           headers: { Authorization: `Bearer ${user?.token}` }
         });
-        toast.success('Cập nhật chiến dịch thành công', { position: 'top-center' });
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Cập nhật chiến dịch thành công',
+          showConfirmButton: false,
+          timer: 3000
+        });
       } else {
         await axios.post('http://localhost:5028/api/campaign', payload, {
           headers: { Authorization: `Bearer ${user?.token}` }
         });
-        toast.success('Thêm chiến dịch thành công', { position: 'top-center' });
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Thêm chiến dịch thành công',
+          showConfirmButton: false,
+          timer: 3000
+        });
       }
       setShowModal(false);
       fetchCampaigns();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Có lỗi xảy ra', { position: 'top-center' });
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'error',
+        title: err.response?.data?.message || 'Có lỗi xảy ra',
+        showConfirmButton: false,
+        timer: 3000
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -174,11 +196,25 @@ export const AdminCampaignsPage: React.FC = () => {
       await axios.delete(`http://localhost:5028/api/campaign/${deleteId}`, {
         headers: { Authorization: `Bearer ${user?.token}` }
       });
-      toast.success('Xoá chiến dịch thành công', { position: 'top-center' });
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Xoá chiến dịch thành công',
+        showConfirmButton: false,
+        timer: 3000
+      });
       setShowDeleteModal(false);
       fetchCampaigns();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi xoá', { position: 'top-center' });
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'error',
+        title: err.response?.data?.message || 'Có lỗi xảy ra khi xoá',
+        showConfirmButton: false,
+        timer: 3000
+      });
       setShowDeleteModal(false);
     }
   };
@@ -204,10 +240,6 @@ export const AdminCampaignsPage: React.FC = () => {
 
   return (
     <>
-      {ReactDOM.createPortal(
-        <ToastContainer position="top-center" autoClose={3000} theme="colored" />,
-        document.body
-      )}
       <div className="container-fluid fade-in py-4 px-4" style={{ backgroundColor: '#F8F9FA', minHeight: '100vh' }}>
 
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -426,16 +458,34 @@ export const AdminCampaignsPage: React.FC = () => {
             </table>
           </div>
           {!loading && filteredCampaigns.length > 0 && (
-            <div className="pt-4 border-top mt-2 d-flex justify-content-between align-items-center">
+            <div className="pt-4 border-top mt-2 d-flex justify-content-between align-items-center flex-wrap gap-3">
               <div className="text-muted" style={{ fontSize: '0.85rem' }}>
                 Hiển thị {Math.min((currentPage - 1) * itemsPerPage + 1, filteredCampaigns.length)} - {Math.min(currentPage * itemsPerPage, filteredCampaigns.length)} trong tổng số {filteredCampaigns.length} mục
               </div>
-              <Pagination
-                currentPage={currentPage}
-                totalItems={filteredCampaigns.length}
-                itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-              />
+              <div className="d-flex align-items-center gap-3">
+                <div className="d-flex align-items-center gap-2">
+                  <span className="text-muted" style={{ fontSize: '0.85rem' }}>Hiển thị</span>
+                  <select
+                    className="form-select form-select-sm border"
+                    style={{ width: '100px', height: '36px', borderRadius: '8px' }}
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value="5">5 / trang</option>
+                    <option value="10">10 / trang</option>
+                    <option value="20">20 / trang</option>
+                  </select>
+                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={filteredCampaigns.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
             </div>
           )}
         </div>

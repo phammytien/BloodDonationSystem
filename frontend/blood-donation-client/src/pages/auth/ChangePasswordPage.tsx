@@ -83,11 +83,7 @@ export const ChangePasswordPage: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFF' }}>
-      <ToastContainer position="top-right" autoClose={3000} />
-
-
-
-      {/* ── MAIN CONTENT ── */}
+{/* ── MAIN CONTENT ── */}
       <div className="container py-5 d-flex justify-content-center align-items-center" style={{ minHeight: 'calc(100vh - 70px)' }}>
         <div className="bg-white rounded-4 p-4 p-md-5 shadow-sm border" style={{ maxWidth: '850px', width: '100%', borderColor: '#E5E7EB' }}>
           <div className="row g-4">

@@ -192,8 +192,7 @@ export const HistoryPage: React.FC = () => {
 
   return (
     <div className="fade-in" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', paddingBottom: '4rem', fontFamily: "'Inter', sans-serif" }}>
-      <ToastContainer position="top-center" autoClose={3000} />
-      <style>{`
+<style>{`
         .custom-tab { color: #6B7280; font-weight: 600; padding: 0.75rem 1rem; cursor: pointer; border-bottom: 2px solid transparent; }
         .custom-tab.active { color: #DC2626; border-bottom: 2px solid #DC2626; }
         .history-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; transition: all 0.2s; }

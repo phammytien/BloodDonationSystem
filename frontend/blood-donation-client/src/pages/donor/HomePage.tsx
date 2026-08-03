@@ -159,11 +159,7 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="fade-in" style={{ minHeight: '100vh', backgroundColor: '#fff' }}>
-      <ToastContainer position="top-right" autoClose={3500} />
-
-
-
-      {/* ── HERO BANNER ──────────────────────────────────────── */}
+{/* ── HERO BANNER ──────────────────────────────────────── */}
       <header className="hero-section" style={{ position: 'relative' }}>
         {/* Faded Background Image requested by User */}
         <div

@@ -1062,3 +1062,6 @@ strong, b {
   }
 }
 
+
+.Toastify__toast-container { z-index: 99999 !important; }
+

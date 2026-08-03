@@ -76,7 +76,7 @@ public class CampaignService : ICampaignService
             UserId = userId,
             Title = "Chiến dịch hiến máu mới \ud83e\ude78",
             Content = $"Chiến dịch '{campaign.CampaignName}' vừa được phát động tại {campaign.Location}. Hãy đăng ký tham gia ngay!",
-            Type = "Campaign",
+            Type = $"Campaign|{campaign.CampaignId}",
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         }).ToList();

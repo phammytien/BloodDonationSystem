@@ -262,7 +262,7 @@ export const AdminInventoryPage: React.FC = () => {
 
       <div className="bg-white rounded-4 shadow-sm overflow-hidden mb-4" style={{ border: '1px solid #F3F4F6' }}>
         {/* Filters */}
-        <div className="p-3 border-bottom bg-white d-flex flex-wrap gap-3 align-items-center">
+        <div className="p-3 border-bottom bg-white d-flex flex-wrap gap-3 align-items-end">
           <div className="position-relative flex-grow-1" style={{ minWidth: '250px' }}>
             <Search className="position-absolute text-muted" size={18} style={{ left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
             <input 
@@ -293,7 +293,7 @@ export const AdminInventoryPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="ms-auto mt-4 d-flex gap-2">
+          <div className="ms-auto d-flex gap-2">
             <button className="btn btn-light border d-flex align-items-center gap-2" style={{ height: '42px', borderRadius: '8px' }} onClick={() => { resetFilters(); fetchInventories(); }}>
               <RefreshCw size={16} />
               <span>Làm mới</span>

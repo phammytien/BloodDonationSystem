@@ -16,6 +16,11 @@ export const AdminAppointmentsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<any[]>([]);
 
+  const maskPhone = (phone?: string) => {
+    if (!phone || phone.length < 6) return phone;
+    return phone.slice(0, 3) + '****' + phone.slice(-3);
+  };
+
   // Filters & Search
   const [filterCampaignId, setFilterCampaignId] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
@@ -33,7 +38,7 @@ export const AdminAppointmentsPage: React.FC = () => {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   useEffect(() => {
     fetchCampaigns();
@@ -355,44 +360,10 @@ export const AdminAppointmentsPage: React.FC = () => {
   return (
     <>
       <div className="container-fluid fade-in py-2" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
-        <ToastContainer position="top-center" autoClose={3000} theme="colored" />
-
-        {/* Header & Filters */}
         <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
           <div>
             <h3 style={{ fontFamily: 'Montserrat', fontWeight: 800, color: '#111827', margin: 0 }}>Duyệt Đơn Đăng Ký</h3>
             <p className="text-muted small mt-1 mb-0">Quản lý và xét duyệt các đơn đăng ký hiến máu.</p>
-          </div>
-
-          <div className="d-flex gap-3 align-items-center">
-            <select
-              className="form-select border-0 shadow-sm rounded-3 px-3 py-2"
-              value={filterCampaignId}
-              onChange={(e) => setFilterCampaignId(e.target.value)}
-              style={{ minWidth: '220px', fontSize: '0.9rem' }}
-            >
-              <option value="">Tất cả chiến dịch</option>
-              {campaigns.map(c => (
-                <option key={c.campaignId} value={c.campaignId}>{c.campaignName}</option>
-              ))}
-            </select>
-
-            <select
-              className="form-select border-0 shadow-sm rounded-3 px-3 py-2"
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              style={{ minWidth: '180px', fontSize: '0.9rem' }}
-            >
-              <option value="">Tất cả trạng thái</option>
-              <option value="0">Chờ duyệt</option>
-              <option value="1">Đã xác nhận</option>
-              <option value="2">Hoàn thành</option>
-              <option value="3">Đã hủy</option>
-            </select>
-
-            {/* <button className="btn btn-outline-secondary bg-white border-0 shadow-sm py-2 px-3 rounded-3" style={{ color: '#D42B2B' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-            </button> */}
           </div>
         </div>
 
@@ -462,8 +433,8 @@ export const AdminAppointmentsPage: React.FC = () => {
         {/* Table & Toolbar */}
         <div className="card border-0 bg-white" style={{ boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', borderRadius: '1rem' }}>
 
-          <div className="d-flex justify-content-between align-items-center p-4 border-bottom">
-            <div className="position-relative" style={{ width: '350px' }}>
+          <div className="d-flex flex-wrap gap-3 align-items-center p-4 border-bottom">
+            <div className="position-relative flex-grow-1" style={{ minWidth: '250px' }}>
               <span className="position-absolute" style={{ top: '50%', left: '15px', transform: 'translateY(-50%)', color: '#9CA3AF' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               </span>
@@ -474,6 +445,33 @@ export const AdminAppointmentsPage: React.FC = () => {
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
+            </div>
+
+            <div style={{ minWidth: '220px' }}>
+              <select
+                className="form-select bg-light border-0 rounded-3 px-3 py-2"
+                value={filterCampaignId}
+                onChange={(e) => setFilterCampaignId(e.target.value)}
+              >
+                <option value="">Tất cả chiến dịch</option>
+                {campaigns.map(c => (
+                  <option key={c.campaignId} value={c.campaignId}>{c.campaignName}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ minWidth: '180px' }}>
+              <select
+                className="form-select bg-light border-0 rounded-3 px-3 py-2"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="">Tất cả trạng thái</option>
+                <option value="0">Chờ duyệt</option>
+                <option value="1">Đã xác nhận</option>
+                <option value="2">Hoàn thành</option>
+                <option value="3">Đã hủy</option>
+              </select>
             </div>
 
             <div className="d-flex gap-3">
@@ -546,7 +544,7 @@ export const AdminAppointmentsPage: React.FC = () => {
                       <td className="py-3">
                         <div className="fw-bold text-dark" style={{ fontSize: '0.95rem' }}>{a.donorName}</div>
                         <div className="text-muted mt-1" style={{ fontSize: '0.8rem' }}>
-                          <span className="me-2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="me-1"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>{a.donorPhone}</span>
+                          <span className="me-2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="me-1"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>{a.donorPhone ? maskPhone(a.donorPhone) : ''}</span>
                           <span className="badge bg-danger rounded-pill px-2">{a.bloodGroup}</span>
                         </div>
                       </td>
@@ -588,16 +586,34 @@ export const AdminAppointmentsPage: React.FC = () => {
           </div>
 
           {!loading && totalItems > 0 && (
-            <div className="p-3 border-top d-flex justify-content-between align-items-center">
-              <span className="text-muted small">
+            <div className="p-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-3">
+              <div className="text-muted small">
                 Hiển thị {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} trong tổng số {totalItems} mục
-              </span>
-              <Pagination
-                currentPage={currentPage}
-                totalItems={totalItems}
-                itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-              />
+              </div>
+              <div className="d-flex align-items-center gap-3">
+                <div className="d-flex align-items-center gap-2">
+                  <span className="text-muted small">Hiển thị</span>
+                  <select
+                    className="form-select form-select-sm border"
+                    style={{ width: '100px', height: '36px', borderRadius: '8px' }}
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value="5">5 / trang</option>
+                    <option value="10">10 / trang</option>
+                    <option value="20">20 / trang</option>
+                  </select>
+                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
             </div>
           )}
         </div>

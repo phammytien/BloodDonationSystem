@@ -24,6 +24,7 @@ builder.Services.AddScoped<IDonorService, DonorService>();
 builder.Services.AddScoped<IBloodInventoryService, BloodInventoryService>();
 builder.Services.AddScoped<IBloodDonationService, BloodDonationService>();
 builder.Services.AddScoped<IBackupService, BackupService>();
+builder.Services.AddScoped<IStaffService, StaffService>();
 
 // Register Background Service
 builder.Services.AddHostedService<AutoBackupHostedService>();

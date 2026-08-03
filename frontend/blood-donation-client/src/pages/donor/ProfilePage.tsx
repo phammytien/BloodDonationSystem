@@ -305,11 +305,7 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFF' }}>
-      <ToastContainer position="top-right" autoClose={3000} />
-
-
-
-      <div className="container py-5">
+<div className="container py-5">
         <div className="row g-4 justify-content-center">
 
           {/* Left panel: Info summary & Donor Card */}

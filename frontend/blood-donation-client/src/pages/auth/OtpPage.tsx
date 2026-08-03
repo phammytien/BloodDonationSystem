@@ -101,8 +101,7 @@ export const OtpPage: React.FC = () => {
 
   return (
     <div className="auth-wrapper fade-in">
-      <ToastContainer position="top-right" autoClose={3000} />
-      <div className="auth-container" style={{ maxWidth: '600px', minHeight: 'auto' }}>
+<div className="auth-container" style={{ maxWidth: '600px', minHeight: 'auto' }}>
         <div className="auth-form-container w-100 px-5 py-5 text-center">
           <div className="mb-4">
             {/* Elegant Shield Icon */}
